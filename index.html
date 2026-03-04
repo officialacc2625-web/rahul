@@ -533,6 +533,20 @@
                     <label for="tcTopN">Show Top N</label>
                     <input type="number" id="tcTopN" value="50" min="1" step="5">
                 </div>
+                <div class="lowconv-control-group">
+                    <label for="tcRBM">RBM</label>
+                    <select id="tcRBM"
+                        style="padding:9px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;">
+                        <option value="">All RBMs</option>
+                    </select>
+                </div>
+                <div class="lowconv-control-group">
+                    <label for="tcBDM">BDM</label>
+                    <select id="tcBDM"
+                        style="padding:9px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;">
+                        <option value="">All BDMs</option>
+                    </select>
+                </div>
                 <button class="btn-apply-filter" id="btnTCRefresh">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="23 4 23 10 17 10" />
@@ -556,7 +570,7 @@
             <!-- Table -->
             <div class="lowconv-table-wrap">
                 <div class="report-header" style="margin-bottom:12px;">
-                    <h2>Top Performing Staff — Best Conversion</h2>
+                    <h2>Top Performing Staff — High Qty Sale & High Qty Conversion</h2>
                     <span class="tc-badge" id="tcCount">0 staff</span>
                 </div>
                 <div class="table-wrapper" id="tcTableWrapper">

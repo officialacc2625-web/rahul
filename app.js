@@ -1062,13 +1062,34 @@
         const minQty = parseFloat($('tcMinQty').value) || 0;
         const sortBy = $('tcSortBy').value; // 'qtyConv' or 'valConv'
         const topN = parseInt($('tcTopN').value) || 50;
+        const selRBM = $('tcRBM').value;
+        const selBDM = $('tcBDM').value;
 
         const allStats = buildStaffStats();
 
-        // Filter: must have >= minQty product qty AND conversion > 0
-        const filtered = allStats
+        // Populate RBM and BDM dropdowns (preserve selection)
+        const rbmSet = [...new Set(allStats.map(s => s.rbm).filter(Boolean))].sort();
+        const bdmSet = [...new Set(allStats.map(s => s.bdm).filter(Boolean))].sort();
+        $('tcRBM').innerHTML = '<option value="">All RBMs</option>' +
+            rbmSet.map(r => `<option value="${r}" ${r === selRBM ? 'selected' : ''}>${r}</option>`).join('');
+        $('tcBDM').innerHTML = '<option value="">All BDMs</option>' +
+            bdmSet.map(b => `<option value="${b}" ${b === selBDM ? 'selected' : ''}>${b}</option>`).join('');
+
+        // Filter: must have >= minQty product qty AND conversion > 0, plus RBM/BDM filters
+        const eligible = allStats
             .filter(s => s.pQty >= minQty && s[sortBy] > 0)
-            .sort((a, b) => b[sortBy] - a[sortBy])
+            .filter(s => !selRBM || s.rbm === selRBM)
+            .filter(s => !selBDM || s.bdm === selBDM);
+
+        // Sort: primary by product qty (highest first), secondary by conversion (highest first)
+        // This ensures staff with high product sales always rank at the top
+        const filtered = eligible
+            .sort((a, b) => {
+                // Primary: higher product qty first
+                if (b.pQty !== a.pQty) return b.pQty - a.pQty;
+                // Secondary: higher conversion first
+                return b[sortBy] - a[sortBy];
+            })
             .slice(0, topN);
 
         $('tcCount').textContent = `${filtered.length} staff`;
@@ -1126,9 +1147,15 @@
         const minQty = parseFloat($('tcMinQty').value) || 0;
         const sortBy = $('tcSortBy').value;
         const topN = parseInt($('tcTopN').value) || 50;
+        const selRBM = $('tcRBM').value;
+        const selBDM = $('tcBDM').value;
         const allStats = buildStaffStats();
-        const filtered = allStats.filter(s => s.pQty >= minQty && s[sortBy] > 0)
-            .sort((a, b) => b[sortBy] - a[sortBy]).slice(0, topN);
+        const filtered = allStats
+            .filter(s => s.pQty >= minQty && s[sortBy] > 0)
+            .filter(s => !selRBM || s.rbm === selRBM)
+            .filter(s => !selBDM || s.bdm === selBDM)
+            .sort((a, b) => b.pQty !== a.pQty ? b.pQty - a.pQty : b[sortBy] - a[sortBy])
+            .slice(0, topN);
         if (filtered.length === 0) return;
         const hdr = ['Rank', 'Staff', 'Branch', 'RBM', 'BDM', 'Prod Qty', 'OSG Qty', 'Qty Conv%', 'Val Conv%', 'Prod Revenue', 'OSG Revenue'];
         const lines = [hdr.join(',')];
