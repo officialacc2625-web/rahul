@@ -176,6 +176,10 @@ body {
     flex: 1;
     margin-left: var(--sidebar-width);
     min-height: 100vh;
+    max-width: calc(100% - var(--sidebar-width));
+    overflow-x: hidden;
+    padding: 0 16px;
+    box-sizing: border-box;
 }
 
 /* ========== TOP BAR ========== */
@@ -252,6 +256,9 @@ body {
     display: none;
     padding: 28px 32px;
     animation: fadeIn 0.4s ease;
+    overflow-x: auto;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .content-section.active {
@@ -1082,7 +1089,10 @@ body {
 
 /* ========== LOW CONV STAFF PAGE ========== */
 .lowconv-container {
-    max-width: 1200px;
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
 }
 
 .lowconv-controls {
@@ -1095,6 +1105,7 @@ body {
     border: 1px solid var(--border);
     border-radius: var(--radius);
     margin-bottom: 20px;
+    box-sizing: border-box;
 }
 
 .lowconv-control-group {
@@ -1132,15 +1143,13 @@ body {
 
 /* KPI summary row */
 .lc-kpi-row {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 12px;
     margin-bottom: 20px;
 }
 
 .lc-kpi {
-    flex: 1;
-    min-width: 160px;
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -1149,6 +1158,7 @@ body {
     flex-direction: column;
     gap: 6px;
     transition: all var(--transition);
+    min-width: 0;
 }
 
 .lc-kpi:hover {
@@ -1188,6 +1198,8 @@ body {
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 20px;
+    overflow-x: auto;
+    box-sizing: border-box;
 }
 
 /* Warning colour for very low (>0) conversion */
@@ -1249,7 +1261,9 @@ body {
 
 /* ========== DEEP INSIGHTS PAGE ========== */
 .insights-container {
-    max-width: 1000px;
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .insights-header {

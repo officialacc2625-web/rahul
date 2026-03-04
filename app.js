@@ -20,37 +20,37 @@
 
     // ---- COLUMN MAPPING (Product / AMC file) ----
     const PRODUCT_COL_MAP = {
-        branch: ['branch', 'store name', 'store', 'branch name'],
-        rbm: ['rbm', 'rbm name', 'region', 'regional manager'],
-        bdm: ['bdm', 'bdm name', 'business development manager'],
-        staff: ['staff', 'staff name', 'salesperson', 'sales person', 'employee'],
-        product: ['product', 'product name', 'product type'],
-        category: ['category', 'item category', 'item group'],
-        brand: ['brand', 'brand name'],
-        soldPrice: ['sold price', 'soldprice', 'selling price', 'sale price', 'mop'],
-        taxableVal: ['taxable value', 'taxable', 'taxable amount'],
-        tax: ['tax', 'tax amount', 'gst', 'tax value'],
-        qty: ['qty', 'quantity', 'qnty', 'units'],
-        discount: ['direct discount', 'discount', 'total discount'],
-        indDiscount: ['indirect discount'],
+        branch: ['branch', 'store name', 'store', 'branch name', 'outlet', 'outlet name', 'shop name'],
+        rbm: ['rbm', 'rbm name', 'region', 'regional manager', 'regional business manager', 'rsm'],
+        bdm: ['bdm', 'bdm name', 'business development manager', 'area manager', 'asm'],
+        staff: ['staff', 'staff name', 'salesperson', 'sales person', 'employee', 'employee name', 'promoter', 'promoter name', 'executive'],
+        product: ['product', 'product name', 'product type', 'product group', 'model', 'model name', 'item name'],
+        category: ['category', 'item category', 'item group', 'product category', 'sub category'],
+        brand: ['brand', 'brand name', 'make'],
+        soldPrice: ['sold price', 'soldprice', 'selling price', 'sale price', 'mop', 'net amount', 'net value', 'total amount', 'amount', 'sale amount', 'sale value', 'value', 'net sales value'],
+        taxableVal: ['taxable value', 'taxable', 'taxable amount', 'taxable val'],
+        tax: ['tax', 'tax amount', 'gst', 'tax value', 'gst amount'],
+        qty: ['qty', 'quantity', 'qnty', 'units', 'net qty', 'net prod qty', 'total qty', 'sale qty', 'sales qty', 'pcs'],
+        discount: ['direct discount', 'discount', 'total discount', 'disc', 'disc%'],
+        indDiscount: ['indirect discount', 'ind discount'],
         dbdCharge: ['dbd charge', 'dbd'],
-        procCharge: ['processing charge'],
-        svcCharge: ['service charge'],
-        addition: ['addition'],
-        deduction: ['deduction'],
-        invoice: ['invoice number', 'invoice no', 'invoice', 'bill no'],
+        procCharge: ['processing charge', 'proc charge'],
+        svcCharge: ['service charge', 'svc charge'],
+        addition: ['addition', 'additions'],
+        deduction: ['deduction', 'deductions'],
+        invoice: ['invoice number', 'invoice no', 'invoice', 'bill no', 'bill number', 'bill no.', 'invoice no.', 'inv no', 'receipt no'],
     };
 
     // ---- COLUMN MAPPING (OSG file) ----
     const OSG_COL_MAP = {
-        branch: ['store name', 'store', 'branch', 'branch name'],
-        storeCode: ['store code'],
-        product: ['product', 'product name', 'product type'],
-        category: ['category'],
-        brand: ['brand'],
-        soldPrice: ['sold price', 'soldprice', 'plan price', 'selling price'],
-        qty: ['quantity', 'qty', 'ews qty', 'qnty'],
-        invoice: ['invoice no', 'invoice number', 'invoice', 'bill no'],
+        branch: ['store name', 'store', 'branch', 'branch name', 'outlet', 'outlet name', 'shop name'],
+        storeCode: ['store code', 'store id', 'outlet code'],
+        product: ['product', 'product name', 'product type', 'model', 'model name', 'item name', 'product group'],
+        category: ['category', 'product category', 'item category'],
+        brand: ['brand', 'brand name', 'make'],
+        soldPrice: ['sold price', 'soldprice', 'plan price', 'selling price', 'net amount', 'amount', 'value', 'net value', 'sale price', 'mop', 'total amount', 'premium', 'premium amount'],
+        qty: ['quantity', 'qty', 'ews qty', 'qnty', 'units', 'net qty', 'count', 'nos', 'pcs'],
+        invoice: ['invoice no', 'invoice number', 'invoice', 'bill no', 'bill number', 'bill no.', 'invoice no.', 'inv no', 'receipt no'],
     };
 
     // ---- DOM REFERENCES ----
@@ -232,38 +232,140 @@
     }
 
     function parseExcel(file, colMap, rowMapper) {
+        // Detect CSV files and use fast CSV parser
+        const isCSV = file.name.toLowerCase().endsWith('.csv');
+        if (isCSV) return parseCSVFile(file, colMap, rowMapper);
+
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = (e) => {
                 try {
                     const data = new Uint8Array(e.target.result);
-                    const wb = XLSX.read(data, { type: 'array', cellDates: true });
-                    const sheet = wb.Sheets[wb.SheetNames[0]];
-                    const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-                    if (json.length === 0) { reject(new Error('No data')); return; }
-                    const headers = Object.keys(json[0]);
-                    const mapping = autoMapColumns(headers, colMap);
-                    resolve(json.map(row => rowMapper(row, mapping)));
+                    const fileSizeMB = (data.length / (1024 * 1024)).toFixed(1);
+                    updateLoadingMsg('Reading XLSX (' + fileSizeMB + ' MB)...');
+                    console.log('[Excel] Loading ' + file.name + ' (' + fileSizeMB + ' MB)');
+
+                    if (data.length > 20 * 1024 * 1024) {
+                        alert('This XLSX file is ' + fileSizeMB + ' MB which is very large.\n\nFor best results, convert it to CSV first:\n1. Open a terminal in the portal folder\n2. Run: python convert.py "your_file.xlsx"\n3. Upload the resulting .csv file instead.\n\nWill attempt to parse anyway...');
+                    }
+
+                    setTimeout(() => {
+                        try {
+                            const wb = XLSX.read(data, { type: 'array', cellDates: true, dense: true });
+                            let allRows = [];
+                            for (let si = 0; si < wb.SheetNames.length; si++) {
+                                const sheetName = wb.SheetNames[si];
+                                updateLoadingMsg('Parsing sheet ' + (si + 1) + '/' + wb.SheetNames.length + '...');
+                                const sheet = wb.Sheets[sheetName];
+                                const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+                                if (json.length === 0) continue;
+                                const headers = Object.keys(json[0]);
+                                console.log('[Sheet: ' + sheetName + '] ' + json.length + ' rows');
+                                const mapping = autoMapColumns(headers, colMap);
+                                for (let i = 0; i < json.length; i++) {
+                                    allRows.push(rowMapper(json[i], mapping));
+                                }
+                            }
+                            if (allRows.length === 0) { reject(new Error('No data')); return; }
+                            updateLoadingMsg('Loaded ' + allRows.length.toLocaleString() + ' rows!');
+                            console.log('[Total] ' + allRows.length + ' rows');
+                            resolve(allRows);
+                        } catch (err) {
+                            console.error('[Parse Error]', err);
+                            alert('Error parsing XLSX: ' + err.message + '\n\nFor large files, convert to CSV first:\npython convert.py "your_file.xlsx"');
+                            reject(err);
+                        }
+                    }, 100);
                 } catch (err) { reject(err); }
             };
-            reader.onerror = () => reject(new Error('Read error'));
+            reader.onerror = () => reject(new Error('File read error'));
             reader.readAsArrayBuffer(file);
         });
     }
 
+    function parseCSVFile(file, colMap, rowMapper) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const text = e.target.result;
+                    const fileSizeMB = (text.length / (1024 * 1024)).toFixed(1);
+                    updateLoadingMsg('Parsing CSV (' + fileSizeMB + ' MB)...');
+                    console.log('[CSV] Loading ' + file.name + ' (' + fileSizeMB + ' MB)');
+
+                    // Use XLSX library to parse CSV (handles all edge cases)
+                    var wb = XLSX.read(text, { type: 'string' });
+                    var sheet = wb.Sheets[wb.SheetNames[0]];
+                    var json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+                    console.log('[CSV] ' + json.length + ' rows parsed');
+                    if (json.length === 0) { reject(new Error('No data in CSV')); return; }
+
+                    var headers = Object.keys(json[0]);
+                    console.log('[CSV Headers] ' + headers.slice(0, 8).join(', '));
+                    var mapping = autoMapColumns(headers, colMap);
+
+                    updateLoadingMsg('Processing ' + json.length.toLocaleString() + ' rows...');
+                    var allRows = [];
+                    for (var i = 0; i < json.length; i++) {
+                        allRows.push(rowMapper(json[i], mapping));
+                        if (i % 100000 === 0 && i > 0) {
+                            updateLoadingMsg('Row ' + i.toLocaleString() + ' / ' + json.length.toLocaleString());
+                        }
+                    }
+
+                    updateLoadingMsg('Loaded ' + allRows.length.toLocaleString() + ' rows!');
+                    console.log('[CSV Total] ' + allRows.length + ' rows');
+                    resolve(allRows);
+                } catch (err) {
+                    console.error('[CSV Error]', err);
+                    alert('Error parsing CSV: ' + err.message);
+                    reject(err);
+                }
+            };
+            reader.onerror = () => reject(new Error('File read error'));
+            reader.readAsText(file);
+        });
+    }
+
+    function updateLoadingMsg(msg) {
+        const el = document.querySelector('#loadingOverlay p');
+        if (el) el.textContent = msg;
+    }
+
     function autoMapColumns(headers, colMap) {
         const mapping = {};
+        const headersLower = headers.map(h => h.toLowerCase().trim());
+
         for (const [key, aliases] of Object.entries(colMap)) {
             mapping[key] = null;
-            // Iterate aliases in order — first alias gets priority
+
+            // Pass 1: Exact match (alias order = priority)
             for (const alias of aliases) {
-                const found = headers.find(h => h.toLowerCase().trim() === alias);
-                if (found) { mapping[key] = found; break; }
+                const idx = headersLower.indexOf(alias);
+                if (idx >= 0) { mapping[key] = headers[idx]; break; }
+            }
+
+            // Pass 2: Partial/contains match as fallback
+            if (!mapping[key]) {
+                for (const alias of aliases) {
+                    const idx = headersLower.findIndex(h => h.includes(alias) || alias.includes(h));
+                    if (idx >= 0 && h_len(headersLower[idx]) > 1) { mapping[key] = headers[idx]; break; }
+                }
             }
         }
+
+        // Warn about critical unmapped columns
+        const critical = ['soldPrice', 'qty', 'branch', 'product'];
+        critical.forEach(k => {
+            if (!mapping[k]) console.warn(`[⚠ Column NOT FOUND] '${k}' — no matching header. Available headers:`, headers.join(', '));
+        });
+
         console.log('[Column Mapping]', JSON.stringify(mapping));
         return mapping;
     }
+
+    function h_len(s) { return s ? s.length : 0; }
 
     function getVal(row, col, def) {
         if (!col) return def;
@@ -778,6 +880,9 @@
         $('tcKpiRow').innerHTML = '';
         $('tcCount').textContent = '0 staff';
         $('insightsContent').innerHTML = noDataHTML('Upload data and generate reports to see insights.');
+        $('fsTableWrapper').innerHTML = noDataHTML('Upload data and generate reports first.');
+        $('fsKpiRow').innerHTML = '';
+        $('fsCount').textContent = '0 staff';
         document.querySelector('[data-section="upload-section"]').click();
     });
 
@@ -839,16 +944,32 @@
 
         const minQty = parseFloat($('lcMinQty').value) || 0;
         const maxConv = parseFloat($('lcMaxConv').value);
+        const selRBM = $('lcRBM').value;
+        const selBDM = $('lcBDM').value;
 
         const allStats = buildStaffStats();
 
-        // Filter: must have >= minQty product qty AND <= maxConv qty conversion %
+        // Populate RBM dropdown (preserve selection)
+        const rbmSet = [...new Set(allStats.map(s => s.rbm).filter(Boolean))].sort();
+        const bdmSet = [...new Set(allStats.map(s => s.bdm).filter(Boolean))].sort();
+
+        const rbmEl = $('lcRBM');
+        const bdmEl = $('lcBDM');
+        const prevRBM = selRBM;
+        const prevBDM = selBDM;
+
+        rbmEl.innerHTML = '<option value="">All RBMs</option>' +
+            rbmSet.map(r => `<option value="${r}" ${r === prevRBM ? 'selected' : ''}>${r}</option>`).join('');
+        bdmEl.innerHTML = '<option value="">All BDMs</option>' +
+            bdmSet.map(b => `<option value="${b}" ${b === prevBDM ? 'selected' : ''}>${b}</option>`).join('');
+
+        // Filter: minQty, maxConv, optional RBM, optional BDM
         const filtered = allStats
             .filter(s => s.pQty >= minQty && s.qtyConv <= maxConv)
+            .filter(s => !selRBM || s.rbm === selRBM)
+            .filter(s => !selBDM || s.bdm === selBDM)
             .sort((a, b) => {
-                // Primary: lowest qty conversion first
                 if (a.qtyConv !== b.qtyConv) return a.qtyConv - b.qtyConv;
-                // Secondary: highest product qty first
                 return b.pQty - a.pQty;
             });
 
@@ -904,8 +1025,13 @@
         if (productData.length === 0) return;
         const minQty = parseFloat($('lcMinQty').value) || 0;
         const maxConv = parseFloat($('lcMaxConv').value);
+        const selRBM = $('lcRBM').value;
+        const selBDM = $('lcBDM').value;
         const allStats = buildStaffStats();
-        const filtered = allStats.filter(s => s.pQty >= minQty && s.qtyConv <= maxConv)
+        const filtered = allStats
+            .filter(s => s.pQty >= minQty && s.qtyConv <= maxConv)
+            .filter(s => !selRBM || s.rbm === selRBM)
+            .filter(s => !selBDM || s.bdm === selBDM)
             .sort((a, b) => a.qtyConv - b.qtyConv || b.pQty - a.pQty);
         if (filtered.length === 0) return;
         const hdr = ['Rank', 'Staff', 'Branch', 'RBM', 'BDM', 'Prod Qty', 'OSG Qty', 'Qty Conv%', 'Val Conv%', 'Prod Revenue'];
@@ -916,6 +1042,7 @@
         });
         downloadCSV(lines.join('\n'), 'low_conv_staff.csv');
     }
+
 
     // ---- TOP CONV STAFF PAGE ----
     $('btnTCRefresh').addEventListener('click', renderTopConvPage);
@@ -1242,6 +1369,162 @@
             </div>
             <div class="insight-card-body">${body}</div>
         </div>`;
+    }
+
+    // ---- FUTURE STORES PAGE ----
+    $('btnFSRefresh').addEventListener('click', renderFutureStoresPage);
+    $('btnFSExport').addEventListener('click', exportFutureStoresCSV);
+    document.querySelector('[data-section="future-section"]').addEventListener('click', () => {
+        setTimeout(renderFutureStoresPage, 50);
+    });
+
+    function buildFutureStaffStats() {
+        // Only include product rows whose branch contains "FUTURE" (case-insensitive)
+        const futureProduct = productData.filter(r => r.branch && r.branch.toUpperCase().includes('FUTURE'));
+
+        // Build invoice → staff lookup from future product data
+        const invoiceStaff = {};
+        futureProduct.forEach(r => { if (r.invoice && r.staff) invoiceStaff[r.invoice] = r.staff; });
+
+        // Group product data by staff
+        const pByStaff = {};
+        futureProduct.forEach(r => {
+            const s = r.staff || 'Unknown';
+            if (!pByStaff[s]) pByStaff[s] = { branch: r.branch, rbm: r.rbm, bdm: r.bdm, rows: [] };
+            pByStaff[s].rows.push(r);
+        });
+
+        // Group OSG data by staff via invoice mapping (only future-related invoices)
+        const oByStaff = {};
+        osgData.forEach(r => {
+            const s = r.invoice ? (invoiceStaff[r.invoice] || null) : null;
+            if (!s) return;
+            if (!oByStaff[s]) oByStaff[s] = [];
+            oByStaff[s].push(r);
+        });
+
+        const allStaff = new Set([...Object.keys(pByStaff), ...Object.keys(oByStaff)]);
+        allStaff.delete('Unknown');
+
+        return Array.from(allStaff).map(name => {
+            const pInfo = pByStaff[name] || { branch: '', rbm: '', bdm: '', rows: [] };
+            const oRows = oByStaff[name] || [];
+            const pQty = pInfo.rows.reduce((s, r) => s + r.qty, 0);
+            const oQty = oRows.reduce((s, r) => s + r.qty, 0);
+            const pRev = pInfo.rows.reduce((s, r) => s + r.soldPrice, 0);
+            const oRev = oRows.reduce((s, r) => s + r.soldPrice, 0);
+            const qtyConv = pQty > 0 ? (oQty / pQty) * 100 : 0;
+            const valConv = pRev > 0 ? (oRev / pRev) * 100 : 0;
+            return { name, branch: pInfo.branch, rbm: pInfo.rbm, bdm: pInfo.bdm, pQty, oQty, pRev, oRev, qtyConv, valConv };
+        });
+    }
+
+    function renderFutureStoresPage() {
+        if (productData.length === 0) {
+            $('fsTableWrapper').innerHTML = noDataHTML('Upload data and generate reports first.');
+            $('fsKpiRow').innerHTML = '';
+            $('fsCount').textContent = '0 staff';
+            return;
+        }
+
+        const selRBM = $('fsRBM').value;
+        const selBDM = $('fsBDM').value;
+        const selBranch = $('fsBranch').value;
+
+        const allStats = buildFutureStaffStats();
+
+        // Populate dropdowns (preserve selection)
+        const rbmSet = [...new Set(allStats.map(s => s.rbm).filter(Boolean))].sort();
+        const bdmSet = [...new Set(allStats.map(s => s.bdm).filter(Boolean))].sort();
+        const branchSet = [...new Set(allStats.map(s => s.branch).filter(Boolean))].sort();
+
+        $('fsRBM').innerHTML = '<option value="">All RBMs</option>' +
+            rbmSet.map(r => `<option value="${r}" ${r === selRBM ? 'selected' : ''}>${r}</option>`).join('');
+        $('fsBDM').innerHTML = '<option value="">All BDMs</option>' +
+            bdmSet.map(b => `<option value="${b}" ${b === selBDM ? 'selected' : ''}>${b}</option>`).join('');
+        $('fsBranch').innerHTML = '<option value="">All Future Stores</option>' +
+            branchSet.map(b => `<option value="${b}" ${b === selBranch ? 'selected' : ''}>${b}</option>`).join('');
+
+        // Filter
+        const filtered = allStats
+            .filter(s => !selRBM || s.rbm === selRBM)
+            .filter(s => !selBDM || s.bdm === selBDM)
+            .filter(s => !selBranch || s.branch === selBranch)
+            .sort((a, b) => b.pQty - a.pQty);
+
+        $('fsCount').textContent = `${filtered.length} staff`;
+
+        // KPI summary
+        const totalPQty = filtered.reduce((s, r) => s + r.pQty, 0);
+        const totalOQty = filtered.reduce((s, r) => s + r.oQty, 0);
+        const totalPRev = filtered.reduce((s, r) => s + r.pRev, 0);
+        const totalORev = filtered.reduce((s, r) => s + r.oRev, 0);
+        const avgQtyConv = totalPQty > 0 ? (totalOQty / totalPQty) * 100 : 0;
+        const avgValConv = totalPRev > 0 ? (totalORev / totalPRev) * 100 : 0;
+        const uniqueBranches = new Set(filtered.map(s => s.branch)).size;
+
+        $('fsKpiRow').innerHTML = `
+            <div class="lc-kpi"><span class="lc-kpi-label">Future Stores</span><span class="lc-kpi-val">${uniqueBranches}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Total Staff</span><span class="lc-kpi-val">${filtered.length}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Avg Qty Conv</span><span class="lc-kpi-val conversion-text">${avgQtyConv.toFixed(2)}%</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Avg Val Conv</span><span class="lc-kpi-val conversion-text">${avgValConv.toFixed(2)}%</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Total Product Revenue</span><span class="lc-kpi-val">${fmtShort(totalPRev)}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Total OSG Revenue</span><span class="lc-kpi-val">${fmtShort(totalORev)}</span></div>
+        `;
+
+        if (filtered.length === 0) {
+            $('fsTableWrapper').innerHTML = noDataHTML('No staff found in Future stores.');
+            return;
+        }
+
+        let html = `<table class="data-table">
+            <thead><tr>
+                <th>#</th><th>Staff</th><th>Branch</th><th>RBM</th><th>BDM</th>
+                <th>Prod Qty</th><th>OSG Qty</th><th>Qty Conv%</th><th>Val Conv%</th><th>Prod Rev</th><th>OSG Rev</th>
+            </tr></thead><tbody>`;
+
+        filtered.forEach((e, i) => {
+            const convCls = e.qtyConv === 0 ? 'loss-val' : (e.qtyConv < 5 ? 'conv-warn' : 'conv-val');
+            const rank = i + 1;
+            const rankBadge = rank <= 3 ? `<span class="rank-badge rank-${rank}">${rank}</span>` : `<span class="rank-num">${rank}</span>`;
+            html += `<tr>
+                <td class="number-cell">${rankBadge}</td>
+                <td><strong>${e.name}</strong></td>
+                <td>${e.branch}</td>
+                <td>${e.rbm}</td>
+                <td>${e.bdm}</td>
+                <td class="number-cell"><strong>${e.pQty}</strong></td>
+                <td class="number-cell">${e.oQty}</td>
+                <td class="number-cell ${convCls}">${e.qtyConv.toFixed(2)}%</td>
+                <td class="number-cell conv-val">${e.valConv.toFixed(2)}%</td>
+                <td class="number-cell">${fmtShort(e.pRev)}</td>
+                <td class="number-cell">${fmtShort(e.oRev)}</td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+        $('fsTableWrapper').innerHTML = html;
+    }
+
+    function exportFutureStoresCSV() {
+        if (productData.length === 0) return;
+        const selRBM = $('fsRBM').value;
+        const selBDM = $('fsBDM').value;
+        const selBranch = $('fsBranch').value;
+        const allStats = buildFutureStaffStats();
+        const filtered = allStats
+            .filter(s => !selRBM || s.rbm === selRBM)
+            .filter(s => !selBDM || s.bdm === selBDM)
+            .filter(s => !selBranch || s.branch === selBranch)
+            .sort((a, b) => b.pQty - a.pQty);
+        if (filtered.length === 0) return;
+        const hdr = ['Rank', 'Staff', 'Branch', 'RBM', 'BDM', 'Prod Qty', 'OSG Qty', 'Qty Conv%', 'Val Conv%', 'Prod Revenue', 'OSG Revenue'];
+        const lines = [hdr.join(',')];
+        filtered.forEach((e, i) => {
+            lines.push([i + 1, q(e.name), q(e.branch), q(e.rbm), q(e.bdm), e.pQty, e.oQty,
+            e.qtyConv.toFixed(2), e.valConv.toFixed(2), e.pRev.toFixed(0), e.oRev.toFixed(0)].join(','));
+        });
+        downloadCSV(lines.join('\n'), 'future_stores_staff.csv');
     }
 
     // ---- UTILITIES ----

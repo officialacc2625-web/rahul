@@ -79,6 +79,13 @@
                 </svg>
                 <span>Top Staff</span>
             </a>
+            <a href="#" class="nav-item" data-section="future-section" id="nav-future">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
+                </svg>
+                <span>Future Stores</span>
+            </a>
             <a href="#" class="nav-item" data-section="insights-section" id="nav-insights">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M9 18h6" />
@@ -450,6 +457,20 @@
                     <label for="lcMaxConv">Max Qty Conv % (threshold)</label>
                     <input type="number" id="lcMaxConv" value="1" min="0" step="0.5">
                 </div>
+                <div class="lowconv-control-group">
+                    <label for="lcRBM">RBM</label>
+                    <select id="lcRBM"
+                        style="padding:9px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;">
+                        <option value="">All RBMs</option>
+                    </select>
+                </div>
+                <div class="lowconv-control-group">
+                    <label for="lcBDM">BDM</label>
+                    <select id="lcBDM"
+                        style="padding:9px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;">
+                        <option value="">All BDMs</option>
+                    </select>
+                </div>
                 <button class="btn-apply-filter" id="btnLCRefresh">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="23 4 23 10 17 10" />
@@ -552,6 +573,73 @@
         </div>
     </section>
 
+    <!-- Future Stores Section -->
+    <section class="content-section" id="future-section">
+        <div class="lowconv-container">
+
+            <!-- Controls -->
+            <div class="lowconv-controls">
+                <div class="lowconv-control-group">
+                    <label for="fsRBM">RBM</label>
+                    <select id="fsRBM"
+                        style="padding:9px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;">
+                        <option value="">All RBMs</option>
+                    </select>
+                </div>
+                <div class="lowconv-control-group">
+                    <label for="fsBDM">BDM</label>
+                    <select id="fsBDM"
+                        style="padding:9px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;">
+                        <option value="">All BDMs</option>
+                    </select>
+                </div>
+                <div class="lowconv-control-group">
+                    <label for="fsBranch">Branch</label>
+                    <select id="fsBranch"
+                        style="padding:9px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;">
+                        <option value="">All Future Stores</option>
+                    </select>
+                </div>
+                <button class="btn-apply-filter" id="btnFSRefresh">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="23 4 23 10 17 10" />
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                    </svg>
+                    Refresh
+                </button>
+                <button class="btn-export" id="btnFSExport" style="margin-left:auto;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    Export CSV
+                </button>
+            </div>
+
+            <!-- Summary KPI row -->
+            <div class="lc-kpi-row" id="fsKpiRow"></div>
+
+            <!-- Table -->
+            <div class="lowconv-table-wrap">
+                <div class="report-header" style="margin-bottom:12px;">
+                    <h2>Future Stores — Staff Conversion</h2>
+                    <span class="tc-badge" id="fsCount">0 staff</span>
+                </div>
+                <div class="table-wrapper" id="fsTableWrapper">
+                    <div class="no-data-msg">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.5">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                            <polyline points="9 22 9 12 15 12 15 22" />
+                        </svg>
+                        <p>Generate reports first, then visit this page.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Deep Insights Section -->
     <section class="content-section" id="insights-section">
         <div class="insights-container">
@@ -585,7 +673,7 @@
     <!-- Loading Overlay -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
-        <p>Processing your data...</p>
+        <p>Processing your data... large files may take 30-60 seconds</p>
     </div>
 
     <script src="app.js"></script>
