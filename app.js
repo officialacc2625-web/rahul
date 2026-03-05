@@ -84,19 +84,69 @@
     const filterBDM = $('filterBDM');
     const filterStaff = $('filterStaff');
 
+    // ---- AUTHENTICATION STATE ----
+    let isAuthenticated = false;
+    const AUTH_PASSWORD = 'user1234';
+    let pendingNavTarget = null;
+    let pendingNavItem = null;
+
     // ---- NAVIGATION ----
     document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
             const section = item.dataset.section;
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            item.classList.add('active');
-            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-            $(section).classList.add('active');
-            $('pageTitle').textContent = item.querySelector('span').textContent;
-            sidebar.classList.remove('open');
+
+            // Check if page needs auth
+            const isPublicPage = section === 'upload-section' || section === 'productdetails-section';
+            if (!isPublicPage && !isAuthenticated) {
+                // Intercept navigation and show password modal
+                pendingNavTarget = section;
+                pendingNavItem = item;
+                $('passwordModal').style.display = 'flex';
+                $('modalPasswordInput').value = '';
+                $('passwordErrorMsg').textContent = '';
+                $('modalPasswordInput').focus();
+                return;
+            }
+
+            performNavigation(item, section);
         });
     });
+
+    function performNavigation(item, section) {
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        item.classList.add('active');
+        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+        $(section).classList.add('active');
+        $('pageTitle').textContent = item.querySelector('span').textContent;
+        sidebar.classList.remove('open');
+    }
+
+    // ---- PASSWORD MODAL LOGIC ----
+    $('btnSubmitPassword').addEventListener('click', handlePasswordSubmit);
+    $('btnCancelPassword').addEventListener('click', () => {
+        $('passwordModal').style.display = 'none';
+        pendingNavTarget = null;
+        pendingNavItem = null;
+    });
+    $('modalPasswordInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handlePasswordSubmit();
+    });
+
+    function handlePasswordSubmit() {
+        const input = $('modalPasswordInput').value;
+        if (input === AUTH_PASSWORD) {
+            isAuthenticated = true;
+            $('passwordModal').style.display = 'none';
+            if (pendingNavItem && pendingNavTarget) {
+                performNavigation(pendingNavItem, pendingNavTarget);
+            }
+        } else {
+            $('passwordErrorMsg').textContent = 'Incorrect password. Try again.';
+            $('modalPasswordInput').classList.add('shake');
+            setTimeout(() => $('modalPasswordInput').classList.remove('shake'), 400);
+        }
+    }
     menuToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
 
     // Report tabs
@@ -1096,15 +1146,15 @@
             .filter(s => !selRBM || s.rbm === selRBM)
             .filter(s => !selBDM || s.bdm === selBDM);
 
-        // Sort: by combined score (pQty × oQty) — rewards staff high on BOTH metrics
-        // Staff with high product qty but low OSG qty will rank lower
+        // Sort: primarily by absolute OSG volume (OSG Qty or OSG Revenue)
+        // This ensures staff with the highest actual number of conversions are at the top,
+        // which naturally requires both high Product Qty and high Conversion %.
         const filtered = eligible
             .sort((a, b) => {
-                const scoreA = a.pQty * a.oQty * a.oQty;
-                const scoreB = b.pQty * b.oQty * b.oQty;
-                if (scoreB !== scoreA) return scoreB - scoreA;
-                // Tie-breaker: higher conversion first
-                return b[sortBy] - a[sortBy];
+                const volA = sortBy === 'qtyConv' ? a.oQty : a.oRev;
+                const volB = sortBy === 'qtyConv' ? b.oQty : b.oRev;
+                if (volB !== volA) return volB - volA; // Highest OSG volume first
+                return b[sortBy] - a[sortBy];          // Tie-breaker: highest conversion %
             })
             .slice(0, topN);
 
@@ -1170,7 +1220,12 @@
             .filter(s => s.pQty >= minQty && s[sortBy] > 0)
             .filter(s => !selRBM || s.rbm === selRBM)
             .filter(s => !selBDM || s.bdm === selBDM)
-            .sort((a, b) => { const sA = a.pQty * a.oQty * a.oQty, sB = b.pQty * b.oQty * b.oQty; return sB !== sA ? sB - sA : b[sortBy] - a[sortBy]; })
+            .sort((a, b) => {
+                const volA = sortBy === 'qtyConv' ? a.oQty : a.oRev;
+                const volB = sortBy === 'qtyConv' ? b.oQty : b.oRev;
+                if (volB !== volA) return volB - volA; // Highest OSG volume first
+                return b[sortBy] - a[sortBy];          // Tie-breaker: highest conversion %
+            })
             .slice(0, topN);
         if (filtered.length === 0) return;
         const hdr = ['Rank', 'Staff', 'Branch', 'RBM', 'BDM', 'Prod Qty', 'OSG Qty', 'Qty Conv%', 'Val Conv%', 'Prod Revenue', 'OSG Revenue'];
