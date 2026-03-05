@@ -1603,17 +1603,21 @@
 
         // Filter product and OSG data
         let filtP = productData;
-        let filtO = osgData;
         if (selRBM) filtP = filtP.filter(r => r.rbm === selRBM);
         if (selBDM) filtP = filtP.filter(r => r.bdm === selBDM);
-        if (selProduct) {
-            filtP = filtP.filter(r => r.product === selProduct);
-            filtO = filtO.filter(r => r.product === selProduct);
-        }
+        if (selProduct) filtP = filtP.filter(r => r.product === selProduct);
 
-        // Build invoice lookup from OSG
+        // Build invoice lookup from product data — only count OSG entries that match a product invoice
+        const productInvoices = new Set();
+        filtP.forEach(r => { if (r.invoice) productInvoices.add(r.invoice); });
+
+        // Build invoice lookup from ALL OSG data (for missed customers section)
         const osgInvoices = new Set();
         osgData.forEach(r => { if (r.invoice) osgInvoices.add(r.invoice); });
+
+        // Filter OSG: only entries whose invoice exists in product data
+        let filtO = osgData.filter(r => r.invoice && productInvoices.has(r.invoice));
+        if (selProduct) filtO = filtO.filter(r => r.product === selProduct);
 
         // Product stats: group by product category
         const pByProd = groupBy(filtP, 'product');
