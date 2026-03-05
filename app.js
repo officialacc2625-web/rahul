@@ -132,7 +132,13 @@
     });
 
     function setupUploadZone(zone, input, onFile) {
-        zone.addEventListener('click', () => input.click());
+        zone.addEventListener('click', (e) => {
+            // Don't re-trigger if the click came from inside the input itself
+            if (e.target === input) return;
+            input.click();
+        });
+        // Stop input clicks from bubbling up to zone click handler
+        input.addEventListener('click', (e) => e.stopPropagation());
         zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
         zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
         zone.addEventListener('drop', async e => {
