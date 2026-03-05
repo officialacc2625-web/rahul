@@ -1096,13 +1096,14 @@
             .filter(s => !selRBM || s.rbm === selRBM)
             .filter(s => !selBDM || s.bdm === selBDM);
 
-        // Sort: primary by product qty (highest first), secondary by conversion (highest first)
-        // This ensures staff with high product sales always rank at the top
+        // Sort: by combined score (pQty × oQty) — rewards staff high on BOTH metrics
+        // Staff with high product qty but low OSG qty will rank lower
         const filtered = eligible
             .sort((a, b) => {
-                // Primary: higher product qty first
-                if (b.pQty !== a.pQty) return b.pQty - a.pQty;
-                // Secondary: higher conversion first
+                const scoreA = a.pQty * a.oQty;
+                const scoreB = b.pQty * b.oQty;
+                if (scoreB !== scoreA) return scoreB - scoreA;
+                // Tie-breaker: higher conversion first
                 return b[sortBy] - a[sortBy];
             })
             .slice(0, topN);
@@ -1169,7 +1170,7 @@
             .filter(s => s.pQty >= minQty && s[sortBy] > 0)
             .filter(s => !selRBM || s.rbm === selRBM)
             .filter(s => !selBDM || s.bdm === selBDM)
-            .sort((a, b) => b.pQty !== a.pQty ? b.pQty - a.pQty : b[sortBy] - a[sortBy])
+            .sort((a, b) => { const sA = a.pQty * a.oQty, sB = b.pQty * b.oQty; return sB !== sA ? sB - sA : b[sortBy] - a[sortBy]; })
             .slice(0, topN);
         if (filtered.length === 0) return;
         const hdr = ['Rank', 'Staff', 'Branch', 'RBM', 'BDM', 'Prod Qty', 'OSG Qty', 'Qty Conv%', 'Val Conv%', 'Prod Revenue', 'OSG Revenue'];
