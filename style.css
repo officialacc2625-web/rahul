@@ -8,18 +8,18 @@
 }
 
 :root {
-    --bg-primary: #060913;
-    --bg-secondary: rgba(15, 20, 35, 0.3);
-    --bg-card: rgba(15, 20, 35, 0.4);
-    --bg-card-hover: rgba(25, 35, 60, 0.6);
-    --bg-sidebar: rgba(10, 12, 18, 0.7);
-    --bg-input: rgba(15, 18, 30, 0.5);
-    --border: rgba(255, 255, 255, 0.12);
-    --border-light: rgba(255, 255, 255, 0.25);
-    --border-glow: rgba(59, 130, 246, 0.5);
-    --text-primary: #ffffff;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
+    --bg-primary: #09090b;
+    --bg-secondary: #09090b;
+    --bg-card: #18181b;
+    --bg-card-hover: #27272a;
+    --bg-sidebar: #09090b;
+    --bg-input: #09090b;
+    --border: #27272a;
+    --border-light: #3f3f46;
+    --border-glow: rgba(59, 130, 246, 0.4);
+    --text-primary: #fafafa;
+    --text-secondary: #a1a1aa;
+    --text-muted: #71717a;
 
     --accent-blue: #3b82f6;
     --accent-purple: #8b5cf6;
@@ -29,21 +29,21 @@
     --accent-amber: #f59e0b;
     --accent-orange: #f97316;
 
-    --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-    --gradient-profit: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
-    --gradient-loss: linear-gradient(135deg, #f43f5e 0%, #fb923c 100%);
-    --gradient-revenue: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
-    --gradient-conversion: linear-gradient(135deg, #f59e0b 0%, #f43f5e 100%);
+    --gradient-primary: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+    --gradient-profit: linear-gradient(180deg, #10b981 0%, #059669 100%);
+    --gradient-loss: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+    --gradient-revenue: linear-gradient(180deg, #0ea5e9 0%, #0284c7 100%);
+    --gradient-conversion: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
 
-    --shadow-lg: 0 16px 40px -8px rgba(0, 0, 0, 0.5);
-    --shadow-card: 0 8px 32px -4px rgba(0, 0, 0, 0.3);
-    --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.3);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.5);
+    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.5);
+    --shadow-glow: 0 0 15px rgba(59, 130, 246, 0.2);
 
-    --radius: 16px;
-    --radius-sm: 10px;
+    --radius: 8px;
+    --radius-sm: 6px;
     --sidebar-width: 260px;
     --topbar-height: 72px;
-    --transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    --transition: 0.15s ease-in-out;
 }
 
 html {
@@ -53,11 +53,6 @@ html {
 body {
     font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
     background: var(--bg-primary);
-    background-image:
-        radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.3) 0%, transparent 45%),
-        radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.3) 0%, transparent 45%),
-        radial-gradient(circle at 50% 100%, rgba(6, 182, 212, 0.25) 0%, transparent 40%);
-    background-attachment: fixed;
     color: var(--text-primary);
     display: flex;
     min-height: 100vh;
@@ -86,8 +81,8 @@ body {
 .sidebar {
     width: var(--sidebar-width);
     background: var(--bg-sidebar);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    
+    -webkit-
     border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
@@ -201,7 +196,7 @@ body {
 .top-bar {
     height: var(--topbar-height);
     background: rgba(10, 14, 26, 0.85);
-    backdrop-filter: blur(20px);
+    
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
@@ -307,8 +302,8 @@ body {
 
 .upload-card {
     background: var(--bg-card);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    
+    -webkit-
     border: 1px solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow-card);
@@ -495,8 +490,8 @@ body {
 .upload-instructions {
     padding: 24px;
     background: var(--bg-card);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    
+    -webkit-
     border: 1px solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow-card);
@@ -549,8 +544,8 @@ body {
     gap: 14px;
     padding: 18px 22px;
     background: var(--bg-card);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    
+    -webkit-
     border: 1px solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow-card);
@@ -657,8 +652,8 @@ body {
 
 .kpi-card {
     background: var(--bg-card);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    
+    -webkit-
     border: 1px solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow-card);
@@ -790,8 +785,8 @@ body {
 
 .conversion-card {
     background: var(--bg-card);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    
+    -webkit-
     border: 1px solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow-card);
@@ -876,8 +871,8 @@ body {
 /* ========== REPORTS ========== */
 .reports-container {
     background: var(--bg-card);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    
+    -webkit-
     border: 1px solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow-card);
@@ -1135,8 +1130,8 @@ body {
     gap: 14px;
     padding: 18px 22px;
     background: var(--bg-card);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    
+    -webkit-
     border: 1px solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow-card);
