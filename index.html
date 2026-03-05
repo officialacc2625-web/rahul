@@ -63,6 +63,14 @@
                 </svg>
                 <span>Charts</span>
             </a>
+            <a href="#" class="nav-item" data-section="productdetails-section" id="nav-productdetails">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                    <line x1="8" y1="21" x2="16" y2="21" />
+                    <line x1="12" y1="17" x2="12" y2="21" />
+                </svg>
+                <span>Product Details</span>
+            </a>
             <a href="#" class="nav-item" data-section="lowconv-section" id="nav-lowconv">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path
@@ -679,6 +687,91 @@
                         <path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z" />
                     </svg>
                     <p>Upload data and generate reports to see insights.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Product Details Section -->
+    <section class="content-section" id="productdetails-section">
+        <div class="lowconv-container">
+
+            <!-- Controls -->
+            <div class="lowconv-controls">
+                <div class="lowconv-control-group">
+                    <label for="pdRBM">RBM</label>
+                    <select id="pdRBM"
+                        style="padding:9px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;">
+                        <option value="">All RBMs</option>
+                    </select>
+                </div>
+                <div class="lowconv-control-group">
+                    <label for="pdBDM">BDM</label>
+                    <select id="pdBDM"
+                        style="padding:9px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;">
+                        <option value="">All BDMs</option>
+                    </select>
+                </div>
+                <div class="lowconv-control-group">
+                    <label for="pdProduct">Product</label>
+                    <select id="pdProduct"
+                        style="padding:9px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;">
+                        <option value="">All Products</option>
+                    </select>
+                </div>
+                <button class="btn-apply-filter" id="btnPDRefresh">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="23 4 23 10 17 10" />
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                    </svg>
+                    Refresh
+                </button>
+            </div>
+
+            <!-- Summary KPI row -->
+            <div class="lc-kpi-row" id="pdKpiRow"></div>
+
+            <!-- Top Products by Revenue -->
+            <div class="lowconv-table-wrap">
+                <div class="report-header" style="margin-bottom:12px;">
+                    <h2>Top Products — By Revenue</h2>
+                </div>
+                <div class="table-wrapper" id="pdTopRevTable"></div>
+            </div>
+
+            <!-- Top Products by Conversion -->
+            <div class="lowconv-table-wrap" style="margin-top:28px;">
+                <div class="report-header" style="margin-bottom:12px;">
+                    <h2>Top Products — By Qty Conversion</h2>
+                </div>
+                <div class="table-wrapper" id="pdTopConvTable"></div>
+            </div>
+
+            <!-- Missed Customers -->
+            <div class="lowconv-table-wrap" style="margin-top:28px;">
+                <div class="report-header" style="margin-bottom:12px;">
+                    <h2>Missed Conversions — Customers Without OSG</h2>
+                    <span class="lc-badge" id="pdMissedCount">0 customers</span>
+                    <button class="btn-export" id="btnPDExport" style="margin-left:auto;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                        Export CSV
+                    </button>
+                </div>
+                <div class="table-wrapper" id="pdMissedTable">
+                    <div class="no-data-msg">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.5">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                            <line x1="8" y1="21" x2="16" y2="21" />
+                            <line x1="12" y1="17" x2="12" y2="21" />
+                        </svg>
+                        <p>Generate reports first, then visit this page.</p>
+                    </div>
                 </div>
             </div>
         </div>

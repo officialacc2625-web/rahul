@@ -39,6 +39,8 @@
         addition: ['addition', 'additions'],
         deduction: ['deduction', 'deductions'],
         invoice: ['invoice number', 'invoice no', 'invoice', 'bill no', 'bill number', 'bill no.', 'invoice no.', 'inv no', 'receipt no'],
+        customerName: ['customer name', 'customer', 'cust name', 'buyer name', 'buyer', 'party name', 'party', 'client name', 'client'],
+        customerNo: ['customer number', 'customer no', 'cust no', 'mobile', 'phone', 'contact', 'mobile no', 'phone no', 'contact no', 'customer mobile', 'cust mobile', 'mobile number'],
     };
 
     // ---- COLUMN MAPPING (OSG file) ----
@@ -202,6 +204,8 @@
             r.category = strVal(row, mapping.category);
             r.brand = strVal(row, mapping.brand);
             r.invoice = strVal(row, mapping.invoice);
+            r.customerName = strVal(row, mapping.customerName);
+            r.customerNo = strVal(row, mapping.customerNo);
             r.soldPrice = num(getVal(row, mapping.soldPrice, 0));
             r.taxableVal = num(getVal(row, mapping.taxableVal, 0));
             r.tax = num(getVal(row, mapping.tax, 0));
@@ -889,6 +893,11 @@
         $('fsTableWrapper').innerHTML = noDataHTML('Upload data and generate reports first.');
         $('fsKpiRow').innerHTML = '';
         $('fsCount').textContent = '0 staff';
+        $('pdTopRevTable').innerHTML = '';
+        $('pdTopConvTable').innerHTML = '';
+        $('pdMissedTable').innerHTML = noDataHTML('Upload data and generate reports first.');
+        $('pdKpiRow').innerHTML = '';
+        $('pdMissedCount').textContent = '0 customers';
         document.querySelector('[data-section="upload-section"]').click();
     });
 
@@ -1558,6 +1567,221 @@
             e.qtyConv.toFixed(2), e.valConv.toFixed(2), e.pRev.toFixed(0), e.oRev.toFixed(0)].join(','));
         });
         downloadCSV(lines.join('\n'), 'future_stores_staff.csv');
+    }
+
+    // ---- PRODUCT DETAILS PAGE ----
+    $('btnPDRefresh').addEventListener('click', renderProductDetailsPage);
+    $('btnPDExport').addEventListener('click', exportProductDetailsMissedCSV);
+    document.querySelector('[data-section="productdetails-section"]').addEventListener('click', () => {
+        setTimeout(renderProductDetailsPage, 50);
+    });
+
+    function renderProductDetailsPage() {
+        if (productData.length === 0) {
+            $('pdTopRevTable').innerHTML = noDataHTML('Upload data and generate reports first.');
+            $('pdTopConvTable').innerHTML = '';
+            $('pdMissedTable').innerHTML = noDataHTML('Upload data and generate reports first.');
+            $('pdKpiRow').innerHTML = '';
+            $('pdMissedCount').textContent = '0 customers';
+            return;
+        }
+
+        const selRBM = $('pdRBM').value;
+        const selBDM = $('pdBDM').value;
+        const selProduct = $('pdProduct').value;
+
+        // Populate filter dropdowns
+        const rbmSet = [...new Set(productData.map(r => r.rbm).filter(Boolean))].sort();
+        const bdmSet = [...new Set(productData.map(r => r.bdm).filter(Boolean))].sort();
+        const prodSet = [...new Set(productData.map(r => r.product).filter(Boolean))].sort();
+        $('pdRBM').innerHTML = '<option value="">All RBMs</option>' +
+            rbmSet.map(r => `<option value="${r}" ${r === selRBM ? 'selected' : ''}>${r}</option>`).join('');
+        $('pdBDM').innerHTML = '<option value="">All BDMs</option>' +
+            bdmSet.map(b => `<option value="${b}" ${b === selBDM ? 'selected' : ''}>${b}</option>`).join('');
+        $('pdProduct').innerHTML = '<option value="">All Products</option>' +
+            prodSet.map(p => `<option value="${p}" ${p === selProduct ? 'selected' : ''}>${p}</option>`).join('');
+
+        // Filter product and OSG data
+        let filtP = productData;
+        let filtO = osgData;
+        if (selRBM) filtP = filtP.filter(r => r.rbm === selRBM);
+        if (selBDM) filtP = filtP.filter(r => r.bdm === selBDM);
+        if (selProduct) {
+            filtP = filtP.filter(r => r.product === selProduct);
+            filtO = filtO.filter(r => r.product === selProduct);
+        }
+
+        // Build invoice lookup from OSG
+        const osgInvoices = new Set();
+        osgData.forEach(r => { if (r.invoice) osgInvoices.add(r.invoice); });
+
+        // Product stats: group by product category
+        const pByProd = groupBy(filtP, 'product');
+        const oByProd = groupBy(filtO, 'product');
+        const productStats = Object.keys(pByProd).map(name => {
+            const pRows = pByProd[name] || [];
+            const oRows = oByProd[name] || [];
+            const pQty = pRows.reduce((s, r) => s + r.qty, 0);
+            const oQty = oRows.reduce((s, r) => s + r.qty, 0);
+            const pRev = pRows.reduce((s, r) => s + r.soldPrice, 0);
+            const oRev = oRows.reduce((s, r) => s + r.soldPrice, 0);
+            const qtyConv = pQty > 0 ? (oQty / pQty) * 100 : 0;
+            const valConv = pRev > 0 ? (oRev / pRev) * 100 : 0;
+            return { name, pQty, oQty, pRev, oRev, qtyConv, valConv };
+        });
+
+        // KPI summary
+        const totalPRev = filtP.reduce((s, r) => s + r.soldPrice, 0);
+        const totalORev = filtO.reduce((s, r) => s + r.soldPrice, 0);
+        const totalPQty = filtP.reduce((s, r) => s + r.qty, 0);
+        const totalOQty = filtO.reduce((s, r) => s + r.qty, 0);
+        const overallQtyConv = totalPQty > 0 ? (totalOQty / totalPQty) * 100 : 0;
+        const overallValConv = totalPRev > 0 ? (totalORev / totalPRev) * 100 : 0;
+        const uniqueProducts = productStats.length;
+
+        $('pdKpiRow').innerHTML = `
+            <div class="lc-kpi"><span class="lc-kpi-label">Products</span><span class="lc-kpi-val">${uniqueProducts}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Qty Conversion</span><span class="lc-kpi-val conversion-text">${overallQtyConv.toFixed(2)}%</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Val Conversion</span><span class="lc-kpi-val conversion-text">${overallValConv.toFixed(2)}%</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Product Revenue</span><span class="lc-kpi-val">${fmtShort(totalPRev)}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">OSG Revenue</span><span class="lc-kpi-val">${fmtShort(totalORev)}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Product Qty</span><span class="lc-kpi-val">${formatNumber(totalPQty)}</span></div>
+        `;
+
+        // ---- Top Products by Revenue ----
+        const topByRev = [...productStats].sort((a, b) => b.pRev - a.pRev).slice(0, 20);
+        if (topByRev.length > 0) {
+            let html = `<table class="data-table">
+                <thead><tr>
+                    <th>#</th><th>Product</th><th>Prod Qty</th><th>OSG Qty</th><th>Qty Conv%</th>
+                    <th>Val Conv%</th><th>Prod Revenue</th><th>OSG Revenue</th>
+                </tr></thead><tbody>`;
+            topByRev.forEach((e, i) => {
+                const rank = i + 1;
+                const rankBadge = rank <= 3 ? `<span class="rank-badge rank-${rank}">${rank}</span>` : `<span class="rank-num">${rank}</span>`;
+                const convCls = e.qtyConv === 0 ? 'loss-val' : (e.qtyConv < 5 ? 'conv-warn' : 'conv-val');
+                html += `<tr>
+                    <td class="number-cell">${rankBadge}</td>
+                    <td><strong>${e.name}</strong></td>
+                    <td class="number-cell">${formatNumber(e.pQty)}</td>
+                    <td class="number-cell">${formatNumber(e.oQty)}</td>
+                    <td class="number-cell ${convCls}">${e.qtyConv.toFixed(2)}%</td>
+                    <td class="number-cell conv-val">${e.valConv.toFixed(2)}%</td>
+                    <td class="number-cell">${fmtShort(e.pRev)}</td>
+                    <td class="number-cell">${fmtShort(e.oRev)}</td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            $('pdTopRevTable').innerHTML = html;
+        } else {
+            $('pdTopRevTable').innerHTML = noDataHTML('No product data available.');
+        }
+
+        // ---- Top Products by Conversion ----
+        const topByConv = [...productStats].filter(p => p.pQty >= 3).sort((a, b) => b.qtyConv - a.qtyConv).slice(0, 20);
+        if (topByConv.length > 0) {
+            let html = `<table class="data-table">
+                <thead><tr>
+                    <th>#</th><th>Product</th><th>Prod Qty</th><th>OSG Qty</th><th>Qty Conv%</th>
+                    <th>Val Conv%</th><th>Prod Revenue</th><th>OSG Revenue</th>
+                </tr></thead><tbody>`;
+            topByConv.forEach((e, i) => {
+                const rank = i + 1;
+                const rankBadge = rank <= 3 ? `<span class="rank-badge rank-${rank}">${rank}</span>` : `<span class="rank-num">${rank}</span>`;
+                html += `<tr>
+                    <td class="number-cell">${rankBadge}</td>
+                    <td><strong>${e.name}</strong></td>
+                    <td class="number-cell">${formatNumber(e.pQty)}</td>
+                    <td class="number-cell">${formatNumber(e.oQty)}</td>
+                    <td class="number-cell profit-val">${e.qtyConv.toFixed(2)}%</td>
+                    <td class="number-cell profit-val">${e.valConv.toFixed(2)}%</td>
+                    <td class="number-cell">${fmtShort(e.pRev)}</td>
+                    <td class="number-cell">${fmtShort(e.oRev)}</td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            $('pdTopConvTable').innerHTML = html;
+        } else {
+            $('pdTopConvTable').innerHTML = noDataHTML('No products with enough quantity.');
+        }
+
+        // ---- Missed Customers: invoices in Product but NOT in OSG ----
+        const missedRows = filtP.filter(r => r.invoice && !osgInvoices.has(r.invoice));
+
+        // Deduplicate by invoice (show unique invoices)
+        const seenInv = new Set();
+        const missedUnique = [];
+        missedRows.forEach(r => {
+            if (!seenInv.has(r.invoice)) {
+                seenInv.add(r.invoice);
+                missedUnique.push(r);
+            }
+        });
+
+        $('pdMissedCount').textContent = `${missedUnique.length} customers`;
+
+        if (missedUnique.length > 0) {
+            let html = `<table class="data-table">
+                <thead><tr>
+                    <th>#</th><th>Invoice No</th><th>Customer Name</th><th>Customer No</th>
+                    <th>Staff</th><th>Branch</th><th>Product</th><th>Qty</th><th>Sold Price</th>
+                </tr></thead><tbody>`;
+            missedUnique.slice(0, 500).forEach((r, i) => {
+                html += `<tr>
+                    <td class="number-cell">${i + 1}</td>
+                    <td>${r.invoice}</td>
+                    <td>${r.customerName || '—'}</td>
+                    <td>${r.customerNo || '—'}</td>
+                    <td>${r.staff || '—'}</td>
+                    <td>${r.branch || '—'}</td>
+                    <td>${r.product || '—'}</td>
+                    <td class="number-cell">${r.qty}</td>
+                    <td class="number-cell">${fmtShort(r.soldPrice)}</td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            if (missedUnique.length > 500) {
+                html += `<p style="text-align:center;color:var(--text-muted);margin-top:12px;">Showing 500 of ${missedUnique.length} — export CSV for full list</p>`;
+            }
+            $('pdMissedTable').innerHTML = html;
+        } else {
+            $('pdMissedTable').innerHTML = noDataHTML('All invoices have OSG entries — great conversion!');
+        }
+    }
+
+    function exportProductDetailsMissedCSV() {
+        if (productData.length === 0) return;
+        const selRBM = $('pdRBM').value;
+        const selBDM = $('pdBDM').value;
+        const selProduct = $('pdProduct').value;
+
+        let filtP = productData;
+        if (selRBM) filtP = filtP.filter(r => r.rbm === selRBM);
+        if (selBDM) filtP = filtP.filter(r => r.bdm === selBDM);
+        if (selProduct) filtP = filtP.filter(r => r.product === selProduct);
+
+        const osgInvoices = new Set();
+        osgData.forEach(r => { if (r.invoice) osgInvoices.add(r.invoice); });
+
+        const missedRows = filtP.filter(r => r.invoice && !osgInvoices.has(r.invoice));
+        const seenInv = new Set();
+        const missedUnique = [];
+        missedRows.forEach(r => {
+            if (!seenInv.has(r.invoice)) {
+                seenInv.add(r.invoice);
+                missedUnique.push(r);
+            }
+        });
+
+        if (missedUnique.length === 0) return;
+        const hdr = ['#', 'Invoice No', 'Customer Name', 'Customer No', 'Staff', 'Branch', 'RBM', 'BDM', 'Product', 'Qty', 'Sold Price'];
+        const lines = [hdr.join(',')];
+        missedUnique.forEach((r, i) => {
+            lines.push([i + 1, q(r.invoice), q(r.customerName || ''), q(r.customerNo || ''),
+            q(r.staff || ''), q(r.branch || ''), q(r.rbm || ''), q(r.bdm || ''),
+            q(r.product || ''), r.qty, r.soldPrice.toFixed(0)].join(','));
+        });
+        downloadCSV(lines.join('\n'), 'missed_conversion_customers.csv');
     }
 
     // ---- UTILITIES ----
