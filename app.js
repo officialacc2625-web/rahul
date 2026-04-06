@@ -1914,31 +1914,62 @@
             .filter(s => !selBranch || s.branch === selBranch)
             .sort((a, b) => b.pQty - a.pQty);
         if (filtered.length === 0) return;
-        const hdr = ['Rank', 'Staff', 'Product', 'Product Qty', 'Branch', 'RBM', 'BDM', 'Prod Qty', 'OSG Qty', 'Qty Conv%', 'Val Conv%', 'Prod Revenue', 'OSG Revenue'];
-        const lines = [hdr.join(',')];
+        const hdr = ['Rank', 'Staff', 'Product', 'Product Qty', 'Branch', 'RBM', 'BDM', 'Prod Qty', 'OSG Qty', 'Qty Conv%', 'Val Conv%'];
+        const data = [hdr];
         filtered.forEach((e, i) => {
             const rank = i + 1;
             if (e.products && e.products.length > 0) {
                 e.products.forEach((prod, pIdx) => {
                     if (pIdx === 0) {
-                        lines.push([
-                            rank, q(e.name), q(prod.name), prod.qty, q(e.branch), q(e.rbm), q(e.bdm), e.pQty, prod.osgQty,
-                            e.qtyConv.toFixed(2), e.valConv.toFixed(2), e.pRev.toFixed(0), e.oRev.toFixed(0)
-                        ].join(','));
+                        data.push([
+                            rank, e.name, prod.name, prod.qty, e.branch, e.rbm, e.bdm, e.pQty, prod.osgQty,
+                            parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2))
+                        ]);
                     } else {
-                        lines.push([
-                            '', '', q(prod.name), prod.qty, '', '', '', '', prod.osgQty, '', '', '', ''
-                        ].join(','));
+                        data.push([
+                            '', '', prod.name, prod.qty, '', '', '', '', prod.osgQty, '', ''
+                        ]);
                     }
                 });
             } else {
-                lines.push([
-                    rank, q(e.name), '', '', q(e.branch), q(e.rbm), q(e.bdm), e.pQty, e.oQty,
-                    e.qtyConv.toFixed(2), e.valConv.toFixed(2), e.pRev.toFixed(0), e.oRev.toFixed(0)
-                ].join(','));
+                data.push([
+                    rank, e.name, '', '', e.branch, e.rbm, e.bdm, e.pQty, e.oQty,
+                    parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2))
+                ]);
             }
         });
-        downloadCSV(lines.join('\n'), 'future_stores_staff.csv');
+
+        const ws = XLSX.utils.aoa_to_sheet(data);
+
+        // Styling
+        const headerStyle = {
+            font: { bold: true, color: { rgb: "FFFFFF" } },
+            fill: { fgColor: { rgb: "3b82f6" } },
+            alignment: { horizontal: "center", vertical: "center" }
+        };
+        const altRowStyle = { fill: { fgColor: { rgb: "f1f5f9" } } };
+
+        for (let R = 0; R < data.length; ++R) {
+            for (let C = 0; C < hdr.length; ++C) {
+                const cell_address = { c: C, r: R };
+                const cell_ref = XLSX.utils.encode_cell(cell_address);
+                if (!ws[cell_ref]) continue;
+
+                if (R === 0) {
+                    ws[cell_ref].s = headerStyle;
+                } else if (R % 2 === 0) {
+                    ws[cell_ref].s = { ...ws[cell_ref].s, ...altRowStyle };
+                }
+            }
+        }
+
+        ws['!cols'] = [
+            {wch: 8}, {wch: 25}, {wch: 22}, {wch: 12}, {wch: 20}, {wch: 15}, {wch: 15}, {wch: 10}, {wch: 10}, {wch: 12}, {wch: 12}
+        ];
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Future Stores Staff");
+        XLSX.writeFile(wb, 'future_stores_staff.xlsx');
     }
 
     // ---- PRODUCT DETAILS PAGE ----
