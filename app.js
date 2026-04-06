@@ -1919,8 +1919,14 @@
 
         function addSheet(statsList, sheetName) {
             const data = [hdr];
+            // mergeRanges: array of {s:{r,c}, e:{r,c}}
+            const mergeRanges = [];
+            // Columns to merge across product rows: 0=Rank,1=Staff,4=Branch,5=RBM,6=BDM,7=ProdQty,9=QtyConv,10=ValConv
+            const mergeCols = [0, 1, 4, 5, 6, 7, 9, 10];
+
             statsList.forEach((e, i) => {
                 const rank = i + 1;
+                const startRow = data.length; // 1-indexed row where this staff starts (data[0] = header)
                 if (e.products && e.products.length > 0) {
                     e.products.forEach((prod, pIdx) => {
                         if (pIdx === 0) {
@@ -1934,6 +1940,13 @@
                             ]);
                         }
                     });
+                    const endRow = data.length - 1;
+                    // Only add merges if there are multiple product rows
+                    if (e.products.length > 1) {
+                        mergeCols.forEach(c => {
+                            mergeRanges.push({ s: { r: startRow, c }, e: { r: endRow, c } });
+                        });
+                    }
                 } else {
                     data.push([
                         rank, e.name, '', '', e.branch, e.rbm, e.bdm, e.pQty, e.oQty,
@@ -1944,7 +1957,11 @@
 
             const ws = XLSX.utils.aoa_to_sheet(data);
 
+            // Apply merges
+            if (mergeRanges.length > 0) ws['!merges'] = mergeRanges;
+
             // Styling
+            const centerStyle = { alignment: { horizontal: "center", vertical: "center", wrapText: false } };
             const headerStyle = {
                 font: { bold: true, color: { rgb: "FFFFFF" } },
                 fill: { fgColor: { rgb: "3b82f6" } },
@@ -1954,14 +1971,21 @@
 
             for (let R = 0; R < data.length; ++R) {
                 for (let C = 0; C < hdr.length; ++C) {
-                    const cell_address = { c: C, r: R };
-                    const cell_ref = XLSX.utils.encode_cell(cell_address);
-                    if (!ws[cell_ref]) continue;
-
+                    const cell_ref = XLSX.utils.encode_cell({ c: C, r: R });
+                    if (!ws[cell_ref]) {
+                        // Ensure merged cells that are empty still have a cell object for styling
+                        ws[cell_ref] = { t: 's', v: '' };
+                    }
                     if (R === 0) {
                         ws[cell_ref].s = headerStyle;
-                    } else if (R % 2 === 0) {
-                        ws[cell_ref].s = { ...ws[cell_ref].s, ...altRowStyle };
+                    } else {
+                        const baseStyle = R % 2 === 0 ? { ...altRowStyle } : {};
+                        // Center-align merged columns
+                        if (mergeCols.includes(C)) {
+                            ws[cell_ref].s = { ...baseStyle, alignment: { horizontal: "center", vertical: "center" } };
+                        } else {
+                            ws[cell_ref].s = baseStyle;
+                        }
                     }
                 }
             }
@@ -1972,7 +1996,6 @@
 
             let safeName = sheetName.substring(0, 31).replace(/[\\\/\?\*\[\]]/g, '');
             if(!safeName) safeName = "Sheet";
-            // Check for duplicate names
             let finalName = safeName;
             let counter = 1;
             while(wb.SheetNames.includes(finalName)) {
