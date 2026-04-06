@@ -1914,105 +1914,89 @@
             .filter(s => !selBranch || s.branch === selBranch)
             .sort((a, b) => b.pQty - a.pQty);
         if (filtered.length === 0) return;
-        const hdr = ['Rank', 'Staff', 'Product', 'Product Qty', 'Branch', 'RBM', 'BDM', 'Prod Qty', 'OSG Qty', 'Qty Conv%', 'Val Conv%'];
+        const hdrAll    = ['Rank', 'Staff', 'Product', 'Product Qty', 'Branch', 'RBM', 'BDM', 'Prod Qty', 'OSG Qty', 'Qty Conv%', 'Val Conv%'];
+        const hdrBranch = ['Rank', 'Staff', 'Product', 'Total Prod Qty', 'Prod Qty', 'OSG Qty', 'Qty Conv%', 'Val Conv%'];
         const wb = XLSX.utils.book_new();
 
-        function addSheet(statsList, sheetName) {
+        function addSheet(statsList, sheetName, isBranchSheet) {
+            const hdr = isBranchSheet ? hdrBranch : hdrAll;
             const data = [hdr];
-            // mergeRanges: array of {s:{r,c}, e:{r,c}}
             const mergeRanges = [];
-            // Columns to merge across product rows: 0=Rank,1=Staff,4=Branch,5=RBM,6=BDM,7=ProdQty,9=QtyConv,10=ValConv
-            const mergeCols = [0, 1, 4, 5, 6, 7, 9, 10];
+            const mergeCols = isBranchSheet ? [0, 1, 4, 6, 7] : [0, 1, 4, 5, 6, 7, 9, 10];
 
             statsList.forEach((e, i) => {
                 const rank = i + 1;
-                const startRow = data.length; // 1-indexed row where this staff starts (data[0] = header)
+                const startRow = data.length;
                 if (e.products && e.products.length > 0) {
                     e.products.forEach((prod, pIdx) => {
                         if (pIdx === 0) {
-                            data.push([
-                                rank, e.name, prod.name, prod.qty, e.branch, e.rbm, e.bdm, e.pQty, prod.osgQty,
-                                parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2))
-                            ]);
+                            data.push(isBranchSheet
+                                ? [rank, e.name, prod.name, prod.qty, e.pQty, prod.osgQty, parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2))]
+                                : [rank, e.name, prod.name, prod.qty, e.branch, e.rbm, e.bdm, e.pQty, prod.osgQty, parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2))]);
                         } else {
-                            data.push([
-                                '', '', prod.name, prod.qty, '', '', '', '', prod.osgQty, '', ''
-                            ]);
+                            data.push(isBranchSheet
+                                ? ['', '', prod.name, prod.qty, '', prod.osgQty, '', '']
+                                : ['', '', prod.name, prod.qty, '', '', '', '', prod.osgQty, '', '']);
                         }
                     });
                     const endRow = data.length - 1;
-                    // Only add merges if there are multiple product rows
                     if (e.products.length > 1) {
-                        mergeCols.forEach(c => {
-                            mergeRanges.push({ s: { r: startRow, c }, e: { r: endRow, c } });
-                        });
+                        mergeCols.forEach(c => mergeRanges.push({ s: { r: startRow, c }, e: { r: endRow, c } }));
                     }
                 } else {
-                    data.push([
-                        rank, e.name, '', '', e.branch, e.rbm, e.bdm, e.pQty, e.oQty,
-                        parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2))
-                    ]);
+                    data.push(isBranchSheet
+                        ? [rank, e.name, '', '', e.pQty, e.oQty, parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2))]
+                        : [rank, e.name, '', '', e.branch, e.rbm, e.bdm, e.pQty, e.oQty, parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2))]);
                 }
             });
 
             const ws = XLSX.utils.aoa_to_sheet(data);
-
-            // Apply merges
             if (mergeRanges.length > 0) ws['!merges'] = mergeRanges;
 
-            // Styling
-            const centerStyle = { alignment: { horizontal: "center", vertical: "center", wrapText: false } };
             const headerStyle = {
-                font: { bold: true, color: { rgb: "FFFFFF" } },
-                fill: { fgColor: { rgb: "3b82f6" } },
-                alignment: { horizontal: "center", vertical: "center" }
+                font: { bold: true, color: { rgb: 'FFFFFF' } },
+                fill: { fgColor: { rgb: '3b82f6' } },
+                alignment: { horizontal: 'center', vertical: 'center' }
             };
-            const altRowStyle = { fill: { fgColor: { rgb: "f1f5f9" } } };
+            const altRowStyle = { fill: { fgColor: { rgb: 'f1f5f9' } } };
 
             for (let R = 0; R < data.length; ++R) {
                 for (let C = 0; C < hdr.length; ++C) {
                     const cell_ref = XLSX.utils.encode_cell({ c: C, r: R });
-                    if (!ws[cell_ref]) {
-                        // Ensure merged cells that are empty still have a cell object for styling
-                        ws[cell_ref] = { t: 's', v: '' };
-                    }
+                    if (!ws[cell_ref]) ws[cell_ref] = { t: 's', v: '' };
                     if (R === 0) {
                         ws[cell_ref].s = headerStyle;
                     } else {
                         const baseStyle = R % 2 === 0 ? { ...altRowStyle } : {};
-                        // Center-align merged columns
-                        if (mergeCols.includes(C)) {
-                            ws[cell_ref].s = { ...baseStyle, alignment: { horizontal: "center", vertical: "center" } };
-                        } else {
-                            ws[cell_ref].s = baseStyle;
-                        }
+                        ws[cell_ref].s = mergeCols.includes(C)
+                            ? { ...baseStyle, alignment: { horizontal: 'center', vertical: 'center' } }
+                            : baseStyle;
                     }
                 }
             }
 
-            ws['!cols'] = [
-                {wch: 8}, {wch: 25}, {wch: 22}, {wch: 12}, {wch: 20}, {wch: 15}, {wch: 15}, {wch: 10}, {wch: 10}, {wch: 12}, {wch: 12}
-            ];
+            ws['!cols'] = isBranchSheet
+                ? [{wch:8},{wch:25},{wch:22},{wch:14},{wch:10},{wch:10},{wch:12},{wch:12}]
+                : [{wch:8},{wch:25},{wch:22},{wch:12},{wch:20},{wch:15},{wch:15},{wch:10},{wch:10},{wch:12},{wch:12}];
 
-            let safeName = sheetName.substring(0, 31).replace(/[\\\/\?\*\[\]]/g, '');
-            if(!safeName) safeName = "Sheet";
+            let safeName = sheetName.substring(0, 31).replace(/[\\\/?*[\]]/g, '');
+            if (!safeName) safeName = 'Sheet';
             let finalName = safeName;
             let counter = 1;
-            while(wb.SheetNames.includes(finalName)) {
-                finalName = safeName.substring(0, 27) + " " + counter;
+            while (wb.SheetNames.includes(finalName)) {
+                finalName = safeName.substring(0, 27) + ' ' + counter;
                 counter++;
             }
             XLSX.utils.book_append_sheet(wb, ws, finalName);
         }
 
-        // Add overall sheet first
-        addSheet(filtered, "future_stores_staff");
+        // Summary sheet (all branches)
+        addSheet(filtered, 'future_stores_staff', false);
 
-        // Add individual branch sheets
+        // Individual branch sheets
         const branches = [...new Set(filtered.map(s => s.branch).filter(Boolean))].sort();
         branches.forEach(branch => {
-            const branchStats = filtered.filter(s => s.branch === branch);
-            addSheet(branchStats, branch);
+            addSheet(filtered.filter(s => s.branch === branch), branch, true);
         });
 
         XLSX.writeFile(wb, 'future_stores_staff.xlsx');
