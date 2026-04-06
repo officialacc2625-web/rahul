@@ -1797,7 +1797,17 @@
                 const p = r.product || 'Unknown';
                 prodCounts[p] = (prodCounts[p] || 0) + (r.qty || 0);
             });
-            const products = Object.keys(prodCounts).map(p => ({ name: p, qty: prodCounts[p] })).sort((a,b)=>b.qty - a.qty);
+            const oProdCounts = {};
+            oRows.forEach(r => {
+                const p = r.product || 'Unknown';
+                oProdCounts[p] = (oProdCounts[p] || 0) + (r.qty || 0);
+            });
+            const allProds = new Set([...Object.keys(prodCounts), ...Object.keys(oProdCounts)]);
+            const products = Array.from(allProds).map(p => ({
+                name: p,
+                qty: prodCounts[p] || 0,
+                osgQty: oProdCounts[p] || 0
+            })).sort((a,b) => b.qty - a.qty);
 
             return { name, branch: pInfo.branch, rbm: pInfo.rbm, bdm: pInfo.bdm, pQty, oQty, pRev, oRev, qtyConv, valConv, products };
         });
@@ -1904,7 +1914,7 @@
             .filter(s => !selBranch || s.branch === selBranch)
             .sort((a, b) => b.pQty - a.pQty);
         if (filtered.length === 0) return;
-        const hdr = ['Rank', 'Staff', 'Product', 'Product Qty', 'Branch', 'RBM', 'BDM', 'Prod Qty', 'OSG Qty', 'Qty Conv%', 'Val Conv%', 'Prod Revenue', 'OSG Revenue'];
+        const hdr = ['Rank', 'Staff', 'Product', 'Product Qty', 'Product OSG Qty', 'Branch', 'RBM', 'BDM', 'Total Prod Qty', 'Total OSG Qty', 'Qty Conv%', 'Val Conv%', 'Prod Revenue', 'OSG Revenue'];
         const lines = [hdr.join(',')];
         filtered.forEach((e, i) => {
             const rank = i + 1;
@@ -1912,18 +1922,18 @@
                 e.products.forEach((prod, pIdx) => {
                     if (pIdx === 0) {
                         lines.push([
-                            rank, q(e.name), q(prod.name), prod.qty, q(e.branch), q(e.rbm), q(e.bdm), e.pQty, e.oQty,
+                            rank, q(e.name), q(prod.name), prod.qty, prod.osgQty, q(e.branch), q(e.rbm), q(e.bdm), e.pQty, e.oQty,
                             e.qtyConv.toFixed(2), e.valConv.toFixed(2), e.pRev.toFixed(0), e.oRev.toFixed(0)
                         ].join(','));
                     } else {
                         lines.push([
-                            '', '', q(prod.name), prod.qty, '', '', '', '', '', '', '', '', ''
+                            '', '', q(prod.name), prod.qty, prod.osgQty, '', '', '', '', '', '', '', '', ''
                         ].join(','));
                     }
                 });
             } else {
                 lines.push([
-                    rank, q(e.name), '', '', q(e.branch), q(e.rbm), q(e.bdm), e.pQty, e.oQty,
+                    rank, q(e.name), '', '', '', q(e.branch), q(e.rbm), q(e.bdm), e.pQty, e.oQty,
                     e.qtyConv.toFixed(2), e.valConv.toFixed(2), e.pRev.toFixed(0), e.oRev.toFixed(0)
                 ].join(','));
             }
