@@ -2148,8 +2148,11 @@
         // Load saved statuses from Firebase first, then render
         loadCoStatuses(() => setTimeout(renderCustomersOSGPage, 50));
     });
-    ['coRBM', 'coBDM', 'coProduct', 'coBranch'].forEach(id => {
-        $(id).addEventListener('change', renderCustomersOSGPage);
+    ['coRBM', 'coBDM', 'coProduct', 'coBranch', 'coSort'].forEach(id => {
+        $(id).addEventListener('change', () => {
+            if (id === 'coSort') window.coSortMode = $('coSort').value;
+            renderCustomersOSGPage();
+        });
     });
 
     function loadCoStatuses(callback) {
@@ -2291,8 +2294,17 @@
             $('coMissedCount').textContent = `${missedUnique.length} customers`;
         }
 
-        // Sort by Value (high to low) — highest opportunity at top
-        missedUnique.sort((a, b) => (b.soldPrice || 0) - (a.soldPrice || 0));
+        // Sort based on user selection
+        const sortMode = (typeof window.coSortMode !== 'undefined') ? window.coSortMode : 'value-desc';
+        if (sortMode === 'name-asc') {
+            missedUnique.sort((a, b) => (a.customerName || '').localeCompare(b.customerName || ''));
+        } else if (sortMode === 'name-desc') {
+            missedUnique.sort((a, b) => (b.customerName || '').localeCompare(a.customerName || ''));
+        } else if (sortMode === 'value-asc') {
+            missedUnique.sort((a, b) => (a.soldPrice || 0) - (b.soldPrice || 0));
+        } else {
+            missedUnique.sort((a, b) => (b.soldPrice || 0) - (a.soldPrice || 0));
+        }
 
         if (missedUnique.length === 0) {
             $('coMissedTable').innerHTML = noDataHTML('All invoices have OSG entries — great conversion! 🎉');
@@ -2372,7 +2384,6 @@
                 <th style="padding:12px 10px;text-align:left;font-weight:600;color:var(--text-muted);font-size:0.78rem;letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap;">Customer</th>
                 <th style="padding:12px 10px;text-align:left;font-weight:600;color:var(--text-muted);font-size:0.78rem;letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap;">Interest</th>
                 <th style="padding:12px 10px;text-align:left;font-weight:600;color:var(--text-muted);font-size:0.78rem;letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap;">Contact &amp; Call Status</th>
-                <th style="padding:12px 10px;text-align:left;font-weight:600;color:var(--text-muted);font-size:0.78rem;letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap;">Staff</th>
                 <th style="padding:12px 10px;text-align:left;font-weight:600;color:var(--text-muted);font-size:0.78rem;letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap;">Branch</th>
                 <th style="padding:12px 10px;text-align:left;font-weight:600;color:var(--text-muted);font-size:0.78rem;letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap;">Product</th>
                 <th style="padding:12px 10px;text-align:right;font-weight:600;color:var(--text-muted);font-size:0.78rem;letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap;">Value</th>
@@ -2546,7 +2557,6 @@
                 </div>
                 ${callBtns}
             </td>
-            <td style="padding:12px 10px;color:var(--text-secondary);font-size:0.85rem;">${r.staff||'—'}</td>
             <td style="padding:12px 10px;color:var(--text-secondary);font-size:0.85rem;">${r.branch||'—'}</td>
             <td style="padding:12px 10px;color:var(--text-secondary);font-size:0.85rem;">${r.product||'—'}</td>
             <td style="padding:12px 10px;text-align:right;font-weight:600;color:var(--text-primary);font-size:0.88rem;white-space:nowrap;">${fmtShort(r.soldPrice)}</td>
