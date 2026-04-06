@@ -18,6 +18,44 @@
     let filteredAll = [];      // After filters (product+amc)
     let chartInstances = {};
 
+    // ---- FIREBASE INIT & SHARE LINK ----
+    const firebaseConfig = {
+        apiKey: "AIzaSyC8QKzFwgYnONyp8182KjV_SGuiD6cGPUc",
+        authDomain: "myg-analytics.firebaseapp.com",
+        projectId: "myg-analytics",
+        storageBucket: "myg-analytics.firebasestorage.app",
+        messagingSenderId: "126534817953",
+        appId: "1:126534817953:web:300aefd1de65da8242f8e0",
+        databaseURL: "https://myg-analytics-default-rtdb.firebaseio.com" // Fallback if missing
+    };
+    if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+
+    const shareParam = new URLSearchParams(window.location.search).get('share');
+    if (shareParam) {
+        window.isSharedView = true;
+        document.addEventListener('DOMContentLoaded', () => {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            if (loadingOverlay) loadingOverlay.style.display = 'flex';
+
+            firebase.database().ref('shares/' + shareParam).once('value').then(snap => {
+                if (loadingOverlay) loadingOverlay.style.display = 'none';
+                const data = snap.val();
+                if (data) {
+                    window.sharedMissedUnique = data.missedUnique || [];
+                    // Do NOT set isAuthenticated=true — keep all other pages locked
+                    document.querySelector('[data-section="customers-osg-section"]').click();
+                } else {
+                    alert('Share link is invalid or expired.');
+                }
+            }).catch(e => {
+                if (loadingOverlay) loadingOverlay.style.display = 'none';
+                alert('Failed to load shared link.');
+            });
+        });
+    }
+
     // ---- COLUMN MAPPING (Product / AMC file) ----
     const PRODUCT_COL_MAP = {
         branch: ['branch', 'store name', 'store', 'branch name', 'outlet', 'outlet name', 'shop name'],
@@ -62,6 +100,7 @@
     const loadingOverlay = $('loadingOverlay');
     const fileCountBadge = $('fileCountBadge');
     const fileCountText = $('fileCountText');
+    const btnShare = $('btnShare');
     const btnReset = $('btnReset');
     const btnGenerate = $('btnGenerate');
 
@@ -90,14 +129,104 @@
     let pendingNavTarget = null;
     let pendingNavItem = null;
 
+    // ---- CUSTOMER CALL TRACKING STATE ----
+    const coStatusMap = {};
+    const CO_CALLERS = [
+        { name: 'Harmiya',  color: '#7c3aed', bg: 'rgba(124,58,237,0.15)' },
+        { name: 'Aswathi',  color: '#0891b2', bg: 'rgba(8,145,178,0.15)' },
+        { name: 'Shikha',   color: '#d97706', bg: 'rgba(217,119,6,0.15)'  },
+    ];
+    let currentCaller = localStorage.getItem('co_caller') || null;
+    let coCurrentRows = [];   // current filtered rows
+    let coDisplayLimit = 100; // pagination: rows shown so far
+
+    // ---- GLOBAL DOWNLOAD STAFF DETAILS ----
+    window.downloadStaffDetails = function(staff, branch) {
+        if (!productData || productData.length === 0) return;
+        
+        let pRows = productData;
+        if (staff) pRows = pRows.filter(r => r.staff === staff);
+        if (branch) pRows = pRows.filter(r => r.branch === branch);
+        
+        if (pRows.length === 0) {
+            alert('No detailed product data found.');
+            return;
+        }
+
+        const osgInvoices = new Set();
+        (osgData || []).forEach(r => { if (r.invoice) osgInvoices.add(r.invoice); });
+
+        // Calculate staff-level overall conversions and product counts
+        const staffInvoices = {};
+        const staffStats = {};
+        const staffProdCounts = {};
+
+        pRows.forEach(r => {
+            const s = r.staff || 'Unknown';
+            const p = r.product || 'Unknown';
+
+            if (!staffInvoices[s]) staffInvoices[s] = new Set();
+            if (r.invoice) staffInvoices[s].add(r.invoice);
+            
+            if (!staffStats[s]) staffStats[s] = { pQty: 0, pRev: 0, oQty: 0, oRev: 0 };
+            staffStats[s].pQty += r.qty || 0;
+            staffStats[s].pRev += r.soldPrice || 0;
+
+            if (!staffProdCounts[s]) staffProdCounts[s] = {};
+            if (!staffProdCounts[s][p]) staffProdCounts[s][p] = 0;
+            staffProdCounts[s][p] += (r.qty || 0);
+        });
+
+        (osgData || []).forEach(r => {
+            if (!r.invoice) return;
+            for (const s in staffInvoices) {
+                if (staffInvoices[s].has(r.invoice)) {
+                    staffStats[s].oQty += r.qty || 0;
+                    staffStats[s].oRev += r.soldPrice || 0;
+                    break;
+                }
+            }
+        });
+
+        const lines = [];
+
+        const hdr = ['Staff', 'Branch', 'Staff Qty Conv%', 'Staff Val Conv%', 'Product', 'Total Sold Qty'];
+        lines.push(hdr.join(','));
+        
+        Object.keys(staffProdCounts).sort().forEach(s => {
+            const st = staffStats[s];
+            const qConv = st.pQty > 0 ? (st.oQty / st.pQty) * 100 : 0;
+            const vConv = st.pRev > 0 ? (st.oRev / st.pRev) * 100 : 0;
+            
+            // Find the branch for this staff from the filtered rows
+            const sBranch = pRows.find(r => r.staff === s)?.branch || branch || 'Unknown';
+
+            const products = Object.keys(staffProdCounts[s]).sort((a, b) => staffProdCounts[s][b] - staffProdCounts[s][a]);
+            products.forEach(p => {
+                lines.push([
+                    q(s), q(sBranch), 
+                    qConv.toFixed(2) + '%', vConv.toFixed(2) + '%', 
+                    q(p), staffProdCounts[s][p]
+                ].join(','));
+            });
+        });
+
+        const filename = staff ? `details_${staff.replace(/[^a-z0-9]/gi, '_')}.csv` : `details_${branch.replace(/[^a-z0-9]/gi, '_')}.csv`;
+        downloadCSV(lines.join('\n'), filename);
+    };
+
+    window.downloadBranchDetails = function(branch) {
+        window.downloadStaffDetails(null, branch);
+    };
+
     // ---- NAVIGATION ----
     document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
             const section = item.dataset.section;
 
-            // Check if page needs auth
-            const isPublicPage = section === 'upload-section' || section === 'productdetails-section';
+            // Check if page needs auth — Upload Data and Customers Without OSG are public
+            const isPublicPage = section === 'customers-osg-section' || section === 'upload-section';
             if (!isPublicPage && !isAuthenticated) {
                 // Intercept navigation and show password modal
                 pendingNavTarget = section;
@@ -185,11 +314,9 @@
 
     function setupUploadZone(zone, input, onFile) {
         zone.addEventListener('click', (e) => {
-            // Don't re-trigger if the click came from inside the input itself
             if (e.target === input) return;
             input.click();
         });
-        // Stop input clicks from bubbling up to zone click handler
         input.addEventListener('click', (e) => e.stopPropagation());
         zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
         zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
@@ -198,15 +325,29 @@
             zone.classList.remove('drag-over');
             if (e.dataTransfer.files.length > 0) {
                 showLoading(true);
-                try { await onFile(e.dataTransfer.files[0]); } catch (err) { console.error(err); }
-                showLoading(false);
+                try {
+                    await onFile(e.dataTransfer.files[0]);
+                } catch (err) {
+                    console.error(err);
+                } finally {
+                    showLoading(false);
+                    // Reset input value in drop to allow re-upload of same file via click later
+                    input.value = '';
+                }
             }
         });
         input.addEventListener('change', async () => {
             if (input.files.length > 0) {
                 showLoading(true);
-                try { await onFile(input.files[0]); } catch (err) { console.error(err); }
-                showLoading(false);
+                try {
+                    await onFile(input.files[0]);
+                } catch (err) {
+                    console.error(err);
+                } finally {
+                    showLoading(false);
+                    // Reset input value to allow re-upload of the same file
+                    input.value = '';
+                }
             }
         });
     }
@@ -224,22 +365,87 @@
         btnGenerate.disabled = !(productData.length > 0 && osgData.length > 0);
     }
 
-    // ---- GENERATE REPORTS BUTTON ----
     btnGenerate.addEventListener('click', () => {
         showLoading(true);
-        allData = [...productData, ...amcData];
-
-        fileCountBadge.style.display = 'flex';
-        fileCountText.textContent = `${allData.length} product · ${osgData.length} OSG`;
-        btnReset.style.display = 'flex';
-
-        populateFilters();
-        applyFilters();
-
+        
+        // Use setTimeout to yield the main thread allowing the loading UI to render before heavy processing
         setTimeout(() => {
-            document.querySelector('[data-section="dashboard-section"]').click();
+            try {
+                allData = [...productData, ...amcData];
+
+                fileCountBadge.style.display = 'flex';
+                fileCountText.textContent = `${allData.length} product · ${osgData.length} OSG`;
+                btnShare.style.display = 'flex';
+                btnReset.style.display = 'flex';
+
+                populateFilters();
+                applyFilters();
+
+                document.querySelector('[data-section="dashboard-section"]').click();
+            } catch (err) {
+                console.error('[Generate Error]', err);
+                alert('An error occurred while generating reports:\n' + err.message);
+            } finally {
+                showLoading(false);
+            }
+        }, 50);
+    });
+
+    // ---- SHARE DASHBOARD LOGIC ----
+    btnShare.addEventListener('click', () => {
+        if (productData.length === 0) return alert('Upload data first via Dashboard.');
+
+        // Find missedUnique for the whole dataset
+        const osgInvoices = new Set();
+        osgData.forEach(r => { if (r.invoice) osgInvoices.add(r.invoice); });
+        const seenInv = new Set();
+        const fullMissedUnique = [];
+        productData.forEach(r => {
+            if (r.invoice && !osgInvoices.has(r.invoice) && !seenInv.has(r.invoice)) {
+                seenInv.add(r.invoice);
+                fullMissedUnique.push(r);
+            }
+        });
+
+        // Strip to only display fields, sort by value high-to-low, cap at 2000 top-priority customers
+        const payload = fullMissedUnique
+            .sort((a, b) => (b.soldPrice || 0) - (a.soldPrice || 0))
+            .slice(0, 2000)
+            .map(r => ({
+                invoice:      r.invoice      || '',
+                customerName: r.customerName || '',
+                customerNo:   r.customerNo   || '',
+                staff:        r.staff        || '',
+                branch:       r.branch       || '',
+                product:      r.product      || '',
+                soldPrice:    r.soldPrice    || 0,
+                qty:          r.qty          || 0,
+            }));
+
+        showLoading(true);
+        try {
+            const shareRef = firebase.database().ref('shares').push();
+            shareRef.set({ missedUnique: payload, timestamp: Date.now() })
+                .then(() => {
+                    showLoading(false);
+                    const base = window.location.protocol === 'file:' ? 'http://myg-analytics-2026.surge.sh/' : window.location.origin + window.location.pathname;
+                    const shareUrl = base + '?share=' + shareRef.key;
+                    if (navigator.clipboard) {
+                        navigator.clipboard.writeText(shareUrl).then(() => {
+                            alert('Share link copied to clipboard!\n\nLink: ' + shareUrl);
+                        }).catch(() => alert('Share Link generated: \n\n' + shareUrl));
+                    } else {
+                        alert('Share Link generated: \n\n' + shareUrl);
+                    }
+                }).catch(e => {
+                    showLoading(false);
+                    alert('Failed to generate share link: ' + e.message);
+                });
+        } catch (err) {
             showLoading(false);
-        }, 300);
+            console.error(err);
+            alert('Firebase configuration error (likely missing databaseURL). Cannot share dashboard right now: ' + err.message);
+        }
     });
 
     // ---- PARSING ----
@@ -471,7 +677,14 @@
 
     // Auto-apply filters on dropdown change
     [filterRBM, filterBranch, filterProduct, filterBrand, filterBDM, filterStaff].forEach(sel => {
-        sel.addEventListener('change', applyFilters);
+        sel.addEventListener('change', () => {
+            try {
+                applyFilters();
+            } catch (err) {
+                console.error('[Filter Error]', err);
+                alert('An error occurred while applying filters:\n' + err.message);
+            }
+        });
     });
 
     function applyFilters() {
@@ -945,9 +1158,9 @@
         $('fsCount').textContent = '0 staff';
         $('pdTopRevTable').innerHTML = '';
         $('pdTopConvTable').innerHTML = '';
-        $('pdMissedTable').innerHTML = noDataHTML('Upload data and generate reports first.');
         $('pdKpiRow').innerHTML = '';
-        $('pdMissedCount').textContent = '0 customers';
+        $('coMissedTable').innerHTML = noDataHTML('Upload data and generate reports first.');
+        $('coMissedCount').textContent = '0 customers';
         document.querySelector('[data-section="upload-section"]').click();
     });
 
@@ -1068,9 +1281,10 @@
             const convCls = e.qtyConv === 0 ? 'loss-val' : (e.qtyConv < 0.5 ? 'conv-warn' : 'conv-val');
             const rank = i + 1;
             const rankBadge = rank <= 3 ? `<span class="rank-badge rank-${rank}">${rank}</span>` : `<span class="rank-num">${rank}</span>`;
+            const dlIcon = `<button onclick="window.downloadStaffDetails('${e.name}', '${e.branch}')" title="Download Staff Details" style="background:none;border:none;cursor:pointer;color:var(--primary);padding:0;margin-left:8px;vertical-align:middle;display:inline-flex;align-items:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>`;
             html += `<tr>
                 <td class="number-cell">${rankBadge}</td>
-                <td><strong>${e.name}</strong></td>
+                <td style="white-space:nowrap;"><strong>${e.name}</strong>${dlIcon}</td>
                 <td>${e.branch}</td>
                 <td>${e.rbm}</td>
                 <td>${e.bdm}</td>
@@ -1189,9 +1403,10 @@
         filtered.forEach((e, i) => {
             const rank = i + 1;
             const rankBadge = rank <= 3 ? `<span class="rank-badge rank-${rank}">${rank}</span>` : `<span class="rank-num">${rank}</span>`;
+            const dlIcon = `<button onclick="window.downloadStaffDetails('${e.name}', '${e.branch}')" title="Download Staff Details" style="background:none;border:none;cursor:pointer;color:var(--primary);padding:0;margin-left:8px;vertical-align:middle;display:inline-flex;align-items:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>`;
             html += `<tr>
                 <td class="number-cell">${rankBadge}</td>
-                <td><strong>${e.name}</strong></td>
+                <td style="white-space:nowrap;"><strong>${e.name}</strong>${dlIcon}</td>
                 <td>${e.branch}</td>
                 <td>${e.rbm}</td>
                 <td>${e.bdm}</td>
@@ -1441,6 +1656,69 @@
             `);
         }
 
+        // ---- Card X: Deep Root Cause Analysis ----
+        let deepAnalysisHtml = `<ul style="padding-left:1.5rem; margin-bottom:1rem; color:var(--text-secondary);">`;
+
+        // 1. Product factor
+        const lowConvProds = prodStats
+            .filter(p => p.pQty >= 5) // At least 5 units sold
+            .sort((a, b) => a.qtyConv - b.qtyConv);
+
+        if (lowConvProds.length > 0) {
+            const worstProd = lowConvProds[0];
+            deepAnalysisHtml += `
+                <li style="margin-bottom:12px;">
+                    <strong>Product Factor (<span style="color:var(--loss);">${worstProd.name}</span>):</strong> 
+                    Only converting at <span style="color:var(--loss); font-weight:600;">${worstProd.qtyConv.toFixed(1)}%</span>.
+                    <div style="margin-top:4px; font-size:0.9rem;">
+                        <em>Reason:</em> Highly competitive market segment or low perceived value of OSG for this specific product tier. Customers might view the base product as disposable or already adequately warrantied by the manufacturer.
+                    </div>
+                    <div style="margin-top:4px; font-size:0.9rem;">
+                        <em>Recommendation:</em> Bundle OSG directly into the financing plan for this product, or introduce a "lite" OSG tier tailored to its price point.
+                    </div>
+                </li>`;
+        }
+
+        // 2. Staff factor
+        const weakStaff = staffStats.filter(s => s.pQty >= 5 && s.qtyConv > 0 && s.qtyConv < 5);
+        if (zeroConvStaff.length > 0 || weakStaff.length > 0) {
+            const problemStaffCount = zeroConvStaff.length + weakStaff.length;
+            const pctStaff = ((problemStaffCount / staffStats.length) * 100).toFixed(0);
+            deepAnalysisHtml += `
+                <li style="margin-bottom:12px;">
+                    <strong>Staff Effectiveness:</strong> 
+                    <span style="color:var(--loss); font-weight:600;">${pctStaff}%</span> of staff (${problemStaffCount} members) are significantly underperforming (&lt;5% conversion).
+                    <div style="margin-top:4px; font-size:0.9rem;">
+                        <em>Reason:</em> Lack of pitch confidence, skipping the OSG conversation entirely to close the primary sale faster, or failing to overcome initial customer objections ("it's too expensive").
+                    </div>
+                    <div style="margin-top:4px; font-size:0.9rem;">
+                        <em>Recommendation:</em> Implement a mandatory "3-strike objection handling" framework. Pair bottom quartile staff with Top 3 converters (${topQty.slice(0, 3).map(s => s.name).join(', ')}) for mandatory shadowing sessions this week.
+                    </div>
+                </li>`;
+        }
+
+        // 3. Branch/Footprint factor
+        if (weakBranches.length > 0) {
+            const worstBranch = weakBranches.sort((a, b) => a.qtyConv - b.qtyConv)[0];
+            deepAnalysisHtml += `
+                <li style="margin-bottom:12px;">
+                    <strong>Location Impact (<span style="color:var(--loss);">${worstBranch.name}</span>):</strong> 
+                    Converting at just <span style="color:var(--loss); font-weight:600;">${worstBranch.qtyConv.toFixed(1)}%</span>.
+                    <div style="margin-top:4px; font-size:0.9rem;">
+                        <em>Reason:</em> Demographic price sensitivity in this catchment area, or systemic store-leadership de-prioritization of accessory/OSG targets in favor of raw hardware volume.
+                    </div>
+                    <div style="margin-top:4px; font-size:0.9rem;">
+                        <em>Recommendation:</em> Run a weekend "Free Protection Demo" in-store. RBM needs to reset expectations with the Store Manager that hardware quotas include an absolute minimum 15% OSG attach.
+                    </div>
+                </li>`;
+        }
+        deepAnalysisHtml += `</ul>`;
+
+        html += insightCard('🔍', 'Deep Root Cause Analysis', 'danger', `
+            <p style="margin-bottom:1rem; color:var(--text-primary); font-weight:500;">Based on combinatorial data analysis, the primary drivers of lost conversion are:</p>
+            ${deepAnalysisHtml}
+        `);
+
         // ---- Card 8: Action Plan ----
         const urgentActions = [];
         if (zeroConvStaff.length > 5) urgentActions.push(`Train ${zeroConvStaff.length} zero-conversion staff on OSG selling immediately`);
@@ -1513,7 +1791,15 @@
             const oRev = oRows.reduce((s, r) => s + r.soldPrice, 0);
             const qtyConv = pQty > 0 ? (oQty / pQty) * 100 : 0;
             const valConv = pRev > 0 ? (oRev / pRev) * 100 : 0;
-            return { name, branch: pInfo.branch, rbm: pInfo.rbm, bdm: pInfo.bdm, pQty, oQty, pRev, oRev, qtyConv, valConv };
+            
+            const prodCounts = {};
+            pInfo.rows.forEach(r => {
+                const p = r.product || 'Unknown';
+                prodCounts[p] = (prodCounts[p] || 0) + (r.qty || 0);
+            });
+            const products = Object.keys(prodCounts).map(p => ({ name: p, qty: prodCounts[p] })).sort((a,b)=>b.qty - a.qty);
+
+            return { name, branch: pInfo.branch, rbm: pInfo.rbm, bdm: pInfo.bdm, pQty, oQty, pRev, oRev, qtyConv, valConv, products };
         });
     }
 
@@ -1585,10 +1871,12 @@
             const convCls = e.qtyConv === 0 ? 'loss-val' : (e.qtyConv < 5 ? 'conv-warn' : 'conv-val');
             const rank = i + 1;
             const rankBadge = rank <= 3 ? `<span class="rank-badge rank-${rank}">${rank}</span>` : `<span class="rank-num">${rank}</span>`;
+            const dlIcon = `<button onclick="window.downloadStaffDetails('${e.name}', '${e.branch}')" title="Download Staff Details" style="background:none;border:none;cursor:pointer;color:var(--primary);padding:0;margin-left:8px;vertical-align:middle;display:inline-flex;align-items:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>`;
+            const dlBranchIcon = `<button onclick="window.downloadBranchDetails('${e.branch}')" title="Download Branch Details" style="background:none;border:none;cursor:pointer;color:var(--primary);padding:0;margin-left:8px;vertical-align:middle;display:inline-flex;align-items:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>`;
             html += `<tr>
                 <td class="number-cell">${rankBadge}</td>
-                <td><strong>${e.name}</strong></td>
-                <td>${e.branch}</td>
+                <td style="white-space:nowrap;"><strong>${e.name}</strong>${dlIcon}</td>
+                <td style="white-space:nowrap;">${e.branch}${dlBranchIcon}</td>
                 <td>${e.rbm}</td>
                 <td>${e.bdm}</td>
                 <td class="number-cell"><strong>${e.pQty}</strong></td>
@@ -1616,20 +1904,42 @@
             .filter(s => !selBranch || s.branch === selBranch)
             .sort((a, b) => b.pQty - a.pQty);
         if (filtered.length === 0) return;
-        const hdr = ['Rank', 'Staff', 'Branch', 'RBM', 'BDM', 'Prod Qty', 'OSG Qty', 'Qty Conv%', 'Val Conv%', 'Prod Revenue', 'OSG Revenue'];
+        const hdr = ['Rank', 'Staff', 'Product', 'Product Qty', 'Branch', 'RBM', 'BDM', 'Prod Qty', 'OSG Qty', 'Qty Conv%', 'Val Conv%', 'Prod Revenue', 'OSG Revenue'];
         const lines = [hdr.join(',')];
         filtered.forEach((e, i) => {
-            lines.push([i + 1, q(e.name), q(e.branch), q(e.rbm), q(e.bdm), e.pQty, e.oQty,
-            e.qtyConv.toFixed(2), e.valConv.toFixed(2), e.pRev.toFixed(0), e.oRev.toFixed(0)].join(','));
+            const rank = i + 1;
+            if (e.products && e.products.length > 0) {
+                e.products.forEach((prod, pIdx) => {
+                    if (pIdx === 0) {
+                        lines.push([
+                            rank, q(e.name), q(prod.name), prod.qty, q(e.branch), q(e.rbm), q(e.bdm), e.pQty, e.oQty,
+                            e.qtyConv.toFixed(2), e.valConv.toFixed(2), e.pRev.toFixed(0), e.oRev.toFixed(0)
+                        ].join(','));
+                    } else {
+                        lines.push([
+                            '', '', q(prod.name), prod.qty, '', '', '', '', '', '', '', '', ''
+                        ].join(','));
+                    }
+                });
+            } else {
+                lines.push([
+                    rank, q(e.name), '', '', q(e.branch), q(e.rbm), q(e.bdm), e.pQty, e.oQty,
+                    e.qtyConv.toFixed(2), e.valConv.toFixed(2), e.pRev.toFixed(0), e.oRev.toFixed(0)
+                ].join(','));
+            }
         });
         downloadCSV(lines.join('\n'), 'future_stores_staff.csv');
     }
 
     // ---- PRODUCT DETAILS PAGE ----
     $('btnPDRefresh').addEventListener('click', renderProductDetailsPage);
-    $('btnPDExport').addEventListener('click', exportProductDetailsMissedCSV);
     document.querySelector('[data-section="productdetails-section"]').addEventListener('click', () => {
         setTimeout(renderProductDetailsPage, 50);
+    });
+
+    // Auto-refresh when any Product Details dropdown changes
+    ['pdRBM', 'pdBDM', 'pdProduct'].forEach(id => {
+        $(id).addEventListener('change', renderProductDetailsPage);
     });
 
     function renderProductDetailsPage() {
@@ -1765,69 +2075,441 @@
             $('pdTopConvTable').innerHTML = noDataHTML('No products with enough quantity.');
         }
 
-        // ---- Missed Customers: invoices in Product but NOT in OSG ----
-        const missedRows = filtP.filter(r => r.invoice && !osgInvoices.has(r.invoice));
-
-        // Deduplicate by invoice (show unique invoices)
-        const seenInv = new Set();
-        const missedUnique = [];
-        missedRows.forEach(r => {
-            if (!seenInv.has(r.invoice)) {
-                seenInv.add(r.invoice);
-                missedUnique.push(r);
-            }
-        });
-
-        $('pdMissedCount').textContent = `${missedUnique.length} customers`;
-
-        if (missedUnique.length > 0) {
-            let html = `<table class="data-table">
-                <thead><tr>
-                    <th>#</th><th>Invoice No</th><th>Customer Name</th><th>Customer No</th>
-                    <th>Staff</th><th>Branch</th><th>Product</th><th>Qty</th><th>Sold Price</th>
-                </tr></thead><tbody>`;
-            missedUnique.slice(0, 500).forEach((r, i) => {
-                html += `<tr>
-                    <td class="number-cell">${i + 1}</td>
-                    <td>${r.invoice}</td>
-                    <td>${r.customerName || '—'}</td>
-                    <td>${r.customerNo || '—'}</td>
-                    <td>${r.staff || '—'}</td>
-                    <td>${r.branch || '—'}</td>
-                    <td>${r.product || '—'}</td>
-                    <td class="number-cell">${r.qty}</td>
-                    <td class="number-cell">${fmtShort(r.soldPrice)}</td>
-                </tr>`;
-            });
-            html += '</tbody></table>';
-            if (missedUnique.length > 500) {
-                html += `<p style="text-align:center;color:var(--text-muted);margin-top:12px;">Showing 500 of ${missedUnique.length} — export CSV for full list</p>`;
-            }
-            $('pdMissedTable').innerHTML = html;
-        } else {
-            $('pdMissedTable').innerHTML = noDataHTML('All invoices have OSG entries — great conversion!');
-        }
     }
 
-    function exportProductDetailsMissedCSV() {
+    // ---- CUSTOMERS WITHOUT OSG PAGE ----
+    $('btnCORefresh').addEventListener('click', renderCustomersOSGPage);
+    $('btnCOExport').addEventListener('click', exportCustomersOSGCSV);
+    document.querySelector('[data-section="customers-osg-section"]').addEventListener('click', () => {
+        // Load saved statuses from Firebase first, then render
+        loadCoStatuses(() => setTimeout(renderCustomersOSGPage, 50));
+    });
+    ['coRBM', 'coBDM', 'coProduct', 'coBranch'].forEach(id => {
+        $(id).addEventListener('change', renderCustomersOSGPage);
+    });
+
+    function loadCoStatuses(callback) {
+        if (typeof firebase === 'undefined') { if (callback) callback(); return; }
+        firebase.database().ref('customerStatus').once('value').then(snap => {
+            const data = snap.val() || {};
+            Object.keys(data).forEach(inv => {
+                coStatusMap[inv] = data[inv];
+            });
+            if (callback) callback();
+        }).catch(() => { if (callback) callback(); });
+    }
+
+    function saveCoStatus(inv) {
+        if (typeof firebase === 'undefined') return;
+        const status = coStatusMap[inv] || { callStatus: null, interest: null };
+        firebase.database().ref('customerStatus/' + inv).set(status).catch(e => console.warn('[Firebase] Status save failed:', e));
+    }
+
+    function renderCustomersOSGPage() {
+        let missedUnique = [];
+
+        if (window.sharedMissedUnique) {
+            // We are in shared view mode — apply client-side filters
+            document.querySelectorAll('#customers-osg-section .lowconv-controls').forEach(el => el.style.display = 'none');
+
+            // Init shared filter state
+            if (!window.coSharedFilter) window.coSharedFilter = { branch: '', staff: '', product: '', callStatus: '', interest: '' };
+            const sf = window.coSharedFilter;
+
+            // Build unique values for filter dropdowns
+            const allData = window.sharedMissedUnique;
+            const branches = [...new Set(allData.map(r => r.branch).filter(Boolean))].sort();
+            const staffs   = [...new Set(allData.map(r => r.staff).filter(Boolean))].sort();
+            const products = [...new Set(allData.map(r => r.product).filter(Boolean))].sort();
+
+            // Inject shared filter bar into page (only once)
+            let filterBarEl = $('coSharedFilterBar');
+            if (!filterBarEl) {
+                const bar = document.createElement('div');
+                bar.id = 'coSharedFilterBar';
+                bar.style.cssText = 'display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;padding:14px 18px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;align-items:flex-end;';
+                $('coMissedTable').parentElement.insertBefore(bar, $('coMissedTable'));
+                filterBarEl = bar;
+            }
+
+            const sel = (id, label, opts, val) => `
+                <div style="display:flex;flex-direction:column;gap:4px;min-width:130px;flex:1;">
+                    <label style="font-size:0.72rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">${label}</label>
+                    <select id="${id}" onchange="window.coSharedFilterChange('${id}',this.value)" style="padding:8px 10px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:0.85rem;">
+                        <option value="">All</option>
+                        ${opts.map(o => `<option value="${o}" ${val===o?'selected':''}>${o}</option>`).join('')}
+                    </select>
+                </div>`;
+
+            filterBarEl.innerHTML =
+                sel('coSF_branch',  'Branch',      branches, sf.branch) +
+                sel('coSF_staff',   'Staff',       staffs,   sf.staff) +
+                sel('coSF_product', 'Product',     products, sf.product) +
+                sel('coSF_call',    'Call Status', ['connected','disconnected'], sf.callStatus) +
+                sel('coSF_int',     'Interest',    ['interested','not-interested'], sf.interest) +
+                `<button onclick="window.coSharedFilterReset()" style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-family:inherit;cursor:pointer;font-size:0.82rem;white-space:nowrap;">✕ Clear</button>`;
+
+            window.coSharedFilterChange = (id, val) => {
+                const map = { coSF_branch: 'branch', coSF_staff: 'staff', coSF_product: 'product', coSF_call: 'callStatus', coSF_int: 'interest' };
+                window.coSharedFilter[map[id]] = val;
+                renderCustomersOSGPage();
+            };
+            window.coSharedFilterReset = () => {
+                window.coSharedFilter = { branch: '', staff: '', product: '', callStatus: '', interest: '' };
+                renderCustomersOSGPage();
+            };
+
+            // Apply filters to data
+            missedUnique = allData.filter(r => {
+                if (sf.branch  && r.branch  !== sf.branch)  return false;
+                if (sf.staff   && r.staff   !== sf.staff)   return false;
+                if (sf.product && r.product !== sf.product) return false;
+                if (sf.callStatus) {
+                    const inv = r.invoice || '';
+                    const st = (coStatusMap[inv] || {}).callStatus;
+                    if (st !== sf.callStatus) return false;
+                }
+                if (sf.interest) {
+                    const inv = r.invoice || '';
+                    const st = (coStatusMap[inv] || {}).interest;
+                    if (st !== sf.interest) return false;
+                }
+                return true;
+            });
+
+            $('coMissedCount').textContent = `${missedUnique.length} of ${allData.length} customers (Shared View)`;
+
+        } else {
+            // Standard dynamic processing
+            if (productData.length === 0) {
+                $('coMissedTable').innerHTML = noDataHTML('Upload data and generate reports first.');
+                $('coMissedCount').textContent = '0 customers';
+                $('coMissedCount').style.background = '';
+                return;
+            }
+
+            const selRBM = $('coRBM').value;
+            const selBDM = $('coBDM').value;
+            const selProduct = $('coProduct').value;
+            const selBranch = $('coBranch').value;
+
+            // Populate filter dropdowns (preserve selection)
+            const rbmSet = [...new Set(productData.map(r => r.rbm).filter(Boolean))].sort();
+            const bdmSet = [...new Set(productData.map(r => r.bdm).filter(Boolean))].sort();
+            const prodSet = [...new Set(productData.map(r => r.product).filter(Boolean))].sort();
+            const branchSet = [...new Set(productData.map(r => r.branch).filter(Boolean))].sort();
+
+            $('coRBM').innerHTML = '<option value="">All RBMs</option>' + rbmSet.map(r => `<option value="${r}" ${r === selRBM ? 'selected' : ''}>${r}</option>`).join('');
+            $('coBDM').innerHTML = '<option value="">All BDMs</option>' + bdmSet.map(b => `<option value="${b}" ${b === selBDM ? 'selected' : ''}>${b}</option>`).join('');
+            $('coProduct').innerHTML = '<option value="">All Products</option>' + prodSet.map(p => `<option value="${p}" ${p === selProduct ? 'selected' : ''}>${p}</option>`).join('');
+            $('coBranch').innerHTML = '<option value="">All Branches</option>' + branchSet.map(b => `<option value="${b}" ${b === selBranch ? 'selected' : ''}>${b}</option>`).join('');
+
+            // Filter product rows
+            let filtP = productData;
+            if (selRBM) filtP = filtP.filter(r => r.rbm === selRBM);
+            if (selBDM) filtP = filtP.filter(r => r.bdm === selBDM);
+            if (selProduct) filtP = filtP.filter(r => r.product === selProduct);
+            if (selBranch) filtP = filtP.filter(r => r.branch === selBranch);
+
+            // Build OSG invoice set
+            const osgInvoices = new Set();
+            osgData.forEach(r => { if (r.invoice) osgInvoices.add(r.invoice); });
+
+            // Find product rows with no matching OSG invoice, deduplicated by invoice
+            const seenInv = new Set();
+            filtP.forEach(r => {
+                if (r.invoice && !osgInvoices.has(r.invoice) && !seenInv.has(r.invoice)) {
+                    seenInv.add(r.invoice);
+                    missedUnique.push(r);
+                }
+            });
+
+            $('coMissedCount').textContent = `${missedUnique.length} customers`;
+        }
+
+        // Sort by Value (high to low) — highest opportunity at top
+        missedUnique.sort((a, b) => (b.soldPrice || 0) - (a.soldPrice || 0));
+
+        if (missedUnique.length === 0) {
+            $('coMissedTable').innerHTML = noDataHTML('All invoices have OSG entries — great conversion! 🎉');
+            return;
+        }
+
+        // Store filtered rows globally for pagination and single-row updates
+        coCurrentRows = missedUnique;
+        coDisplayLimit = 100;
+
+        // ---- Stats Bar (with IDs for in-place update) ----
+        const total        = missedUnique.length;
+        const connected    = missedUnique.filter(r => (coStatusMap[r.invoice||'']||{}).callStatus === 'connected').length;
+        const disconnected = missedUnique.filter(r => (coStatusMap[r.invoice||'']||{}).callStatus === 'disconnected').length;
+        const interested   = missedUnique.filter(r => (coStatusMap[r.invoice||'']||{}).interest === 'interested').length;
+        const notInterested= missedUnique.filter(r => (coStatusMap[r.invoice||'']||{}).interest === 'not-interested').length;
+        const notCalled    = total - connected - disconnected;
+
+        const statsBar = `
+        <div id="coStatsBar" style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px;">
+            <div style="flex:1;min-width:120px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;border-top:3px solid #64748b;">
+                <div id="coStat_total" style="font-size:1.6rem;font-weight:700;color:var(--text-primary);">${total}</div>
+                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;">Total Customers</div>
+            </div>
+            <div style="flex:1;min-width:120px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;border-top:3px solid #64748b;">
+                <div id="coStat_notCalled" style="font-size:1.6rem;font-weight:700;color:#94a3b8;">${notCalled}</div>
+                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;">Not Yet Called</div>
+            </div>
+            <div style="flex:1;min-width:120px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;border-top:3px solid #2563eb;">
+                <div id="coStat_connected" style="font-size:1.6rem;font-weight:700;color:#2563eb;">${connected}</div>
+                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;">Connected</div>
+            </div>
+            <div style="flex:1;min-width:120px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;border-top:3px solid #9333ea;">
+                <div id="coStat_disconnected" style="font-size:1.6rem;font-weight:700;color:#9333ea;">${disconnected}</div>
+                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;">Disconnected</div>
+            </div>
+            <div style="flex:1;min-width:120px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;border-top:3px solid #16a34a;">
+                <div id="coStat_interested" style="font-size:1.6rem;font-weight:700;color:#16a34a;">${interested}</div>
+                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;">Interested</div>
+            </div>
+            <div style="flex:1;min-width:120px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;border-top:3px solid #dc2626;">
+                <div id="coStat_notInterested" style="font-size:1.6rem;font-weight:700;color:#dc2626;">${notInterested}</div>
+                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;">Not Interested</div>
+            </div>
+        </div>`;
+
+        // ---- Caller Selector ----
+        const callerSelector = `
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;">
+            <span style="font-size:0.85rem;font-weight:600;color:var(--text-muted);white-space:nowrap;">👤 You are:</span>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                ${CO_CALLERS.map(c => `
+                <button onclick="window.selectCoCaller('${c.name}')" style="
+                    display:flex;align-items:center;gap:7px;
+                    padding:7px 16px;border-radius:20px;border:2px solid ${c.color};
+                    font-size:0.85rem;font-family:inherit;cursor:pointer;font-weight:600;
+                    background:${currentCaller===c.name ? c.bg : 'transparent'};
+                    color:${c.color};
+                    box-shadow:${currentCaller===c.name ? '0 0 0 2px '+c.color+'55' : 'none'};
+                    transition:all 0.2s;
+                ">
+                    <span style="width:24px;height:24px;border-radius:50%;background:${c.color};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;">${c.name[0]}</span>
+                    ${c.name}
+                    ${currentCaller===c.name ? '<span style="font-size:0.7rem;opacity:0.8;">✓ Active</span>' : ''}
+                </button>`).join('')}
+            </div>
+            ${currentCaller
+                ? `<span style="margin-left:auto;font-size:0.8rem;color:var(--text-muted);">Logging calls as <strong style="color:var(--text-primary);">${currentCaller}</strong></span>`
+                : '<span style="margin-left:auto;font-size:0.8rem;color:#f59e0b;">⚠️ Select your name to log calls</span>'}
+        </div>`;
+
+        // ---- Table scaffold + first page of rows ----
+        const tableHeader = `<div style="overflow-x:auto;"><table id="coMainTable" class="data-table" style="width:100%;border-collapse:collapse;font-size:0.875rem;">
+            <thead><tr style="background:var(--bg-input);border-bottom:2px solid var(--border);">
+                <th style="padding:12px 10px;text-align:left;font-weight:600;color:var(--text-muted);font-size:0.78rem;letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap;">#</th>
+                <th style="padding:12px 10px;text-align:left;font-weight:600;color:var(--text-muted);font-size:0.78rem;letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap;">Invoice</th>
+                <th style="padding:12px 10px;text-align:left;font-weight:600;color:var(--text-muted);font-size:0.78rem;letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap;">Customer</th>
+                <th style="padding:12px 10px;text-align:left;font-weight:600;color:var(--text-muted);font-size:0.78rem;letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap;">Interest</th>
+                <th style="padding:12px 10px;text-align:left;font-weight:600;color:var(--text-muted);font-size:0.78rem;letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap;">Contact &amp; Call Status</th>
+                <th style="padding:12px 10px;text-align:left;font-weight:600;color:var(--text-muted);font-size:0.78rem;letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap;">Staff</th>
+                <th style="padding:12px 10px;text-align:left;font-weight:600;color:var(--text-muted);font-size:0.78rem;letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap;">Branch</th>
+                <th style="padding:12px 10px;text-align:left;font-weight:600;color:var(--text-muted);font-size:0.78rem;letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap;">Product</th>
+                <th style="padding:12px 10px;text-align:right;font-weight:600;color:var(--text-muted);font-size:0.78rem;letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap;">Value</th>
+                <th style="padding:12px 10px;text-align:left;font-weight:600;color:var(--text-muted);font-size:0.78rem;letter-spacing:0.05em;text-transform:uppercase;white-space:nowrap;">Remarks</th>
+            </tr></thead><tbody id="coTableBody">`;
+
+        let rowsHTML = '';
+        missedUnique.slice(0, coDisplayLimit).forEach((r, i) => {
+            rowsHTML += buildCoRowHTML(r, i);
+        });
+
+        const remaining = missedUnique.length - coDisplayLimit;
+        const loadMoreBtn = remaining > 0
+            ? `<div id="coLoadMoreWrap" style="text-align:center;margin-top:16px;">
+                <button onclick="window.coLoadMore()" style="
+                    padding:10px 28px;border-radius:20px;border:1.5px solid var(--accent);
+                    background:transparent;color:var(--accent);font-family:inherit;
+                    font-size:0.88rem;font-weight:600;cursor:pointer;transition:all 0.2s;
+                ">↧ Load ${Math.min(remaining, 100)} more (${remaining} remaining)</button>
+               </div>` : '';
+
+        $('coMissedTable').innerHTML = statsBar + callerSelector + tableHeader + rowsHTML + '</tbody></table></div>' + loadMoreBtn;
+
+        // ---- Handlers ----
+        window.selectCoCaller = function(name) {
+            currentCaller = name;
+            localStorage.setItem('co_caller', name);
+            renderCustomersOSGPage();
+        };
+
+        window.coLoadMore = function() {
+            const tbody = $('coTableBody');
+            if (!tbody) return;
+            const from = coDisplayLimit;
+            coDisplayLimit = Math.min(coDisplayLimit + 100, coCurrentRows.length);
+            let extra = '';
+            coCurrentRows.slice(from, coDisplayLimit).forEach((r, i) => {
+                extra += buildCoRowHTML(r, from + i);
+            });
+            tbody.insertAdjacentHTML('beforeend', extra);
+            const remaining2 = coCurrentRows.length - coDisplayLimit;
+            const wrap = $('coLoadMoreWrap');
+            if (wrap) {
+                if (remaining2 > 0) {
+                    wrap.innerHTML = `<button onclick="window.coLoadMore()" style="
+                        padding:10px 28px;border-radius:20px;border:1.5px solid var(--accent);
+                        background:transparent;color:var(--accent);font-family:inherit;
+                        font-size:0.88rem;font-weight:600;cursor:pointer;">↧ Load ${Math.min(remaining2,100)} more (${remaining2} remaining)</button>`;
+                } else {
+                    wrap.remove();
+                }
+            }
+        };
+
+        window.toggleCoCall = function(inv, status) {
+            if (!currentCaller && status !== "") {
+                alert('Please select your name (Harmiya / Aswathi / Shikha) at the top of the page before logging a call.');
+                // Revert UI to match state since we rejected it
+                updateCoSingleRow(inv);
+                return;
+            }
+            if (!coStatusMap[inv]) coStatusMap[inv] = { callStatus: null, interest: null, calledBy: null, remarks: '' };
+            coStatusMap[inv].callStatus = status === "" ? null : status;
+            coStatusMap[inv].calledBy   = coStatusMap[inv].callStatus ? currentCaller : null;
+            saveCoStatus(inv);
+            updateCoSingleRow(inv);
+            updateCoStatsInPlace();
+        };
+
+        window.toggleCoInterest = function(inv, status) {
+            if (!coStatusMap[inv]) coStatusMap[inv] = { callStatus: null, interest: null, calledBy: null, remarks: '' };
+            coStatusMap[inv].interest = status === "" ? null : status;
+            saveCoStatus(inv);
+            updateCoSingleRow(inv);
+            updateCoStatsInPlace();
+        };
+
+        window.saveCoRemark = function(inv, remark) {
+            if (!coStatusMap[inv]) coStatusMap[inv] = { callStatus: null, interest: null, calledBy: null, remarks: '' };
+            coStatusMap[inv].remarks = remark;
+            saveCoStatus(inv);
+        };
+    }
+
+    // Updates just the 6 stat numbers in-place (no table re-render)
+    function updateCoStatsInPlace() {
+        const rows = coCurrentRows;
+        const connected    = rows.filter(r => (coStatusMap[r.invoice||'']||{}).callStatus === 'connected').length;
+        const disconnected = rows.filter(r => (coStatusMap[r.invoice||'']||{}).callStatus === 'disconnected').length;
+        const interested   = rows.filter(r => (coStatusMap[r.invoice||'']||{}).interest === 'interested').length;
+        const notInterested= rows.filter(r => (coStatusMap[r.invoice||'']||{}).interest === 'not-interested').length;
+        const notCalled    = rows.length - connected - disconnected;
+        const set = (id, val) => { const el = $(id); if (el) el.textContent = val; };
+        set('coStat_total', rows.length);
+        set('coStat_notCalled', notCalled);
+        set('coStat_connected', connected);
+        set('coStat_disconnected', disconnected);
+        set('coStat_interested', interested);
+        set('coStat_notInterested', notInterested);
+    }
+
+    // Replaces a single row in-place without touching the rest of the table
+    function updateCoSingleRow(inv) {
+        const rowEl = document.getElementById('co-row-' + inv);
+        if (!rowEl) return;
+        const idx = coCurrentRows.findIndex((r, i) => (r.invoice || String(i)) === inv);
+        if (idx === -1) return;
+        const newRowHTML = buildCoRowHTML(coCurrentRows[idx], idx);
+        rowEl.outerHTML = newRowHTML;
+    }
+
+    // Builds HTML for a single table row
+    function buildCoRowHTML(r, i) {
+        const inv = r.invoice || String(i);
+        const st  = coStatusMap[inv] || { callStatus: null, interest: null, calledBy: null, remarks: '' };
+
+        const rowBg = st.interest === 'interested'     ? 'rgba(22,163,74,0.06)'
+                    : st.interest === 'not-interested' ? 'rgba(220,38,38,0.06)'
+                    : 'transparent';
+
+        const interestBtn = `
+            <select onchange="window.toggleCoInterest('${inv}', this.value)" style="
+                padding:6px 10px;border-radius:8px;border:1px solid ${st.interest === 'interested' ? '#16a34a' : (st.interest === 'not-interested' ? '#dc2626' : 'var(--border)')};
+                font-size:0.85rem;font-family:inherit;cursor:pointer;font-weight:600;
+                background:var(--bg-input); color:var(--text-primary); outline:none; max-width:140px;
+            ">
+                <option value="" ${!st.interest ? 'selected' : ''}>- Select -</option>
+                <option value="interested" ${st.interest === 'interested' ? 'selected' : ''}>✅ Interested</option>
+                <option value="not-interested" ${st.interest === 'not-interested' ? 'selected' : ''}>❌ Not Interested</option>
+            </select>`;
+
+        const callerInfo = st.calledBy ? (() => {
+            const c = CO_CALLERS.find(x => x.name === st.calledBy) || { color:'#64748b', bg:'rgba(100,116,139,0.15)' };
+            return `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;background:${c.bg};color:${c.color};font-size:0.7rem;font-weight:700;margin-top:5px;">
+                <span style="width:14px;height:14px;border-radius:50%;background:${c.color};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:0.55rem;font-weight:800;">${st.calledBy[0]}</span>
+                ${st.calledBy}</span>`;
+        })() : '';
+
+        const callBtns = r.customerNo ? `
+            <div style="display:flex;flex-direction:column;gap:5px;margin-top:6px;align-items:flex-start;">
+                <select onchange="window.toggleCoCall('${inv}', this.value)" style="
+                    padding:6px 10px;border-radius:8px;border:1px solid ${st.callStatus === 'connected' ? '#2563eb' : (st.callStatus === 'disconnected' ? '#9333ea' : 'var(--border)')};
+                    font-size:0.85rem;font-family:inherit;cursor:pointer;font-weight:600;
+                    background:var(--bg-input); color:var(--text-primary); outline:none; max-width:140px;
+                ">
+                    <option value="" ${!st.callStatus ? 'selected' : ''}>- Status -</option>
+                    <option value="connected" ${st.callStatus === 'connected' ? 'selected' : ''}>📞 Connected</option>
+                    <option value="disconnected" ${st.callStatus === 'disconnected' ? 'selected' : ''}>📵 Disconnected</option>
+                </select>
+                ${callerInfo}
+            </div>` : '';
+
+        const remarksInput = `
+            <input type="text" value="${q(st.remarks || '')}" onchange="window.saveCoRemark('${inv}', this.value)" placeholder="Remarks..." style="
+                padding:6px 10px;border-radius:8px;border:1px solid var(--border);
+                font-size:0.85rem;font-family:inherit;background:var(--bg-input);color:var(--text-primary);
+                width:130px; outline:none;
+            " />
+        `;
+
+        return `<tr id="co-row-${inv}" style="border-bottom:1px solid var(--border);background:${rowBg};transition:background 0.2s;">
+            <td style="padding:12px 10px;color:var(--text-muted);font-size:0.8rem;">${i+1}</td>
+            <td style="padding:12px 10px;font-family:monospace;font-size:0.82rem;color:var(--text-secondary);">${r.invoice}</td>
+            <td style="padding:12px 10px;"><strong style="color:var(--text-primary);font-size:0.9rem;">${r.customerName||'—'}</strong></td>
+            <td style="padding:12px 10px;">${interestBtn}</td>
+            <td style="padding:12px 10px;">
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <span style="font-weight:600;color:var(--text-primary);font-size:0.88rem;">${r.customerNo||'—'}</span>
+                    ${r.customerNo?`<a href="tel:${r.customerNo}" title="Call" style="color:var(--primary);display:flex;padding:5px;border-radius:50%;background:rgba(59,130,246,0.12);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>`:''}
+                    ${r.customerNo?`<a href="https://wa.me/91${r.customerNo.replace(/\D/g,'')}" target="_blank" title="WhatsApp" style="color:#25D366;display:flex;padding:5px;border-radius:50%;background:rgba(37,211,102,0.12);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>`:''}
+                </div>
+                ${callBtns}
+            </td>
+            <td style="padding:12px 10px;color:var(--text-secondary);font-size:0.85rem;">${r.staff||'—'}</td>
+            <td style="padding:12px 10px;color:var(--text-secondary);font-size:0.85rem;">${r.branch||'—'}</td>
+            <td style="padding:12px 10px;color:var(--text-secondary);font-size:0.85rem;">${r.product||'—'}</td>
+            <td style="padding:12px 10px;text-align:right;font-weight:600;color:var(--text-primary);font-size:0.88rem;white-space:nowrap;">${fmtShort(r.soldPrice)}</td>
+            <td style="padding:12px 10px;">${remarksInput}</td>
+        </tr>`;
+    }
+
+    function exportCustomersOSGCSV() {
         if (productData.length === 0) return;
-        const selRBM = $('pdRBM').value;
-        const selBDM = $('pdBDM').value;
-        const selProduct = $('pdProduct').value;
+        const selRBM = $('coRBM').value;
+        const selBDM = $('coBDM').value;
+        const selProduct = $('coProduct').value;
+        const selBranch = $('coBranch').value;
 
         let filtP = productData;
         if (selRBM) filtP = filtP.filter(r => r.rbm === selRBM);
         if (selBDM) filtP = filtP.filter(r => r.bdm === selBDM);
         if (selProduct) filtP = filtP.filter(r => r.product === selProduct);
+        if (selBranch) filtP = filtP.filter(r => r.branch === selBranch);
 
         const osgInvoices = new Set();
         osgData.forEach(r => { if (r.invoice) osgInvoices.add(r.invoice); });
 
-        const missedRows = filtP.filter(r => r.invoice && !osgInvoices.has(r.invoice));
         const seenInv = new Set();
         const missedUnique = [];
-        missedRows.forEach(r => {
-            if (!seenInv.has(r.invoice)) {
+        filtP.forEach(r => {
+            if (r.invoice && !osgInvoices.has(r.invoice) && !seenInv.has(r.invoice)) {
                 seenInv.add(r.invoice);
                 missedUnique.push(r);
             }
@@ -1841,7 +2523,7 @@
             q(r.staff || ''), q(r.branch || ''), q(r.rbm || ''), q(r.bdm || ''),
             q(r.product || ''), r.qty, r.soldPrice.toFixed(0)].join(','));
         });
-        downloadCSV(lines.join('\n'), 'missed_conversion_customers.csv');
+        downloadCSV(lines.join('\n'), 'customers_without_osg.csv');
     }
 
     // ---- UTILITIES ----
@@ -1862,4 +2544,122 @@
     function truncate(s, len) { return s.length > len ? s.substring(0, len) + '…' : s; }
     function showLoading(show) { loadingOverlay.classList.toggle('active', show); }
 
+    // ---- DEEP INSIGHTS PAGE ----
+    $('btnRefreshInsights').addEventListener('click', renderDeepInsightsPage);
+    document.querySelector('[data-section="insights-section"]').addEventListener('click', () => {
+        setTimeout(renderDeepInsightsPage, 50);
+    });
+
+    function renderDeepInsightsPage() {
+        if (productData.length === 0) {
+            $('insightsContentWrapper').innerHTML = noDataHTML('Upload data and generate reports first.');
+            return;
+        }
+
+        const wrapper = $('insightsContentWrapper');
+        wrapper.innerHTML = '<div style="text-align:center; padding: 40px; color:var(--text-muted);"><div class="spinner" style="margin: 0 auto 16px;"></div><p>Analyzing datasets with heuristics...</p></div>';
+
+        // Simulate an "AI Analysis" delay for UX impact
+        setTimeout(() => {
+            try {
+                const html = generateDeepInsightsHTML();
+                wrapper.innerHTML = html;
+            } catch (err) {
+                console.error(err);
+                wrapper.innerHTML = noDataHTML('Error generating insights: ' + err.message);
+            }
+        }, 800);
+    }
+
+    function generateDeepInsightsHTML() {
+        // Gather key metrics for insights
+        const pG_branch = groupBy(filteredProduct, 'branch');
+        const oG_branch = groupBy(filteredOSG, 'branch');
+        const pG_staff = groupBy(filteredProduct, 'staff');
+        const oG_staff = groupBy(filteredOSG, 'staff');
+
+        // 1. Worst Performing Branches (High Qty, near 0% OSG)
+        const branchStats = Object.keys(pG_branch).map(b => {
+            const pQ = pG_branch[b].reduce((s, r) => s + r.qty, 0);
+            const oQ = (oG_branch[b] || []).reduce((s, r) => s + r.qty, 0);
+            const valP = pG_branch[b].reduce((s, r) => s + r.soldPrice, 0);
+            return { branch: b, pQ, oQ, valP, conv: pQ > 0 ? (oQ / pQ) * 100 : 0 };
+        }).filter(b => b.pQ > 5 && b.branch !== 'Unknown').sort((a, b) => a.conv - b.conv);
+
+        const worstBranches = branchStats.slice(0, 3);
+
+        // 2. Missed Premium Opportunities (Products > 50,000 sold without OSG)
+        const osgInvoices = new Set(osgData.map(r => r.invoice).filter(Boolean));
+        const premiumMisses = filteredProduct.filter(r =>
+            r.soldPrice > 50000 && r.invoice && !osgInvoices.has(r.invoice)
+        ).sort((a, b) => b.soldPrice - a.soldPrice).slice(0, 5);
+
+        // 3. Bottom Staff By Attachment Rate (Min 10 sales)
+        const staffStats = Object.keys(pG_staff).map(s => {
+            const pQ = pG_staff[s].reduce((sum, r) => sum + r.qty, 0);
+            const oQ = (oG_staff[s] || []).reduce((sum, r) => sum + r.qty, 0);
+            return { staff: s, pQ, oQ, conv: pQ > 0 ? (oQ / pQ) * 100 : 0, branch: pG_staff[s][0].branch };
+        }).filter(s => s.pQ >= 10 && s.staff !== 'Unknown').sort((a, b) => a.conv - b.conv);
+
+        const worstStaff = staffStats.slice(0, 3);
+
+        let html = '<div style="display:flex; flex-direction:column; gap:24px;">';
+
+        // SECTION 1: Critical Focus Areas
+        html += '<div class="conversion-card" style="border-left: 4px solid var(--loss); border-radius: 8px; padding: 20px; background:var(--bg-card);">';
+        html += '<h3 style="margin-top:0; color:var(--loss); display:flex; align-items:center; gap:8px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Critical Focus Areas</h3>';
+
+        html += '<div style="margin-bottom: 16px;"><strong>🚨 High Volume, Low Conversion Branches:</strong><ul style="margin:8px 0 0 20px; color:var(--text-muted); line-height: 1.6;">';
+        if (worstBranches.length) worstBranches.forEach(b => html += `<li><strong>${b.branch}</strong>: ${b.pQ} products sold but only ${b.oQ} OSG attached (${b.conv.toFixed(1)}%). Estimated missed tracking revenue: ${fmtShort(b.valP * 0.1)}</li>`);
+        else html += '<li>No significantly underperforming branches detected.</li>';
+        html += '</ul></div>';
+
+        html += '<div style="margin-bottom: 16px;"><strong>💎 Missed Premium Device Attachments:</strong><ul style="margin:8px 0 0 20px; color:var(--text-muted); line-height: 1.6;">';
+        if (premiumMisses.length) premiumMisses.forEach(m => html += `<li><strong>${m.staff} (${m.branch})</strong> sold a ${m.product} for ${fmtShort(m.soldPrice)} without OSG (Inv: ${m.invoice}).</li>`);
+        else html += '<li>Great job! High-value premium products seem to be attached correctly.</li>';
+        html += '</ul></div>';
+
+        html += '<div><strong>👤 Highest Opportunity Staff:</strong><ul style="margin:8px 0 0 20px; color:var(--text-muted); line-height: 1.6;">';
+        if (worstStaff.length) worstStaff.forEach(s => html += `<li><strong>${s.staff} (${s.branch})</strong>: Delivered ${s.pQ} units physically but achieved only ${s.conv.toFixed(1)}% conversion.</li>`);
+        else html += '<li>Staff metrics look solid across the board (or volume threshold not met).</li>';
+        html += '</ul></div>';
+
+        html += '</div>';
+
+        // SECTION 2: Automated Root Cause Analysis
+        let reasonHTML = '';
+        if (worstBranches.length && worstBranches[0].conv < 5) {
+            reasonHTML += `<li><strong>Systemic Branch Failure (${worstBranches[0].branch}):</strong> Conversion is near zero (${worstBranches[0].conv.toFixed(1)}%) despite moving ${worstBranches[0].pQ} units. This indicates a store-wide knowledge gap or a leadership failure to enforce pitching at the POS, rather than individual poor performance.</li>`;
+        }
+        if (premiumMisses.length >= 2) {
+            reasonHTML += `<li><strong>Premium Pitch Avoidance:</strong> Found multiple premium devices > ₹50K sold with no OSG attached. Sales reps might be avoiding the OSG pitch on high-ticket items out of fear of losing the primary sale due to total cart value shock.</li>`;
+        }
+        const topPerformers = staffStats.filter(s => s.conv > 20);
+        if (topPerformers.length > 0 && worstStaff.length > 0) {
+            reasonHTML += `<li><strong>Inconsistent Training Deployment:</strong> The gap between top performers (e.g. ${topPerformers[topPerformers.length - 1].staff} at ${topPerformers[topPerformers.length - 1].conv.toFixed(1)}%) and bottom performers (${worstStaff[0].conv.toFixed(1)}%) is massive. Core OSG knowledge is siloed to specific top individuals.</li>`;
+        }
+
+        if (reasonHTML) {
+            html += '<div class="conversion-card" style="border-left: 4px solid var(--accent); border-radius: 8px; padding: 20px; background:var(--bg-card);">';
+            html += '<h3 style="margin-top:0; color:var(--accent); display:flex; align-items:center; gap:8px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Automated Root Cause Analysis</h3>';
+            html += `<ul style="margin:8px 0 0 20px; color:var(--text-muted); line-height:1.6;">${reasonHTML}</ul>`;
+            html += '</div>';
+        }
+
+        // SECTION 3: Action Plan
+        html += '<div class="conversion-card" style="border-left: 4px solid var(--primary); border-radius: 8px; padding: 20px; background:var(--bg-card);">';
+        html += '<h3 style="margin-top:0; color:var(--primary); display:flex; align-items:center; gap:8px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Immediate Action Plan</h3>';
+        html += '<ol style="margin:8px 0 0 24px; color:var(--text-muted); line-height:1.8;">';
+        if (worstBranches.length) html += `<li><strong>RBM/BDM Intercept:</strong> Immediately deploy regional trainers to ${worstBranches.map(b => `<strong>${b.branch}</strong>`).join(', ')} for POS floor shadowing.</li>`;
+        if (premiumMisses.length) html += `<li><strong>Premium Bundling Rule:</strong> Institute a strict rule that any manager override/discount on products over ₹50K ideally requires an OSG attachment commitment.</li>`;
+        if (worstStaff.length) html += `<li><strong>Targeted PIPs:</strong> Place <strong>${worstStaff.map(s => `${s.staff}`).join(', ')}</strong> on an accelerated 7-day OSG pitch improvement plan.</li>`;
+        html += '<li><strong>Daily Morning Brief:</strong> Have branch managers physically review the "Customers Without OSG" dashboard list from yesterday\'s data before the store opens to identify missed pitch opportunities and contact customers via the WhatsApp quick-links.</li>';
+        html += '</ol>';
+        html += '</div>';
+
+        html += '</div>'; // End flex wrapper
+        return html;
+    }
+
 })();
+
