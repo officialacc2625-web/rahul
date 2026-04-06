@@ -1915,31 +1915,38 @@
             .sort((a, b) => b.pQty - a.pQty);
         if (filtered.length === 0) return;
         if (filtered.length === 0) return;
-        const hdrConsolidated = ['Rank', 'Staff', 'Branch', 'RBM', 'BDM', 'Total Prod Qty', 'Total OSG Qty', 'Qty Conv%', 'Val Conv%'];
-        const hdrDetailed     = ['Rank', 'Staff', 'Product', 'Product Qty', 'Branch', 'RBM', 'BDM', 'Total Prod Qty', 'OSG Qty', 'Qty Conv%', 'Val Conv%'];
+        const hdrAll    = ['Rank', 'Staff', 'Product', 'Product Qty', 'Branch', 'RBM', 'BDM', 'Total Prod Qty', 'OSG Qty', 'Qty Conv%', 'Val Conv%'];
+        const hdrBranch = ['Rank', 'Staff', 'Product', 'Total Prod Qty', 'Prod Qty', 'OSG Qty', 'Qty Conv%', 'Val Conv%'];
         const wb = XLSX.utils.book_new();
 
-        function addSheet(statsList, sheetName, isDetailed) {
-            const hdr = isDetailed ? hdrDetailed : hdrConsolidated;
+        function addSheet(statsList, sheetName, isBranchSheet) {
+            const hdr = isBranchSheet ? hdrBranch : hdrAll;
             const data = [hdr];
             const mergeRanges = [];
-            const mergeCols = isDetailed ? [0, 1, 4, 5, 6, 7, 9, 10] : [];
+            // For All: Rank(0), Staff(1), Branch(4), RBM(5), BDM(6), TotQty(7), QtyConv(9), ValConv(10)
+            // For Branch: Rank(0), Staff(1), TotQty(3), QtyConv(6), ValConv(7)
+            const mergeCols = isBranchSheet ? [0, 1, 3, 6, 7] : [0, 1, 4, 5, 6, 7, 9, 10];
 
             statsList.forEach((e, i) => {
                 const rank = i + 1;
                 const startRow = data.length;
 
-                if (isDetailed && e.products && e.products.length > 0) {
+                if (e.products && e.products.length > 0) {
                     e.products.forEach((prod, pIdx) => {
                         if (pIdx === 0) {
-                            data.push([
-                                rank, e.name, prod.name, prod.qty, e.branch, e.rbm, e.bdm, e.pQty, prod.osgQty,
-                                parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2))
-                            ]);
+                            if (isBranchSheet) {
+                                // [Rank, Staff, Product, Total Prod Qty, Prod Qty, OSG Qty, Qty Conv%, Val Conv%]
+                                data.push([rank, e.name, prod.name, e.pQty, prod.qty, prod.osgQty, parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2))]);
+                            } else {
+                                // [Rank, Staff, Product, Product Qty, Branch, RBM, BDM, Total Prod Qty, OSG Qty, Qty Conv%, Val Conv%]
+                                data.push([rank, e.name, prod.name, prod.qty, e.branch, e.rbm, e.bdm, e.pQty, prod.osgQty, parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2))]);
+                            }
                         } else {
-                            data.push([
-                                '', '', prod.name, prod.qty, '', '', '', '', prod.osgQty, '', ''
-                            ]);
+                            if (isBranchSheet) {
+                                data.push(['', '', prod.name, '', prod.qty, prod.osgQty, '', '']);
+                            } else {
+                                data.push(['', '', prod.name, prod.qty, '', '', '', '', prod.osgQty, '', '']);
+                            }
                         }
                     });
                     const endRow = data.length - 1;
@@ -1947,17 +1954,10 @@
                         mergeCols.forEach(c => mergeRanges.push({ s: { r: startRow, c }, e: { r: endRow, c } }));
                     }
                 } else {
-                    // Consolidated (or no products)
-                    if (isDetailed) {
-                        data.push([
-                            rank, e.name, '', '', e.branch, e.rbm, e.bdm, e.pQty, e.oQty,
-                            parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2))
-                        ]);
+                    if (isBranchSheet) {
+                        data.push([rank, e.name, '', e.pQty, '', e.oQty, parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2))]);
                     } else {
-                        data.push([
-                            rank, e.name, e.branch, e.rbm, e.bdm, e.pQty, e.oQty,
-                            parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2))
-                        ]);
+                        data.push([rank, e.name, '', '', e.branch, e.rbm, e.bdm, e.pQty, e.oQty, parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2))]);
                     }
                 }
             });
@@ -1987,9 +1987,9 @@
                 }
             }
 
-            ws['!cols'] = isDetailed
-                ? [{wch:8},{wch:25},{wch:22},{wch:12},{wch:20},{wch:15},{wch:15},{wch:10},{wch:10},{wch:12},{wch:12}]
-                : [{wch:8},{wch:25},{wch:20},{wch:15},{wch:15},{wch:12},{wch:12},{wch:12},{wch:12}];
+            ws['!cols'] = isBranchSheet
+                ? [{wch:8},{wch:25},{wch:22},{wch:14},{wch:10},{wch:10},{wch:12},{wch:12}]
+                : [{wch:8},{wch:25},{wch:22},{wch:12},{wch:20},{wch:15},{wch:15},{wch:10},{wch:10},{wch:12},{wch:12}];
 
             let safeName = sheetName.substring(0, 31).replace(/[\\\/?*[\]]/g, '');
             if (!safeName) safeName = 'Sheet';
@@ -2002,10 +2002,10 @@
             XLSX.utils.book_append_sheet(wb, ws, finalName);
         }
 
-        // First sheet: Consolidated Summary
+        // First sheet: All (no change, detailed itemized)
         addSheet(filtered, 'future_stores_staff', false);
 
-        // Branch sheets: Detailed Itemized
+        // Branch sheets: Simplified format (8 cols)
         const branches = [...new Set(filtered.map(s => s.branch).filter(Boolean))].sort();
         branches.forEach(branch => {
             addSheet(filtered.filter(s => s.branch === branch), branch, true);
