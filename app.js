@@ -1914,7 +1914,7 @@
             .filter(s => !selBranch || s.branch === selBranch)
             .sort((a, b) => b.pQty - a.pQty);
         if (filtered.length === 0) return;
-        const hdr = ['Rank', 'Staff', 'Product', 'Product Qty', 'Product OSG Qty', 'Branch', 'RBM', 'BDM', 'Total Prod Qty', 'Total OSG Qty', 'Qty Conv%', 'Val Conv%', 'Prod Revenue', 'OSG Revenue'];
+        const hdr = ['Rank', 'Staff', 'Product', 'Product Qty', 'Branch', 'RBM', 'BDM', 'Prod Qty', 'OSG Qty', 'Qty Conv%', 'Val Conv%', 'Prod Revenue', 'OSG Revenue'];
         const lines = [hdr.join(',')];
         filtered.forEach((e, i) => {
             const rank = i + 1;
@@ -1922,18 +1922,18 @@
                 e.products.forEach((prod, pIdx) => {
                     if (pIdx === 0) {
                         lines.push([
-                            rank, q(e.name), q(prod.name), prod.qty, prod.osgQty, q(e.branch), q(e.rbm), q(e.bdm), e.pQty, e.oQty,
+                            rank, q(e.name), q(prod.name), prod.qty, q(e.branch), q(e.rbm), q(e.bdm), e.pQty, prod.osgQty,
                             e.qtyConv.toFixed(2), e.valConv.toFixed(2), e.pRev.toFixed(0), e.oRev.toFixed(0)
                         ].join(','));
                     } else {
                         lines.push([
-                            '', '', q(prod.name), prod.qty, prod.osgQty, '', '', '', '', '', '', '', '', ''
+                            '', '', q(prod.name), prod.qty, '', '', '', '', prod.osgQty, '', '', '', ''
                         ].join(','));
                     }
                 });
             } else {
                 lines.push([
-                    rank, q(e.name), '', '', '', q(e.branch), q(e.rbm), q(e.bdm), e.pQty, e.oQty,
+                    rank, q(e.name), '', '', q(e.branch), q(e.rbm), q(e.bdm), e.pQty, e.oQty,
                     e.qtyConv.toFixed(2), e.valConv.toFixed(2), e.pRev.toFixed(0), e.oRev.toFixed(0)
                 ].join(','));
             }
