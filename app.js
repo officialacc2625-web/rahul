@@ -2445,7 +2445,8 @@
                 ">↧ Load ${Math.min(remaining, 100)} more (${remaining} remaining)</button>
                </div>` : '';
 
-        $('coMissedTable').innerHTML = statsBar + callerSelector + tableHeader + rowsHTML + '</tbody></table></div>' + loadMoreBtn;
+        const cpHTML = renderCallerPerformanceHTML();
+        $('coMissedTable').innerHTML = statsBar + cpHTML + callerSelector + tableHeader + rowsHTML + '</tbody></table></div>' + loadMoreBtn;
 
         // ---- Handlers ----
         window.selectCoCaller = function(name) {
@@ -2510,19 +2511,72 @@
 
     // Updates just the 6 stat numbers in-place (no table re-render)
     function updateCoStatsInPlace() {
-        const rows = coCurrentRows;
+        const rows = coCurrentRows || [];
+        const total = rows.length;
         const connected    = rows.filter(r => (coStatusMap[r.invoice||'']||{}).callStatus === 'connected').length;
         const disconnected = rows.filter(r => (coStatusMap[r.invoice||'']||{}).callStatus === 'disconnected').length;
         const interested   = rows.filter(r => (coStatusMap[r.invoice||'']||{}).interest === 'interested').length;
         const notInterested= rows.filter(r => (coStatusMap[r.invoice||'']||{}).interest === 'not-interested').length;
-        const notCalled    = rows.length - connected - disconnected;
+        const notCalled    = total - connected - disconnected;
+
         const set = (id, val) => { const el = $(id); if (el) el.textContent = val; };
-        set('coStat_total', rows.length);
+        set('coStat_total', total);
         set('coStat_notCalled', notCalled);
         set('coStat_connected', connected);
         set('coStat_disconnected', disconnected);
         set('coStat_interested', interested);
         set('coStat_notInterested', notInterested);
+
+        // Also update Caller Performance Cards
+        const cpEl = $('coCallerPerformance');
+        if (cpEl) cpEl.innerHTML = renderCallerPerformanceHTML();
+    }
+
+    function renderCallerPerformanceHTML() {
+        if (!CO_CALLERS || CO_CALLERS.length === 0) return '';
+        
+        let html = '<div class="caller-performance-grid">';
+        CO_CALLERS.forEach(caller => {
+            // Aggregate stats from global coStatusMap for THIS caller
+            const stats = { conn: 0, disc: 0, int: 0, nint: 0 };
+            Object.values(coStatusMap).forEach(st => {
+                if (st.calledBy === caller.name) {
+                    if (st.callStatus === 'connected') stats.conn++;
+                    if (st.callStatus === 'disconnected') stats.disc++;
+                    if (st.interest === 'interested') stats.int++;
+                    if (st.interest === 'not-interested') stats.nint++;
+                }
+            });
+
+            html += `
+            <div class="caller-card" style="border-top: 3px solid ${caller.color};">
+                <div class="caller-card-header">
+                    <div class="caller-avatar" style="background:${caller.color};">${caller.name[0]}</div>
+                    <div class="caller-name">${caller.name}</div>
+                    <div style="margin-left:auto; font-size:0.7rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Caller</div>
+                </div>
+                <div class="caller-stats-mini-grid">
+                    <div class="mini-stat conn">
+                        <span class="mini-stat-label">Connected</span>
+                        <span class="mini-stat-val">${stats.conn}</span>
+                    </div>
+                    <div class="mini-stat disc">
+                        <span class="mini-stat-label">Disconnected</span>
+                        <span class="mini-stat-val">${stats.disc}</span>
+                    </div>
+                    <div class="mini-stat int">
+                        <span class="mini-stat-label">Interested</span>
+                        <span class="mini-stat-val">${stats.int}</span>
+                    </div>
+                    <div class="mini-stat nint">
+                        <span class="mini-stat-label">Not Interested</span>
+                        <span class="mini-stat-val">${stats.nint}</span>
+                    </div>
+                </div>
+            </div>`;
+        });
+        html += '</div>';
+        return html;
     }
 
     // Replaces a single row in-place without touching the rest of the table
