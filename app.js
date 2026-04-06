@@ -947,21 +947,57 @@
     }
 
     const COLORS = {
-        green: 'rgba(16,185,129,0.8)', red: 'rgba(239,68,68,0.8)',
-        blue: 'rgba(59,130,246,0.8)', amber: 'rgba(245,158,11,0.8)',
-        cyan: 'rgba(6,182,212,0.8)', purple: 'rgba(139,92,246,0.8)',
-        orange: 'rgba(249,115,22,0.8)',
+        green: '#10b981',   // Emerald 500
+        red: '#ef4444',     // Rose 500
+        blue: '#3b82f6',    // Cobalt 500
+        amber: '#f59e0b',   // Amber 500
+        cyan: '#06b6d4',    // Cyan 500
+        purple: '#8b5cf6',  // Violet 500
+        orange: '#f97316',  // Orange 500
+        slate: '#64748b'    // Slate 500
     };
-    const PALETTE = ['#3b82f6', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#6366f1',
-        '#14b8a6', '#f97316', '#a855f7', '#22d3ee', '#84cc16', '#e11d48', '#0ea5e9', '#d946ef'];
+    const PALETTE = [
+        '#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#06b6d4', '#f43f5e', 
+        '#8b5cf6', '#14b8a6', '#f97316', '#6366f1', '#0ea5e9'
+    ];
 
     function chartBase(withYCurrency) {
         return {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { labels: { color: '#8896b8', font: { family: 'Inter', size: 11 } } } },
+            responsive: true, 
+            maintainAspectRatio: false,
+            plugins: { 
+                legend: { 
+                    labels: { 
+                        color: '#94a3b8', 
+                        font: { family: "'Outfit', sans-serif", size: 12, weight: '500' },
+                        padding: 20,
+                        usePointStyle: true
+                    } 
+                },
+                tooltip: {
+                    backgroundColor: '#1e293b',
+                    titleColor: '#f1f5f9',
+                    bodyColor: '#cbd5e1',
+                    borderColor: 'rgba(255,255,255,0.1)',
+                    borderWidth: 1,
+                    padding: 12,
+                    cornerRadius: 8,
+                    displayColors: true
+                }
+            },
             scales: {
-                x: { ticks: { color: '#5a6a8a', font: { size: 10 } }, grid: { color: 'rgba(30,42,69,0.5)' } },
-                y: { ticks: { color: '#5a6a8a', font: { size: 10 }, callback: withYCurrency ? v => fmtShort(v) : v => v + '%' }, grid: { color: 'rgba(30,42,69,0.5)' } },
+                x: { 
+                    ticks: { color: '#64748b', font: { family: "'Outfit', sans-serif", size: 11 } }, 
+                    grid: { color: 'rgba(255,255,255,0.03)', drawBorder: false } 
+                },
+                y: { 
+                    ticks: { 
+                        color: '#64748b', 
+                        font: { family: "'Outfit', sans-serif", size: 11 }, 
+                        callback: withYCurrency ? v => fmtShort(v) : v => v + '%' 
+                    }, 
+                    grid: { color: 'rgba(255,255,255,0.03)', drawBorder: false } 
+                },
             }
         };
     }
@@ -2343,56 +2379,66 @@
         const notCalled    = total - connected - disconnected;
 
         const statsBar = `
-        <div id="coStatsBar" style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px;">
-            <div style="flex:1;min-width:120px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;border-top:3px solid #64748b;">
-                <div id="coStat_total" style="font-size:1.6rem;font-weight:700;color:var(--text-primary);">${total}</div>
-                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;">Total Customers</div>
+        <div id="coStatsBar" class="kpi-grid" style="margin-bottom:24px;">
+            <div class="kpi-card" style="border-top: 4px solid var(--text-muted); height: 100px; padding: 16px 20px;">
+                <div class="kpi-content">
+                    <div class="kpi-label">Total Results</div>
+                    <div id="coStat_total" class="kpi-value">${total}</div>
+                </div>
             </div>
-            <div style="flex:1;min-width:120px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;border-top:3px solid #64748b;">
-                <div id="coStat_notCalled" style="font-size:1.6rem;font-weight:700;color:#94a3b8;">${notCalled}</div>
-                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;">Not Yet Called</div>
+            <div class="kpi-card" style="border-top: 4px solid var(--text-secondary); height: 100px; padding: 16px 20px;">
+                <div class="kpi-content">
+                    <div class="kpi-label">Not Called</div>
+                    <div id="coStat_notCalled" class="kpi-value" style="color:var(--text-secondary);">${notCalled}</div>
+                </div>
             </div>
-            <div style="flex:1;min-width:120px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;border-top:3px solid #2563eb;">
-                <div id="coStat_connected" style="font-size:1.6rem;font-weight:700;color:#2563eb;">${connected}</div>
-                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;">Connected</div>
+            <div class="kpi-card" style="border-top: 4px solid var(--accent-blue); height: 100px; padding: 16px 20px;">
+                <div class="kpi-content">
+                    <div class="kpi-label">Connected</div>
+                    <div id="coStat_connected" class="kpi-value" style="color:var(--accent-blue);">${connected}</div>
+                </div>
             </div>
-            <div style="flex:1;min-width:120px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;border-top:3px solid #9333ea;">
-                <div id="coStat_disconnected" style="font-size:1.6rem;font-weight:700;color:#9333ea;">${disconnected}</div>
-                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;">Disconnected</div>
+            <div class="kpi-card" style="border-top: 4px solid var(--accent-purple); height: 100px; padding: 16px 20px;">
+                <div class="kpi-content">
+                    <div class="kpi-label">Disconnected</div>
+                    <div id="coStat_disconnected" class="kpi-value" style="color:var(--accent-purple);">${disconnected}</div>
+                </div>
             </div>
-            <div style="flex:1;min-width:120px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;border-top:3px solid #16a34a;">
-                <div id="coStat_interested" style="font-size:1.6rem;font-weight:700;color:#16a34a;">${interested}</div>
-                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;">Interested</div>
+            <div class="kpi-card" style="border-top: 4px solid var(--accent-green); height: 100px; padding: 16px 20px;">
+                <div class="kpi-content">
+                    <div class="kpi-label">Interested</div>
+                    <div id="coStat_interested" class="kpi-value" style="color:var(--accent-green);">${interested}</div>
+                </div>
             </div>
-            <div style="flex:1;min-width:120px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;border-top:3px solid #dc2626;">
-                <div id="coStat_notInterested" style="font-size:1.6rem;font-weight:700;color:#dc2626;">${notInterested}</div>
-                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;">Not Interested</div>
+            <div class="kpi-card" style="border-top: 4px solid var(--accent-red); height: 100px; padding: 16px 20px;">
+                <div class="kpi-content">
+                    <div class="kpi-label">Not Interested</div>
+                    <div id="coStat_notInterested" class="kpi-value" style="color:var(--accent-red);">${notInterested}</div>
+                </div>
             </div>
         </div>`;
 
         // ---- Caller Selector ----
         const callerSelector = `
-        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;">
-            <span style="font-size:0.85rem;font-weight:600;color:var(--text-muted);white-space:nowrap;">👤 You are:</span>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                ${CO_CALLERS.map(c => `
-                <button onclick="window.selectCoCaller('${c.name}')" style="
-                    display:flex;align-items:center;gap:7px;
-                    padding:7px 16px;border-radius:20px;border:2px solid ${c.color};
-                    font-size:0.85rem;font-family:inherit;cursor:pointer;font-weight:600;
-                    background:${currentCaller===c.name ? c.bg : 'transparent'};
-                    color:${c.color};
-                    box-shadow:${currentCaller===c.name ? '0 0 0 2px '+c.color+'55' : 'none'};
-                    transition:all 0.2s;
-                ">
-                    <span style="width:24px;height:24px;border-radius:50%;background:${c.color};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;">${c.name[0]}</span>
-                    ${c.name}
-                    ${currentCaller===c.name ? '<span style="font-size:0.7rem;opacity:0.8;">✓ Active</span>' : ''}
-                </button>`).join('')}
+        <div class="filters-bar" style="padding: 16px 24px; margin-bottom:24px;">
+            <div class="filter-group" style="min-width: auto; flex: 0;">
+                <label>👤 Session Caller</label>
+                <div style="display:flex;gap:10px;margin-top:4px;">
+                    ${CO_CALLERS.map(c => `
+                    <button onclick="window.selectCoCaller('${c.name}')" class="nav-item ${currentCaller===c.name ? 'active' : ''}" style="
+                        padding:8px 16px; border-radius:30px; font-size:0.88rem; cursor:pointer;
+                        ${currentCaller===c.name ? 'background:'+c.bg+'; color:'+c.color+'; border-color:'+c.color : ''}
+                    ">
+                        <span style="width:20px;height:20px;border-radius:50%;background:${c.color};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:0.65rem;margin-right:4px;">${c.name[0]}</span>
+                        ${c.name}
+                    </button>`).join('')}
+                </div>
             </div>
-            ${currentCaller
-                ? `<span style="margin-left:auto;font-size:0.8rem;color:var(--text-muted);">Logging calls as <strong style="color:var(--text-primary);">${currentCaller}</strong></span>`
-                : '<span style="margin-left:auto;font-size:0.8rem;color:#f59e0b;">⚠️ Select your name to log calls</span>'}
+            <div style="margin-left:auto; display:flex; flex-direction:column; align-items:flex-end;">
+                ${currentCaller
+                    ? `<span style="font-size:0.85rem;color:var(--text-secondary);">Logged in as <strong style="color:var(--accent-blue);">${currentCaller}</strong></span>`
+                    : '<div class="status-badge" style="background:rgba(245,158,11,0.15); color:var(--accent-amber);">⚠️ Please select your name</div>'}
+            </div>
         </div>`;
 
         // ---- Table scaffold + first page of rows ----
@@ -2416,12 +2462,10 @@
 
         const remaining = missedUnique.length - coDisplayLimit;
         const loadMoreBtn = remaining > 0
-            ? `<div id="coLoadMoreWrap" style="text-align:center;margin-top:16px;">
-                <button onclick="window.coLoadMore()" style="
-                    padding:10px 28px;border-radius:20px;border:1.5px solid var(--accent);
-                    background:transparent;color:var(--accent);font-family:inherit;
-                    font-size:0.88rem;font-weight:600;cursor:pointer;transition:all 0.2s;
-                ">↧ Load ${Math.min(remaining, 100)} more (${remaining} remaining)</button>
+            ? `<div id="coLoadMoreWrap" style="text-align:center;margin-top:24px;">
+                <button onclick="window.coLoadMore()" class="btn-apply-filter" style="margin: 0 auto;">
+                    ↧ Load ${Math.min(remaining, 100)} more (${remaining} remaining)
+                </button>
                </div>` : '';
 
         $('coMissedTable').innerHTML = statsBar + callerSelector + tableHeader + rowsHTML + '</tbody></table></div>' + loadMoreBtn;
@@ -2505,13 +2549,26 @@
     }
 
     // Replaces a single row in-place without touching the rest of the table
+    // Replaces a single row in-place without touching the rest of the table
     function updateCoSingleRow(inv) {
         const rowEl = document.getElementById('co-row-' + inv);
         if (!rowEl) return;
         const idx = coCurrentRows.findIndex((r, i) => (r.invoice || String(i)) === inv);
         if (idx === -1) return;
         const newRowHTML = buildCoRowHTML(coCurrentRows[idx], idx);
-        rowEl.outerHTML = newRowHTML;
+        
+        // Use a temporary container to swap the element while preserving transition
+        const temp = document.createElement('tbody');
+        temp.innerHTML = newRowHTML;
+        const newRow = temp.firstElementChild;
+        
+        newRow.style.background = 'rgba(59, 130, 246, 0.15)';
+        rowEl.replaceWith(newRow);
+        
+        setTimeout(() => {
+            const el = document.getElementById('co-row-' + inv);
+            if (el) el.style.background = '';
+        }, 800);
     }
 
     // Builds HTML for a single table row
@@ -2519,35 +2576,27 @@
         const inv = r.invoice || String(i);
         const st  = coStatusMap[inv] || { callStatus: null, interest: null, calledBy: null, remarks: '' };
 
-        const rowBg = st.interest === 'interested'     ? 'rgba(22,163,74,0.06)'
-                    : st.interest === 'not-interested' ? 'rgba(220,38,38,0.06)'
-                    : 'transparent';
+        const rowClass = st.interest === 'interested' ? 'insight-success' 
+                       : st.interest === 'not-interested' ? 'insight-danger' 
+                       : '';
 
         const interestBtn = `
-            <select onchange="window.toggleCoInterest('${inv}', this.value)" style="
-                padding:6px 10px;border-radius:8px;border:1px solid ${st.interest === 'interested' ? '#16a34a' : (st.interest === 'not-interested' ? '#dc2626' : 'var(--border)')};
-                font-size:0.85rem;font-family:inherit;cursor:pointer;font-weight:600;
-                background:var(--bg-input); color:var(--text-primary); outline:none; max-width:140px;
-            ">
+            <select onchange="window.toggleCoInterest('${inv}', this.value)" class="crm-select" style="border-color:${st.interest === 'interested' ? 'var(--accent-green)' : (st.interest === 'not-interested' ? 'var(--accent-red)' : 'var(--border)')};">
                 <option value="" ${!st.interest ? 'selected' : ''}>- Select -</option>
                 <option value="interested" ${st.interest === 'interested' ? 'selected' : ''}>✅ Interested</option>
                 <option value="not-interested" ${st.interest === 'not-interested' ? 'selected' : ''}>❌ Not Interested</option>
             </select>`;
 
         const callerInfo = st.calledBy ? (() => {
-            const c = CO_CALLERS.find(x => x.name === st.calledBy) || { color:'#64748b', bg:'rgba(100,116,139,0.15)' };
-            return `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;background:${c.bg};color:${c.color};font-size:0.7rem;font-weight:700;margin-top:5px;">
-                <span style="width:14px;height:14px;border-radius:50%;background:${c.color};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:0.55rem;font-weight:800;">${st.calledBy[0]}</span>
-                ${st.calledBy}</span>`;
+            const c = CO_CALLERS.find(x => x.name === st.calledBy) || { color:'#94a3b8', bg:'rgba(148, 163, 184, 0.1)' };
+            return `<div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:12px;background:${c.bg};color:${c.color};font-size:0.75rem;font-weight:700;margin-top:6px;border:1px solid ${c.color}22;">
+                <span style="width:16px;height:16px;border-radius:50%;background:${c.color};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:800;">${st.calledBy[0]}</span>
+                ${st.calledBy}</div>`;
         })() : '';
 
         const callBtns = r.customerNo ? `
-            <div style="display:flex;flex-direction:column;gap:5px;margin-top:6px;align-items:flex-start;">
-                <select onchange="window.toggleCoCall('${inv}', this.value)" style="
-                    padding:6px 10px;border-radius:8px;border:1px solid ${st.callStatus === 'connected' ? '#2563eb' : (st.callStatus === 'disconnected' ? '#9333ea' : 'var(--border)')};
-                    font-size:0.85rem;font-family:inherit;cursor:pointer;font-weight:600;
-                    background:var(--bg-input); color:var(--text-primary); outline:none; max-width:140px;
-                ">
+            <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;align-items:flex-start;">
+                <select onchange="window.toggleCoCall('${inv}', this.value)" class="crm-select" style="border-color:${st.callStatus === 'connected' ? 'var(--accent-blue)' : (st.callStatus === 'disconnected' ? 'var(--accent-purple)' : 'var(--border)')};">
                     <option value="" ${!st.callStatus ? 'selected' : ''}>- Status -</option>
                     <option value="connected" ${st.callStatus === 'connected' ? 'selected' : ''}>📞 Connected</option>
                     <option value="disconnected" ${st.callStatus === 'disconnected' ? 'selected' : ''}>📵 Disconnected</option>
@@ -2555,31 +2604,23 @@
                 ${callerInfo}
             </div>` : '';
 
-        const remarksInput = `
-            <input type="text" value="${q(st.remarks || '')}" onchange="window.saveCoRemark('${inv}', this.value)" placeholder="Remarks..." style="
-                padding:6px 10px;border-radius:8px;border:1px solid var(--border);
-                font-size:0.85rem;font-family:inherit;background:var(--bg-input);color:var(--text-primary);
-                width:130px; outline:none;
-            " />
-        `;
-
-        return `<tr id="co-row-${inv}" style="border-bottom:1px solid var(--border);background:${rowBg};transition:background 0.2s;">
-            <td style="padding:12px 10px;color:var(--text-muted);font-size:0.8rem;">${i+1}</td>
-            <td style="padding:12px 10px;font-family:monospace;font-size:0.82rem;color:var(--text-secondary);">${r.invoice}</td>
-            <td style="padding:12px 10px;"><strong style="color:var(--text-primary);font-size:0.9rem;">${r.customerName||'—'}</strong></td>
-            <td style="padding:12px 10px;">${interestBtn}</td>
-            <td style="padding:12px 10px;">
-                <div style="display:flex;align-items:center;gap:6px;">
-                    <span style="font-weight:600;color:var(--text-primary);font-size:0.88rem;">${r.customerNo||'—'}</span>
-                    ${r.customerNo?`<a href="tel:${r.customerNo}" title="Call" style="color:var(--primary);display:flex;padding:5px;border-radius:50%;background:rgba(59,130,246,0.12);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>`:''}
-                    ${r.customerNo?`<a href="https://wa.me/91${r.customerNo.replace(/\D/g,'')}" target="_blank" title="WhatsApp" style="color:#25D366;display:flex;padding:5px;border-radius:50%;background:rgba(37,211,102,0.12);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>`:''}
+        return `<tr id="co-row-${inv}" class="${rowClass}">
+            <td><span class="text-muted">${i+1}</span></td>
+            <td><code style="color:var(--text-secondary); opacity:0.8;">${r.invoice}</code></td>
+            <td><div style="font-weight:700; color:var(--text-primary); font-size:0.95rem;">${r.customerName||'—'}</div></td>
+            <td>${interestBtn}</td>
+            <td>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                    <span style="font-weight:600;color:var(--text-primary);">${r.customerNo||'—'}</span>
+                    ${r.customerNo?`<a href="tel:${r.customerNo}" class="status-badge" style="background:rgba(59,130,246,0.1); color:var(--accent-blue); padding:4px;" title="Call"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>`:''}
+                    ${r.customerNo?`<a href="https://wa.me/91${r.customerNo.replace(/\D/g,'')}" target="_blank" class="status-badge" style="background:rgba(37,211,102,0.1); color:#25D366; padding:4px;" title="WhatsApp"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>`:''}
                 </div>
                 ${callBtns}
             </td>
-            <td style="padding:12px 10px;">${remarksInput}</td>
-            <td style="padding:12px 10px;color:var(--text-secondary);font-size:0.85rem;">${r.branch||'—'}</td>
-            <td style="padding:12px 10px;color:var(--text-secondary);font-size:0.85rem;">${r.product||'—'}</td>
-            <td style="padding:12px 10px;text-align:right;font-weight:600;color:var(--text-primary);font-size:0.88rem;white-space:nowrap;">${fmtShort(r.soldPrice)}</td>
+            <td><input type="text" value="${q(st.remarks || '')}" onchange="window.saveCoRemark('${inv}', this.value)" placeholder="Add remarks..." class="crm-input" style="width:160px;" /></td>
+            <td><span class="text-muted" style="font-size:0.85rem;">${r.branch||'—'}</span></td>
+            <td><span class="text-secondary" style="font-size:0.85rem; font-weight:500;">${r.product||'—'}</span></td>
+            <td style="text-align:right;"><div class="conv-warn" style="font-size:1rem;">${fmtShort(r.soldPrice)}</div></td>
         </tr>`;
     }
 
