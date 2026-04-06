@@ -1915,60 +1915,83 @@
             .sort((a, b) => b.pQty - a.pQty);
         if (filtered.length === 0) return;
         const hdr = ['Rank', 'Staff', 'Product', 'Product Qty', 'Branch', 'RBM', 'BDM', 'Prod Qty', 'OSG Qty', 'Qty Conv%', 'Val Conv%'];
-        const data = [hdr];
-        filtered.forEach((e, i) => {
-            const rank = i + 1;
-            if (e.products && e.products.length > 0) {
-                e.products.forEach((prod, pIdx) => {
-                    if (pIdx === 0) {
-                        data.push([
-                            rank, e.name, prod.name, prod.qty, e.branch, e.rbm, e.bdm, e.pQty, prod.osgQty,
-                            parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2))
-                        ]);
-                    } else {
-                        data.push([
-                            '', '', prod.name, prod.qty, '', '', '', '', prod.osgQty, '', ''
-                        ]);
+        const wb = XLSX.utils.book_new();
+
+        function addSheet(statsList, sheetName) {
+            const data = [hdr];
+            statsList.forEach((e, i) => {
+                const rank = i + 1;
+                if (e.products && e.products.length > 0) {
+                    e.products.forEach((prod, pIdx) => {
+                        if (pIdx === 0) {
+                            data.push([
+                                rank, e.name, prod.name, prod.qty, e.branch, e.rbm, e.bdm, e.pQty, prod.osgQty,
+                                parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2))
+                            ]);
+                        } else {
+                            data.push([
+                                '', '', prod.name, prod.qty, '', '', '', '', prod.osgQty, '', ''
+                            ]);
+                        }
+                    });
+                } else {
+                    data.push([
+                        rank, e.name, '', '', e.branch, e.rbm, e.bdm, e.pQty, e.oQty,
+                        parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2))
+                    ]);
+                }
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(data);
+
+            // Styling
+            const headerStyle = {
+                font: { bold: true, color: { rgb: "FFFFFF" } },
+                fill: { fgColor: { rgb: "3b82f6" } },
+                alignment: { horizontal: "center", vertical: "center" }
+            };
+            const altRowStyle = { fill: { fgColor: { rgb: "f1f5f9" } } };
+
+            for (let R = 0; R < data.length; ++R) {
+                for (let C = 0; C < hdr.length; ++C) {
+                    const cell_address = { c: C, r: R };
+                    const cell_ref = XLSX.utils.encode_cell(cell_address);
+                    if (!ws[cell_ref]) continue;
+
+                    if (R === 0) {
+                        ws[cell_ref].s = headerStyle;
+                    } else if (R % 2 === 0) {
+                        ws[cell_ref].s = { ...ws[cell_ref].s, ...altRowStyle };
                     }
-                });
-            } else {
-                data.push([
-                    rank, e.name, '', '', e.branch, e.rbm, e.bdm, e.pQty, e.oQty,
-                    parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2))
-                ]);
-            }
-        });
-
-        const ws = XLSX.utils.aoa_to_sheet(data);
-
-        // Styling
-        const headerStyle = {
-            font: { bold: true, color: { rgb: "FFFFFF" } },
-            fill: { fgColor: { rgb: "3b82f6" } },
-            alignment: { horizontal: "center", vertical: "center" }
-        };
-        const altRowStyle = { fill: { fgColor: { rgb: "f1f5f9" } } };
-
-        for (let R = 0; R < data.length; ++R) {
-            for (let C = 0; C < hdr.length; ++C) {
-                const cell_address = { c: C, r: R };
-                const cell_ref = XLSX.utils.encode_cell(cell_address);
-                if (!ws[cell_ref]) continue;
-
-                if (R === 0) {
-                    ws[cell_ref].s = headerStyle;
-                } else if (R % 2 === 0) {
-                    ws[cell_ref].s = { ...ws[cell_ref].s, ...altRowStyle };
                 }
             }
+
+            ws['!cols'] = [
+                {wch: 8}, {wch: 25}, {wch: 22}, {wch: 12}, {wch: 20}, {wch: 15}, {wch: 15}, {wch: 10}, {wch: 10}, {wch: 12}, {wch: 12}
+            ];
+
+            let safeName = sheetName.substring(0, 31).replace(/[\\\/\?\*\[\]]/g, '');
+            if(!safeName) safeName = "Sheet";
+            // Check for duplicate names
+            let finalName = safeName;
+            let counter = 1;
+            while(wb.SheetNames.includes(finalName)) {
+                finalName = safeName.substring(0, 27) + " " + counter;
+                counter++;
+            }
+            XLSX.utils.book_append_sheet(wb, ws, finalName);
         }
 
-        ws['!cols'] = [
-            {wch: 8}, {wch: 25}, {wch: 22}, {wch: 12}, {wch: 20}, {wch: 15}, {wch: 15}, {wch: 10}, {wch: 10}, {wch: 12}, {wch: 12}
-        ];
+        // Add overall sheet first
+        addSheet(filtered, "future_stores_staff");
 
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Future Stores Staff");
+        // Add individual branch sheets
+        const branches = [...new Set(filtered.map(s => s.branch).filter(Boolean))].sort();
+        branches.forEach(branch => {
+            const branchStats = filtered.filter(s => s.branch === branch);
+            addSheet(branchStats, branch);
+        });
+
         XLSX.writeFile(wb, 'future_stores_staff.xlsx');
     }
 
