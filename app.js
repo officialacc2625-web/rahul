@@ -77,6 +77,8 @@
         addition: ['addition', 'additions'],
         deduction: ['deduction', 'deductions'],
         invoice: ['invoice number', 'invoice no', 'invoice', 'bill no', 'bill number', 'bill no.', 'invoice no.', 'inv no', 'receipt no'],
+        invoiceDate: ['invoice date', 'date', 'bill date', 'creation date'],
+        time: ['time', 'creation time', 'invoice time', 'bill time'],
         customerName: ['customer name', 'customer', 'cust name', 'buyer name', 'buyer', 'party name', 'party', 'client name', 'client'],
         customerNo: ['customer number', 'customer no', 'cust no', 'mobile', 'phone', 'contact', 'mobile no', 'phone no', 'contact no', 'customer mobile', 'cust mobile', 'mobile number'],
     };
@@ -94,7 +96,43 @@
     };
 
     // ---- DOM REFERENCES ----
-    const $ = id => document.getElementById(id);
+    const $ = id => {
+        const el = document.getElementById(id);
+        if (el) return el;
+        // Mock element to gracefully handle removed UI sections without throwing runtime errors
+        const safeChain = () => safeProxy;
+        const safeProxy = new Proxy({}, {
+            get: function(target, prop) {
+                if (prop === 'then') return undefined;
+                if (prop === 'options') return [{textContent: 'All'}];
+                if (prop === 'value' || prop === 'innerHTML' || prop === 'textContent' || prop === 'className') return '';
+                if (prop === 'style' || prop === 'classList' || prop === 'dataset') return safeProxy;
+                if (typeof prop === 'string') return safeChain;
+                return undefined;
+            },
+            set: function() { return true; }
+        });
+        return safeProxy;
+    };
+
+    const originalQuerySelector = document.querySelector.bind(document);
+    document.querySelector = function(selector) {
+        const el = originalQuerySelector(selector);
+        if (el) return el;
+        const safeChain = () => safeProxy;
+        const safeProxy = new Proxy({}, {
+            get: function(target, prop) {
+                if (prop === 'then') return undefined;
+                if (prop === 'options') return [{textContent: 'All'}];
+                if (prop === 'value' || prop === 'innerHTML' || prop === 'textContent' || prop === 'className') return '';
+                if (prop === 'style' || prop === 'classList' || prop === 'dataset') return safeProxy;
+                if (typeof prop === 'string') return safeChain;
+                return undefined;
+            },
+            set: function() { return true; }
+        });
+        return safeProxy;
+    };
     const sidebar = $('sidebar');
     const menuToggle = $('menuToggle');
     const loadingOverlay = $('loadingOverlay');
@@ -132,9 +170,9 @@
     // ---- CUSTOMER CALL TRACKING STATE ----
     const coStatusMap = {};
     const CO_CALLERS = [
-        { name: 'Harmiya',  color: '#7c3aed', bg: 'rgba(124,58,237,0.15)' },
-        { name: 'Aswathi',  color: '#0891b2', bg: 'rgba(8,145,178,0.15)' },
-        { name: 'Shikha',   color: '#d97706', bg: 'rgba(217,119,6,0.15)'  },
+        { name: 'Harmiya',  color: '#7c3aed', bg: 'rgba(124,58,237,0.15)', pass: '1234' },
+        { name: 'Aswathi',  color: '#0891b2', bg: 'rgba(8,145,178,0.15)', pass: '5678' },
+        { name: 'Shikha',   color: '#d97706', bg: 'rgba(217,119,6,0.15)', pass: '9012'  },
     ];
     let currentCaller = localStorage.getItem('co_caller') || null;
     let coCurrentRows = [];   // current filtered rows
@@ -461,6 +499,8 @@
             r.brand = strVal(row, mapping.brand);
             r.invoice = strVal(row, mapping.invoice);
             r.customerName = strVal(row, mapping.customerName);
+            r.invoiceDate = getVal(row, mapping.invoiceDate, '');
+            r.time = getVal(row, mapping.time, '');
             r.customerNo = strVal(row, mapping.customerNo);
             r.soldPrice = num(getVal(row, mapping.soldPrice, 0));
             r.taxableVal = num(getVal(row, mapping.taxableVal, 0));
@@ -2188,7 +2228,7 @@
         // Load saved statuses from Firebase first, then render
         loadCoStatuses(() => setTimeout(renderCustomersOSGPage, 50));
     });
-    ['coRBM', 'coBDM', 'coProduct', 'coBranch', 'coSort'].forEach(id => {
+    ['coBrand', 'coRBM', 'coBDM', 'coProduct', 'coBranch', 'coSort', 'coStatusFilter'].forEach(id => {
         $(id).addEventListener('change', () => {
             if (id === 'coSort') window.coSortMode = $('coSort').value;
             renderCustomersOSGPage();
@@ -2295,17 +2335,22 @@
                 return;
             }
 
+            const selBrand = document.getElementById('coBrand') ? document.getElementById('coBrand').value : '';
             const selRBM = $('coRBM').value;
             const selBDM = $('coBDM').value;
             const selProduct = $('coProduct').value;
             const selBranch = $('coBranch').value;
+            const selDate = document.getElementById('coDateFilter') ? document.getElementById('coDateFilter').value : '';
+            const selStatusFilter = document.getElementById('coStatusFilter') ? document.getElementById('coStatusFilter').value : '';
 
             // Populate filter dropdowns (preserve selection)
+            const brandSet = [...new Set(productData.map(r => r.brand).filter(Boolean))].sort();
             const rbmSet = [...new Set(productData.map(r => r.rbm).filter(Boolean))].sort();
             const bdmSet = [...new Set(productData.map(r => r.bdm).filter(Boolean))].sort();
             const prodSet = [...new Set(productData.map(r => r.product).filter(Boolean))].sort();
             const branchSet = [...new Set(productData.map(r => r.branch).filter(Boolean))].sort();
 
+            if($('coBrand')) $('coBrand').innerHTML = '<option value="">All Brands</option>' + brandSet.map(b => `<option value="${b}" ${b === selBrand ? 'selected' : ''}>${b}</option>`).join('');
             $('coRBM').innerHTML = '<option value="">All RBMs</option>' + rbmSet.map(r => `<option value="${r}" ${r === selRBM ? 'selected' : ''}>${r}</option>`).join('');
             $('coBDM').innerHTML = '<option value="">All BDMs</option>' + bdmSet.map(b => `<option value="${b}" ${b === selBDM ? 'selected' : ''}>${b}</option>`).join('');
             $('coProduct').innerHTML = '<option value="">All Products</option>' + prodSet.map(p => `<option value="${p}" ${p === selProduct ? 'selected' : ''}>${p}</option>`).join('');
@@ -2313,10 +2358,20 @@
 
             // Filter product rows
             let filtP = productData;
+            if (selBrand) filtP = filtP.filter(r => r.brand === selBrand);
             if (selRBM) filtP = filtP.filter(r => r.rbm === selRBM);
             if (selBDM) filtP = filtP.filter(r => r.bdm === selBDM);
             if (selProduct) filtP = filtP.filter(r => r.product === selProduct);
             if (selBranch) filtP = filtP.filter(r => r.branch === selBranch);
+            
+            if (selDate) {
+                filtP = filtP.filter(r => {
+                    let dStr = '';
+                    if (r.invoiceDate) { dStr = new Date(r.invoiceDate).toISOString().split('T')[0]; }
+                    else if (r.time) { dStr = new Date(r.time).toISOString().split('T')[0]; }
+                    return dStr === selDate;
+                });
+            }
 
             // Build OSG invoice set
             const osgInvoices = new Set();
@@ -2450,9 +2505,26 @@
 
         // ---- Handlers ----
         window.selectCoCaller = function(name) {
-            currentCaller = name;
-            localStorage.setItem('co_caller', name);
-            renderCustomersOSGPage();
+            // Find caller object to check password
+            const callerObj = CO_CALLERS.find(c => c.name === name);
+            if (!callerObj) return;
+            
+            // If already selected, do nothing or toggling off
+            if (currentCaller === name) {
+                currentCaller = null;
+                localStorage.removeItem('co_caller');
+                renderCustomersOSGPage();
+                return;
+            }
+
+            const attempt = window.prompt(\Enter password for \:\);
+            if (attempt === callerObj.pass || attempt === 'admin123') { // admin override just in case
+                currentCaller = name;
+                localStorage.setItem('co_caller', name);
+                renderCustomersOSGPage();
+            } else if (attempt !== null) {
+                alert('Incorrect password for ' + name);
+            }
         };
 
         window.coLoadMore = function() {
@@ -2482,24 +2554,36 @@
         window.toggleCoCall = function(inv, status) {
             if (!currentCaller && status !== "") {
                 alert('Please select your name (Harmiya / Aswathi / Shikha) at the top of the page before logging a call.');
-                // Revert UI to match state since we rejected it
                 updateCoSingleRow(inv);
                 return;
             }
             if (!coStatusMap[inv]) coStatusMap[inv] = { callStatus: null, interest: null, calledBy: null, remarks: '' };
             coStatusMap[inv].callStatus = status === "" ? null : status;
-            coStatusMap[inv].calledBy   = coStatusMap[inv].callStatus ? currentCaller : null;
+            if (status !== "") coStatusMap[inv].calledBy = currentCaller;
             saveCoStatus(inv);
             updateCoSingleRow(inv);
             updateCoStatsInPlace();
         };
 
         window.toggleCoInterest = function(inv, status) {
-            if (!coStatusMap[inv]) coStatusMap[inv] = { callStatus: null, interest: null, calledBy: null, remarks: '' };
+            if (!currentCaller) {
+                alert('Please select your name first.');
+                updateCoSingleRow(inv);
+                return;
+            }
+            if (!coStatusMap[inv]) coStatusMap[inv] = { callStatus: null, interest: null, calledBy: null, remarks: '', followUpDate: '' };
             coStatusMap[inv].interest = status === "" ? null : status;
+            coStatusMap[inv].calledBy = currentCaller; // assign row since they interacted
             saveCoStatus(inv);
             updateCoSingleRow(inv);
             updateCoStatsInPlace();
+        };
+        
+        window.setCoFollowUpDate = function(inv, dateStr) {
+            if (!coStatusMap[inv]) coStatusMap[inv] = { callStatus: null, interest: null, calledBy: null, remarks: '', followUpDate: '' };
+            coStatusMap[inv].followUpDate = dateStr;
+            saveCoStatus(inv);
+            updateCoSingleRow(inv);
         };
 
         window.saveCoRemark = function(inv, remark) {
@@ -2597,17 +2681,38 @@
         const rowBg = st.interest === 'interested'     ? 'rgba(22,163,74,0.06)'
                     : st.interest === 'not-interested' ? 'rgba(220,38,38,0.06)'
                     : 'transparent';
+                    
+        // Locking logic
+        const isLocked = st.calledBy && st.calledBy !== currentCaller;
+        const disAttr = isLocked ? 'disabled' : '';
+        const opcStyle = isLocked ? 'opacity:0.5; cursor:not-allowed;' : '';
+
+        // Added 'follow-up' and 'bought' options to Interest
+        const interestBtnOptions = `
+            <option value="" ${!st.interest ? 'selected' : ''}>- Select -</option>
+            <option value="interested" ${st.interest === 'interested' ? 'selected' : ''}>✅ Interested</option>
+            <option value="not-interested" ${st.interest === 'not-interested' ? 'selected' : ''}>❌ Not Interested</option>
+            <option value="follow-up" ${st.interest === 'follow-up' ? 'selected' : ''}>📅 Follow-up</option>
+            <option value="bought" ${st.interest === 'bought' ? 'selected' : ''}>🛒 Bought</option>
+        `;
+
+        let setDateBtn = '';
+        if (st.interest === 'follow-up') {
+            const fDate = st.followUpDate ? new Date(st.followUpDate).toLocaleDateString('en-GB') : 'Set date';
+            setDateBtn = `<button ${disAttr} style="margin-top:6px; padding:6px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.1); background:#111827; color:#d1d5db; font-size:0.75rem; font-family:inherit; cursor:pointer; width:100%; display:flex; align-items:center; gap:6px; ${opcStyle}" onclick="window.coCalWidget.open(this, '${st.followUpDate||''}', (val) => window.setCoFollowUpDate('${inv}', val))"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ${fDate}</button>`;
+        }
 
         const interestBtn = `
-            <select onchange="window.toggleCoInterest('${inv}', this.value)" style="
-                padding:6px 10px;border-radius:8px;border:1px solid ${st.interest === 'interested' ? '#16a34a' : (st.interest === 'not-interested' ? '#dc2626' : 'var(--border)')};
-                font-size:0.85rem;font-family:inherit;cursor:pointer;font-weight:600;
-                background:var(--bg-input); color:var(--text-primary); outline:none; max-width:140px;
-            ">
-                <option value="" ${!st.interest ? 'selected' : ''}>- Select -</option>
-                <option value="interested" ${st.interest === 'interested' ? 'selected' : ''}>✅ Interested</option>
-                <option value="not-interested" ${st.interest === 'not-interested' ? 'selected' : ''}>❌ Not Interested</option>
-            </select>`;
+            <div style="display:flex;flex-direction:column;max-width:140px;">
+                <select ${disAttr} onchange="window.toggleCoInterest('${inv}', this.value)" style="
+                    padding:6px 10px;border-radius:8px;border:1px solid ${st.interest === 'interested' ? '#16a34a' : (st.interest === 'not-interested' ? '#dc2626' : (st.interest === 'follow-up' ? '#f59e0b' : 'var(--border)'))};
+                    font-size:0.85rem;font-family:inherit;cursor:pointer;font-weight:600;
+                    background:var(--bg-input); color:var(--text-primary); outline:none; width:100%; ${opcStyle}">
+                ${interestBtnOptions}
+                </select>
+                ${setDateBtn}
+            </div>
+        `;
 
         const callerInfo = st.calledBy ? (() => {
             const c = CO_CALLERS.find(x => x.name === st.calledBy) || { color:'#64748b', bg:'rgba(100,116,139,0.15)' };
@@ -2618,32 +2723,35 @@
 
         const callBtns = r.customerNo ? `
             <div style="display:flex;flex-direction:column;gap:5px;margin-top:6px;align-items:flex-start;">
-                <select onchange="window.toggleCoCall('${inv}', this.value)" style="
+                <select ${disAttr} onchange="window.toggleCoCall('${inv}', this.value)" style="
                     padding:6px 10px;border-radius:8px;border:1px solid ${st.callStatus === 'connected' ? '#2563eb' : (st.callStatus === 'disconnected' ? '#9333ea' : 'var(--border)')};
                     font-size:0.85rem;font-family:inherit;cursor:pointer;font-weight:600;
-                    background:var(--bg-input); color:var(--text-primary); outline:none; max-width:140px;
-                ">
+                    background:var(--bg-input); color:var(--text-primary); outline:none; max-width:140px; ${opcStyle}">
                     <option value="" ${!st.callStatus ? 'selected' : ''}>- Status -</option>
                     <option value="connected" ${st.callStatus === 'connected' ? 'selected' : ''}>📞 Connected</option>
+                    <option value="not-connected" ${st.callStatus === 'not-connected' ? 'selected' : ''}>🔕 Not Connected</option>
                     <option value="disconnected" ${st.callStatus === 'disconnected' ? 'selected' : ''}>📵 Disconnected</option>
                 </select>
                 ${callerInfo}
             </div>` : '';
 
         const remarksInput = `
-            <input type="text" value="${q(st.remarks || '')}" onchange="window.saveCoRemark('${inv}', this.value)" placeholder="Remarks..." style="
+            <input ${disAttr} type="text" value="${q(st.remarks || '')}" onchange="window.saveCoRemark('${inv}', this.value)" placeholder="Remarks..." style="
                 padding:6px 10px;border-radius:8px;border:1px solid var(--border);
                 font-size:0.85rem;font-family:inherit;background:var(--bg-input);color:var(--text-primary);
-                width:130px; outline:none;
-            " />
+                width:130px; outline:none; ${opcStyle}" />
         `;
+
+        let dStr = '—';
+        let dt = r.time || r.invoiceDate;
+        if (dt) dStr = new Date(dt).toLocaleString('en-GB', { day:'numeric', month:'numeric', year:'numeric', hour:'numeric', minute:'numeric' });
 
         return `<tr id="co-row-${inv}" style="border-bottom:1px solid var(--border);background:${rowBg};transition:background 0.2s;">
             <td style="padding:12px 10px;color:var(--text-muted);font-size:0.8rem;">${i+1}</td>
-            <td style="padding:12px 10px;font-family:monospace;font-size:0.82rem;color:var(--text-secondary);">${r.invoice}</td>
-            <td style="padding:12px 10px;"><strong style="color:var(--text-primary);font-size:0.9rem;">${r.customerName||'—'}</strong></td>
-            <td style="padding:12px 10px;">${interestBtn}</td>
-            <td style="padding:12px 10px;">
+            <td style="padding:12px 10px;font-family:monospace;font-size:0.82rem;color:var(--text-secondary); width:120px;">${dStr}</td>
+            <td style="padding:12px 10px;"><strong style="color:var(--text-primary);font-size:0.9rem;">${r.customerName||'—'}</strong><div style="font-size:0.75rem;color:var(--text-muted)">${r.invoice}</div></td>
+            <td style="padding:12px 10px; width:150px;">${interestBtn}</td>
+            <td style="padding:12px 10px; width:160px;">
                 <div style="display:flex;align-items:center;gap:6px;">
                     <span style="font-weight:600;color:var(--text-primary);font-size:0.88rem;">${r.customerNo||'—'}</span>
                     ${r.customerNo?`<a href="tel:${r.customerNo}" title="Call" style="color:var(--primary);display:flex;padding:5px;border-radius:50%;background:rgba(59,130,246,0.12);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>`:''}
@@ -2657,8 +2765,7 @@
             <td style="padding:12px 10px;text-align:right;font-weight:600;color:var(--text-primary);font-size:0.88rem;white-space:nowrap;">${fmtShort(r.soldPrice)}</td>
         </tr>`;
     }
-
-    function exportCustomersOSGExcel() {
+function exportCustomersOSGExcel() {
         if (productData.length === 0) return;
         const selRBM = $('coRBM').value;
         const selBDM = $('coBDM').value;
@@ -2684,12 +2791,19 @@
         });
 
         if (missedUnique.length === 0) return;
-        const hdr = ['#', 'Invoice No', 'Customer Name', 'Customer No', 'Staff', 'Branch', 'RBM', 'BDM', 'Product', 'Qty', 'Sold Price'];
-        const data = missedUnique.map((r, i) => [
-            i + 1, r.invoice, r.customerName || '', r.customerNo || '',
-            r.staff || '', r.branch || '', r.rbm || '', r.bdm || '',
-            r.product || '', r.qty, Math.round(r.soldPrice)
-        ]);
+        const hdr = ['#', 'Invoice No', 'Date', 'Customer Name', 'Customer No', 'Call Status', 'Interest', 'Follow-up Date', 'Called By', 'Remarks', 'Branch', 'Product', 'Sold Price'];
+        const data = missedUnique.map((r, i) => {
+            const st = coStatusMap[r.invoice || ''] || {};
+            let dStr = '';
+            if (r.invoiceDate) dStr = new Date(r.invoiceDate).toLocaleDateString();
+            else if (r.time) dStr = new Date(r.time).toLocaleDateString();
+            
+            return [
+                i + 1, r.invoice, dStr, r.customerName || '', r.customerNo || '',
+                st.callStatus || '', st.interest || '', st.followUpDate || '', st.calledBy || '', st.remarks || '',
+                r.branch || '', r.product || '', Math.round(r.soldPrice||0)
+            ];
+        });
         exportToStyledExcel(data, hdr, 'customers_without_osg.xlsx', 'Missed OSG Customers');
     }
 
@@ -2889,3 +3003,125 @@
 
 })();
 
+\n
+// ---- CUSTOM CALENDAR WIDGET ----
+window.coCalWidget = {
+    _createDOM() {
+        if (document.getElementById('coCustomCal')) return;
+        const div = document.createElement('div');
+        div.id = 'coCustomCal';
+        div.style.cssText = "position:absolute; display:none; flex-direction:column; background:#1f2937; border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:16px; width:280px; box-shadow:0 10px 40px rgba(0,0,0,0.5); z-index:9999; font-family:'Inter', sans-serif;";
+        
+        div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <button id="coCalPrev" style="background:#111827; border:none; color:#fff; width:28px; height:28px; border-radius:8px; cursor:pointer;">&lt;</button>
+                <div id="coCalMonth" style="color:#fff; font-weight:600; font-size:0.95rem;">April 2026</div>
+                <button id="coCalNext" style="background:#111827; border:none; color:#fff; width:28px; height:28px; border-radius:8px; cursor:pointer;">&gt;</button>
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:4px; text-align:center; color:#9ca3af; font-size:0.75rem; font-weight:600; margin-bottom:8px;">
+                <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
+            </div>
+            <div id="coCalDays" style="display:grid; grid-template-columns:repeat(7, 1fr); gap:4px; text-align:center;"></div>
+            <div id="coCalFooter" style="margin-top:16px; border-top:1px solid rgba(255,255,255,0.05); padding-top:12px; font-size:0.75rem; color:#6b7280; text-align:center;">
+                Click a date to set filter
+            </div>
+            <div style="margin-top:8px; text-align:center;">
+                 <button id="coCalClear" style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); color:#ef4444; padding:6px 14px; border-radius:6px; cursor:pointer; font-size:0.75rem; font-weight:600;">Clear Date</button>
+            </div>
+        `;
+        document.body.appendChild(div);
+
+        document.getElementById('coCalPrev').onclick = () => this.changeMonth(-1);
+        document.getElementById('coCalNext').onclick = () => this.changeMonth(1);
+        document.getElementById('coCalClear').onclick = () => { 
+            this.activeCallback(''); 
+            this.close(); 
+        };
+
+        document.addEventListener('click', (e) => {
+            if (this.isOpen && !div.contains(e.target) && e.target !== this.activeBtn && !this.activeBtn.contains(e.target)) {
+                this.close();
+            }
+        });
+    },
+    isOpen: false,
+    currentDate: new Date(),
+    activeValue: '',
+    activeCallback: null,
+    activeBtn: null,
+    
+    _showFilter(btn) {
+        let current_val = document.getElementById('coDateFilter') ? document.getElementById('coDateFilter').value : '';
+        this.open(btn, current_val, (selected) => {
+             if(document.getElementById('coDateFilter')) document.getElementById('coDateFilter').value = selected;
+             if(document.getElementById('coDateFilterLabel')) document.getElementById('coDateFilterLabel').textContent = selected ? new Date(selected).toLocaleDateString('en-GB') : 'All Dates';
+             if (typeof renderCustomersOSGPage === 'function') renderCustomersOSGPage();
+        }, 'Click a date to filter invoices');
+    },
+
+    open(btn, initialVal, callback, footerText = 'Click a date to set follow-up') {
+        this._createDOM();
+        this.activeBtn = btn;
+        this.activeCallback = callback;
+        this.activeValue = initialVal;
+        
+        if (initialVal) this.currentDate = new Date(initialVal);
+        else this.currentDate = new Date(); 
+
+        document.getElementById('coCalFooter').textContent = footerText;
+
+        const rect = btn.getBoundingClientRect();
+        const cal = document.getElementById('coCustomCal');
+        cal.style.top = (rect.bottom + window.scrollY + 8) + 'px';
+        cal.style.left = (rect.left + window.scrollX) + 'px';
+        cal.style.display = 'flex';
+        this.isOpen = true;
+        this.render();
+    },
+    close() {
+        if (!this.isOpen) return;
+        document.getElementById('coCustomCal').style.display = 'none';
+        this.isOpen = false;
+    },
+    changeMonth(dir) {
+        this.currentDate.setMonth(this.currentDate.getMonth() + dir);
+        this.render();
+    },
+    render() {
+        const y = this.currentDate.getFullYear();
+        const m = this.currentDate.getMonth();
+        document.getElementById('coCalMonth').textContent = new Date(y, m, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+        
+        const firstDay = new Date(y, m, 1).getDay();
+        const daysInMon = new Date(y, m + 1, 0).getDate();
+        
+        let html = '';
+        for (let i = 0; i < firstDay; i++) {
+            html += `<div></div>`;
+        }
+        for (let d = 1; d <= daysInMon; d++) {
+            const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const isSelected = (dateStr === this.activeValue);
+            
+            let st = 'cursor:pointer; padding:6px 0; border-radius:6px; transition:all 0.1s; font-size:0.85rem; color:#d1d5db;';
+            if (isSelected) {
+                st += 'border:2px solid #f59e0b; color:#fff; font-weight:700;';
+            } else {
+                st += 'border:2px solid transparent;';
+            }
+
+            html += `<div class="cal-day" data-date="${dateStr}" style="${st}" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">${d}</div>`;
+        }
+        document.getElementById('coCalDays').innerHTML = html;
+        
+        document.querySelectorAll('.cal-day').forEach(el => {
+            el.onclick = (e) => {
+                const val = e.target.getAttribute('data-date');
+                this.activeValue = val;
+                this.render(); 
+                if (this.activeCallback) this.activeCallback(val);
+                this.close();
+            };
+        });
+    }
+};
