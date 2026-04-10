@@ -426,41 +426,43 @@
         if (btn) btn.disabled = !(productData.length > 0 && osgData.length > 0);
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const btnGen = document.getElementById('btnGenerate');
+    (function() {
+        var btnGen = document.getElementById('btnGenerate');
         if (!btnGen) return;
-        btnGen.addEventListener('click', () => {
-        showLoading(true);
-        
-        // Use setTimeout to yield the main thread allowing the loading UI to render before heavy processing
-        setTimeout(() => {
-            try {
-                allData = [...productData, ...amcData];
+        btnGen.addEventListener('click', function() {
+            showLoading(true);
+            setTimeout(function() {
+                try {
+                    allData = [...productData, ...amcData];
 
-                fileCountBadge.style.display = 'flex';
-                fileCountText.textContent = `${allData.length} product · ${osgData.length} OSG`;
-                btnShare.style.display = 'flex';
-                btnReset.style.display = 'flex';
+                    var fcb = document.getElementById('fileCountBadge');
+                    var fct = document.getElementById('fileCountText');
+                    var bShr = document.getElementById('btnShare');
+                    var bRst = document.getElementById('btnReset');
+                    if (fcb) fcb.style.display = 'flex';
+                    if (fct) fct.textContent = allData.length + ' product · ' + osgData.length + ' OSG';
+                    if (bShr) bShr.style.display = 'flex';
+                    if (bRst) bRst.style.display = 'flex';
 
-                populateFilters();
-                applyFilters();
+                    populateFilters();
+                    applyFilters();
 
-                document.querySelector('[data-section="dashboard-section"]').click();
-            } catch (err) {
-                console.error('[Generate Error]', err);
-                alert('An error occurred while generating reports:\n' + err.message);
-            } finally {
-                showLoading(false);
-            }
-        }, 50);
+                    document.querySelector('[data-section="dashboard-section"]').click();
+                } catch (err) {
+                    console.error('[Generate Error]', err);
+                    alert('An error occurred while generating reports:\n' + err.message);
+                } finally {
+                    showLoading(false);
+                }
+            }, 50);
         });
-    }); // end DOMContentLoaded for btnGenerate
+    })();
 
     // ---- SHARE DASHBOARD LOGIC ----
-    document.addEventListener('DOMContentLoaded', () => {
-        const btnShareEl = document.getElementById('btnShare');
+    (function() {
+        var btnShareEl = document.getElementById('btnShare');
         if (!btnShareEl) return;
-        btnShareEl.addEventListener('click', () => {
+        btnShareEl.addEventListener('click', function() {
         if (productData.length === 0) return alert('Upload data first via Dashboard.');
 
         // Find missedUnique for the whole dataset
@@ -514,8 +516,8 @@
             console.error(err);
             alert('Firebase configuration error (likely missing databaseURL). Cannot share dashboard right now: ' + err.message);
         }
-        }); // end btnShare click
-    }); // end DOMContentLoaded for btnShare
+        });
+    })();
 
     // ---- PARSING ----
     function parseProductFile(file) {
@@ -1197,10 +1199,10 @@
     function q(s) { return '"' + String(s).replace(/"/g, '""') + '"'; }
 
     // ---- RESET ----
-    document.addEventListener('DOMContentLoaded', () => {
-        const btnResetEl = document.getElementById('btnReset');
+    (function() {
+        var btnResetEl = document.getElementById('btnReset');
         if (!btnResetEl) return;
-        btnResetEl.addEventListener('click', () => {
+        btnResetEl.addEventListener('click', function() {
             productData = []; osgData = []; amcData = []; allData = [];
             filteredProduct = []; filteredOSG = []; filteredAll = [];
             const pSt = document.getElementById('productStatus');
@@ -1213,7 +1215,7 @@
             const bGen = document.getElementById('btnGenerate');
             const bShr = document.getElementById('btnShare');
             if (fcb) fcb.style.display = 'none';
-            if (btnResetEl) btnResetEl.style.display = 'none';
+            btnResetEl.style.display = 'none';
             if (bShr) bShr.style.display = 'none';
             if (bGen) bGen.disabled = true;
             [filterRBM, filterBranch, filterBDM, filterStaff].forEach(sel => {
@@ -1243,7 +1245,7 @@
             $('coMissedCount').textContent = '0 customers';
             document.querySelector('[data-section="upload-section"]').click();
         });
-    });
+    })();
 
     // ---- LOW CONV STAFF PAGE ----
     $('btnLCRefresh').addEventListener('click', renderLowConvPage);
