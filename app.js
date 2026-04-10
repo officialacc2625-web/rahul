@@ -327,28 +327,50 @@
     });
 
     // ---- UPLOAD HANDLING ----
-    // Product
-    setupUploadZone(uploadZoneProduct, fileInputProduct, async (file) => {
-        const rows = await parseProductFile(file);
-        productData = rows;
-        showFileStatus(productStatus, file.name, rows.length);
-        checkGenerateReady();
-    });
+    // Always use fresh getElementById to avoid safeProxy issues
+    function initUploadZones() {
+        const zoneProduct = document.getElementById('uploadZoneProduct');
+        const inputProduct = document.getElementById('fileInputProduct');
+        const statusProduct = document.getElementById('productStatus');
+        const zoneOSG = document.getElementById('uploadZoneOSG');
+        const inputOSG = document.getElementById('fileInputOSG');
+        const statusOSG = document.getElementById('osgStatus');
+        const zoneAMC = document.getElementById('uploadZoneAMC');
+        const inputAMC = document.getElementById('fileInputAMC');
+        const statusAMC = document.getElementById('amcStatus');
 
-    // OSG
-    setupUploadZone(uploadZoneOSG, fileInputOSG, async (file) => {
-        const rows = await parseOSGFile(file);
-        osgData = rows;
-        showFileStatus(osgStatus, file.name, rows.length);
-        checkGenerateReady();
-    });
+        if (zoneProduct && inputProduct) {
+            setupUploadZone(zoneProduct, inputProduct, async (file) => {
+                const rows = await parseProductFile(file);
+                productData = rows;
+                showFileStatus(statusProduct, file.name, rows.length);
+                checkGenerateReady();
+            });
+        }
 
-    // AMC (optional)
-    setupUploadZone(uploadZoneAMC, fileInputAMC, async (file) => {
-        const rows = await parseProductFile(file);
-        amcData = rows;
-        showFileStatus(amcStatus, file.name, rows.length);
-    });
+        if (zoneOSG && inputOSG) {
+            setupUploadZone(zoneOSG, inputOSG, async (file) => {
+                const rows = await parseOSGFile(file);
+                osgData = rows;
+                showFileStatus(statusOSG, file.name, rows.length);
+                checkGenerateReady();
+            });
+        }
+
+        if (zoneAMC && inputAMC) {
+            setupUploadZone(zoneAMC, inputAMC, async (file) => {
+                const rows = await parseProductFile(file);
+                amcData = rows;
+                showFileStatus(statusAMC, file.name, rows.length);
+            });
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initUploadZones);
+    } else {
+        initUploadZones();
+    }
 
     function setupUploadZone(zone, input, onFile) {
         zone.addEventListener('click', (e) => {
@@ -400,10 +422,14 @@
     }
 
     function checkGenerateReady() {
-        btnGenerate.disabled = !(productData.length > 0 && osgData.length > 0);
+        const btn = document.getElementById('btnGenerate');
+        if (btn) btn.disabled = !(productData.length > 0 && osgData.length > 0);
     }
 
-    btnGenerate.addEventListener('click', () => {
+    document.addEventListener('DOMContentLoaded', () => {
+        const btnGen = document.getElementById('btnGenerate');
+        if (!btnGen) return;
+        btnGen.addEventListener('click', () => {
         showLoading(true);
         
         // Use setTimeout to yield the main thread allowing the loading UI to render before heavy processing
@@ -427,10 +453,14 @@
                 showLoading(false);
             }
         }, 50);
-    });
+        });
+    }); // end DOMContentLoaded for btnGenerate
 
     // ---- SHARE DASHBOARD LOGIC ----
-    btnShare.addEventListener('click', () => {
+    document.addEventListener('DOMContentLoaded', () => {
+        const btnShareEl = document.getElementById('btnShare');
+        if (!btnShareEl) return;
+        btnShareEl.addEventListener('click', () => {
         if (productData.length === 0) return alert('Upload data first via Dashboard.');
 
         // Find missedUnique for the whole dataset
@@ -484,7 +514,8 @@
             console.error(err);
             alert('Firebase configuration error (likely missing databaseURL). Cannot share dashboard right now: ' + err.message);
         }
-    });
+        }); // end btnShare click
+    }); // end DOMContentLoaded for btnShare
 
     // ---- PARSING ----
     function parseProductFile(file) {
@@ -1166,42 +1197,52 @@
     function q(s) { return '"' + String(s).replace(/"/g, '""') + '"'; }
 
     // ---- RESET ----
-    btnReset.addEventListener('click', () => {
-        productData = []; osgData = []; amcData = []; allData = [];
-        filteredProduct = []; filteredOSG = []; filteredAll = [];
-        productStatus.className = 'upload-status'; productStatus.innerHTML = '';
-        osgStatus.className = 'upload-status'; osgStatus.innerHTML = '';
-        amcStatus.className = 'upload-status'; amcStatus.innerHTML = '';
-        fileCountBadge.style.display = 'none'; btnReset.style.display = 'none';
-        btnGenerate.disabled = true;
-        [filterRBM, filterBranch, filterBDM, filterStaff].forEach(sel => {
-            sel.innerHTML = `<option value="">${sel.options[0]?.textContent || 'All'}</option>`;
+    document.addEventListener('DOMContentLoaded', () => {
+        const btnResetEl = document.getElementById('btnReset');
+        if (!btnResetEl) return;
+        btnResetEl.addEventListener('click', () => {
+            productData = []; osgData = []; amcData = []; allData = [];
+            filteredProduct = []; filteredOSG = []; filteredAll = [];
+            const pSt = document.getElementById('productStatus');
+            const oSt = document.getElementById('osgStatus');
+            const aSt = document.getElementById('amcStatus');
+            if (pSt) { pSt.className = 'upload-status'; pSt.innerHTML = ''; }
+            if (oSt) { oSt.className = 'upload-status'; oSt.innerHTML = ''; }
+            if (aSt) { aSt.className = 'upload-status'; aSt.innerHTML = ''; }
+            const fcb = document.getElementById('fileCountBadge');
+            const bGen = document.getElementById('btnGenerate');
+            const bShr = document.getElementById('btnShare');
+            if (fcb) fcb.style.display = 'none';
+            if (btnResetEl) btnResetEl.style.display = 'none';
+            if (bShr) bShr.style.display = 'none';
+            if (bGen) bGen.disabled = true;
+            [filterRBM, filterBranch, filterBDM, filterStaff].forEach(sel => {
+                if (sel && sel.innerHTML !== undefined) sel.innerHTML = `<option value="">${sel.options[0]?.textContent || 'All'}</option>`;
+            });
+            if (filterProduct) filterProduct.value = '';
+            if (filterBrand) filterBrand.innerHTML = '<option value="">All Brands</option>';
+            $('kpiValConv').textContent = '0%';
+            $('kpiQtyConv').textContent = '0%'; $('kpiQuantity').textContent = '0';
+            ['convRBMTable', 'convBDMTable', 'convStaffTable', 'convBranchTable', 'convProductTable'].forEach(id => $(id).innerHTML = '');
+            ['conversionTableWrapper', 'fullDataTableWrapper'].forEach(id => $(id).innerHTML = '');
+            Object.keys(chartInstances).forEach(destroyChart);
+            $('lcTableWrapper').innerHTML = noDataHTML('Upload data and generate reports first.');
+            $('lcKpiRow').innerHTML = '';
+            $('lcCount').textContent = '0 staff';
+            $('tcTableWrapper').innerHTML = noDataHTML('Upload data and generate reports first.');
+            $('tcKpiRow').innerHTML = '';
+            $('tcCount').textContent = '0 staff';
+            $('insightsContent').innerHTML = noDataHTML('Upload data and generate reports to see insights.');
+            $('fsTableWrapper').innerHTML = noDataHTML('Upload data and generate reports first.');
+            $('fsKpiRow').innerHTML = '';
+            $('fsCount').textContent = '0 staff';
+            $('pdTopRevTable').innerHTML = '';
+            $('pdTopConvTable').innerHTML = '';
+            $('pdKpiRow').innerHTML = '';
+            $('coMissedTable').innerHTML = noDataHTML('Upload data and generate reports first.');
+            $('coMissedCount').textContent = '0 customers';
+            document.querySelector('[data-section="upload-section"]').click();
         });
-        // Product has hardcoded options — just reset selection
-        filterProduct.value = '';
-        // Brand has dynamic options — clear and reset
-        filterBrand.innerHTML = '<option value="">All Brands</option>';
-        $('kpiValConv').textContent = '0%';
-        $('kpiQtyConv').textContent = '0%'; $('kpiQuantity').textContent = '0';
-        ['convRBMTable', 'convBDMTable', 'convStaffTable', 'convBranchTable', 'convProductTable'].forEach(id => $(id).innerHTML = '');
-        ['conversionTableWrapper', 'fullDataTableWrapper'].forEach(id => $(id).innerHTML = '');
-        Object.keys(chartInstances).forEach(destroyChart);
-        $('lcTableWrapper').innerHTML = noDataHTML('Upload data and generate reports first.');
-        $('lcKpiRow').innerHTML = '';
-        $('lcCount').textContent = '0 staff';
-        $('tcTableWrapper').innerHTML = noDataHTML('Upload data and generate reports first.');
-        $('tcKpiRow').innerHTML = '';
-        $('tcCount').textContent = '0 staff';
-        $('insightsContent').innerHTML = noDataHTML('Upload data and generate reports to see insights.');
-        $('fsTableWrapper').innerHTML = noDataHTML('Upload data and generate reports first.');
-        $('fsKpiRow').innerHTML = '';
-        $('fsCount').textContent = '0 staff';
-        $('pdTopRevTable').innerHTML = '';
-        $('pdTopConvTable').innerHTML = '';
-        $('pdKpiRow').innerHTML = '';
-        $('coMissedTable').innerHTML = noDataHTML('Upload data and generate reports first.');
-        $('coMissedCount').textContent = '0 customers';
-        document.querySelector('[data-section="upload-section"]').click();
     });
 
     // ---- LOW CONV STAFF PAGE ----
