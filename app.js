@@ -3046,7 +3046,6 @@ function exportCustomersOSGExcel() {
 
 })();
 
-\n
 // ---- CUSTOM CALENDAR WIDGET ----
 window.coCalWidget = {
     _createDOM() {
