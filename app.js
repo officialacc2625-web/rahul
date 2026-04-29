@@ -1,5 +1,5 @@
 // ============================================================
-// Analytics Portal â€” Conversion Reports
+// Analytics Portal ” Conversion Reports
 // Dual-file: Product Data + OSG Data
 // Value Conversion = OSG Sold Price / Product Sold Price
 // Qty Conversion   = OSG Quantity  / Product Quantity
@@ -47,7 +47,7 @@
                 const data = snap.val();
                 if (data) {
                     window.sharedMissedUnique = data.missedUnique || [];
-                    // Do NOT set isAuthenticated=true â€” keep all other pages locked
+                    // Do NOT set isAuthenticated=true ” keep all other pages locked
                     document.querySelector('[data-section="customers-osg-section"]').click();
                 } else {
                     alert('Share link is invalid or expired.');
@@ -270,7 +270,7 @@
             e.preventDefault();
             const section = item.dataset.section;
 
-            // Check if page needs auth â€” Upload Data and Customers Without OSG are public
+            // Check if page needs auth ” Upload Data and Customers Without OSG are public
             const isPublicPage = section === 'customers-osg-section' || section === 'upload-section';
             if (!isPublicPage && !isAuthenticated) {
                 // Intercept navigation and show password modal
@@ -458,7 +458,7 @@
                     var bShr = document.getElementById('btnShare');
                     var bRst = document.getElementById('btnReset');
                     if (fcb) fcb.style.display = 'flex';
-                    if (fct) fct.textContent = allData.length + ' product Ã‚Â· ' + osgData.length + ' OSG';
+                    if (fct) fct.textContent = allData.length + ' product · ' + osgData.length + ' OSG';
                     if (bShr) bShr.style.display = 'flex';
                     if (bRst) bRst.style.display = 'flex';
 
@@ -715,7 +715,7 @@
         // Warn about critical unmapped columns
         const critical = ['soldPrice', 'qty', 'branch', 'product'];
         critical.forEach(k => {
-            if (!mapping[k]) console.warn(`[âš  Column NOT FOUND] '${k}' â€” no matching header. Available headers:`, headers.join(', '));
+            if (!mapping[k]) console.warn(`[âš  Column NOT FOUND] '${k}' ” no matching header. Available headers:`, headers.join(', '));
         });
 
         console.log('[Column Mapping]', JSON.stringify(mapping));
@@ -740,7 +740,7 @@
     function populateFilters() {
         populateSelect(filterRBM, uniqueVals(allData, 'rbm'), 'All RBMs');
         populateSelect(filterBranch, uniqueVals([...allData, ...osgData], 'branch'), 'All Branches');
-        // Product dropdown is predefined â€” keep as-is, just reset selection
+        // Product dropdown is predefined ” keep as-is, just reset selection
         filterProduct.value = '';
         // Brand populated dynamically from uploaded data
         populateSelect(filterBrand, uniqueVals([...allData, ...osgData], 'brand'), 'All Brands');
@@ -1004,7 +1004,7 @@
                     if (!oGrouped[groupName]) oGrouped[groupName] = [];
                     oGrouped[groupName].push(r);
                 }
-                // Skip OSG rows that can't be attributed â€” no "Unknown"
+                // Skip OSG rows that can't be attributed ” no "Unknown"
             });
         }
 
@@ -1056,7 +1056,7 @@
 
 
     function renderConversionReport() {
-        // Group by branch â€” show value and qty conversion
+        // Group by branch ” show value and qty conversion
         const pGrouped = groupBy(filteredProduct, 'branch');
         const oGrouped = groupBy(filteredOSG, 'branch');
         const allKeys = new Set([...Object.keys(pGrouped), ...Object.keys(oGrouped)]);
@@ -1197,7 +1197,7 @@
         const osgByRBM = {};
         filteredOSG.forEach(r => {
             const rbm = r.invoice ? (invoiceToRBM[r.invoice] || null) : null;
-            if (!rbm) return; // skip unattributable rows â€” no "Unknown"
+            if (!rbm) return; // skip unattributable rows ” no "Unknown"
             if (!osgByRBM[rbm]) osgByRBM[rbm] = [];
             osgByRBM[rbm].push(r);
         });
@@ -1737,7 +1737,7 @@
         let html = '';
 
         // ---- Card 1: Overall Summary ----
-        html += insightCard('Ã°Å¸â€œÅ ', 'Overall Performance Summary', 'info', `
+        html += insightCard('Ã°Å¸“Å ', 'Overall Performance Summary', 'info', `
             <div class="insight-metrics">
                 <div class="insight-metric"><span class="metric-val">${formatNumber(productData.length)}</span><span class="metric-label">Total Transactions</span></div>
                 <div class="insight-metric"><span class="metric-val">${totalStaff}</span><span class="metric-label">Active Staff</span></div>
@@ -1753,21 +1753,21 @@
             const zeroTotalQty = zeroConvStaff.reduce((s, r) => s + r.pQty, 0);
             const zeroTotalRev = zeroConvStaff.reduce((s, r) => s + r.pRev, 0);
             const topZero = zeroConvStaff.sort((a, b) => b.pQty - a.pQty).slice(0, 5);
-            html += insightCard('Ã°Å¸Å¡Â¨', `Zero Conversion Alert â€” ${zeroConvStaff.length} Staff`, 'danger', `
+            html += insightCard('', `Zero Conversion Alert ” ${zeroConvStaff.length} Staff`, 'danger', `
                 <p><strong>${zeroConvStaff.length} staff</strong> have sold <strong>${formatNumber(zeroTotalQty)} products</strong> (${fmtShort(zeroTotalRev)} revenue) but <strong>zero OSG/warranty conversion</strong>.</p>
                 <div class="insight-tag-row">
                     ${topZero.map(s => `<span class="insight-tag danger">${s.name} (${s.pQty} qty)</span>`).join('')}
                     ${zeroConvStaff.length > 5 ? `<span class="insight-tag muted">+${zeroConvStaff.length - 5} more</span>` : ''}
                 </div>
                 <div class="insight-solution">
-                    <strong>Ã°Å¸â€™Â¡ Solution:</strong> Conduct targeted training for these staff members on OSG selling techniques. Pair them with top converters for mentorship. Set 1-week conversion targets with incentives.
+                    <strong>Ã°Å¸’Â¡ Solution:</strong> Conduct targeted training for these staff members on OSG selling techniques. Pair them with top converters for mentorship. Set 1-week conversion targets with incentives.
                 </div>
             `);
         }
 
         // ---- Card 3: Top Performers ----
         if (topQty.length > 0) {
-            html += insightCard('Ã°Å¸Ââ€ ', 'Top Performers â€” Best Qty Conversion', 'success', `
+            html += insightCard(' ', 'Top Performers ” Best Qty Conversion', 'success', `
                 <div class="insight-list">
                     ${topQty.map((s, i) => `
                         <div class="insight-list-item">
@@ -1780,7 +1780,7 @@
                     `).join('')}
                 </div>
                 <div class="insight-solution">
-                    <strong>Ã°Å¸â€™Â¡ Recommendation:</strong> Recognize these staff publicly. Study their techniques and replicate across other branches. Consider a reward/incentive program to sustain performance.
+                    <strong>Ã°Å¸’Â¡ Recommendation:</strong> Recognize these staff publicly. Study their techniques and replicate across other branches. Consider a reward/incentive program to sustain performance.
                 </div>
             `);
         }
@@ -1788,7 +1788,7 @@
         // ---- Card 4: Underperforming Branches ----
         const weakBranches = branchStats.filter(b => b.pQty >= 10 && b.qtyConv < 2).sort((a, b) => a.qtyConv - b.qtyConv).slice(0, 5);
         if (weakBranches.length > 0) {
-            html += insightCard('Ã°Å¸â€œâ€°', 'Underperforming Branches', 'warning', `
+            html += insightCard('Ã°Å¸“â€°', 'Underperforming Branches', 'warning', `
                 <p>These branches have significant product sales but very low OSG conversion:</p>
                 <table class="data-table insight-table"><thead><tr>
                     <th>Branch</th><th>Prod Qty</th><th>OSG Qty</th><th>Qty Conv%</th>
@@ -1796,7 +1796,7 @@
                     ${weakBranches.map(b => `<tr><td>${b.name}</td><td class="number-cell">${b.pQty}</td><td class="number-cell">${b.oQty}</td><td class="number-cell loss-val">${b.qtyConv.toFixed(2)}%</td></tr>`).join('')}
                 </tbody></table>
                 <div class="insight-solution">
-                    <strong>Ã°Å¸â€™Â¡ Solution:</strong> Schedule branch visits and OSG training workshops. Review branch-level OSG targets. Investigate if product mix or customer demographics contribute to low conversion.
+                    <strong>Ã°Å¸’Â¡ Solution:</strong> Schedule branch visits and OSG training workshops. Review branch-level OSG targets. Investigate if product mix or customer demographics contribute to low conversion.
                 </div>
             `);
         }
@@ -1823,7 +1823,7 @@
                 </div>
                 <p>Performance gap: <strong>${gap.toFixed(2)}%</strong>. ${gap > 5 ? 'This is a significant gap that needs attention.' : 'Relatively close performance.'}</p>
                 <div class="insight-solution">
-                    <strong>Ã°Å¸â€™Â¡ Recommendation:</strong> ${gap > 5 ? 'Organize knowledge-sharing sessions between top and bottom RBMs. Assign mentors and set improvement timelines.' : 'Performance is fairly balanced. Focus on pushing overall numbers higher.'}
+                    <strong>Ã°Å¸’Â¡ Recommendation:</strong> ${gap > 5 ? 'Organize knowledge-sharing sessions between top and bottom RBMs. Assign mentors and set improvement timelines.' : 'Performance is fairly balanced. Focus on pushing overall numbers higher.'}
                 </div>
             `);
         }
@@ -1833,7 +1833,7 @@
         const weakProds = prodSorted.slice(0, 3);
         const strongProds = prodSorted.slice(-3).reverse();
         if (prodSorted.length > 0) {
-            html += insightCard('Ã°Å¸â€œÂ¦', 'Product Category Analysis', 'info', `
+            html += insightCard('Ã°Å¸“Â¦', 'Product Category Analysis', 'info', `
                 <div class="insight-compare">
                     <div class="compare-box success-bg" style="flex:1;">
                         <span class="compare-label">Strong Categories</span>
@@ -1845,7 +1845,7 @@
                     </div>
                 </div>
                 <div class="insight-solution">
-                    <strong>Ã°Å¸â€™Â¡ Solution:</strong> Focus OSG push on weak categories. Create category-specific sales scripts. Consider bundled OSG offers for low-converting product types.
+                    <strong>Ã°Å¸’Â¡ Solution:</strong> Focus OSG push on weak categories. Create category-specific sales scripts. Consider bundled OSG offers for low-converting product types.
                 </div>
             `);
         }
@@ -1858,9 +1858,9 @@
                 <div class="insight-tag-row">
                     ${branchRevShare.slice(0, 5).map(b => `<span class="insight-tag info">${b.name}: ${b.share.toFixed(1)}%</span>`).join('')}
                 </div>
-                ${top3Share > 50 ? '<p class="text-warning">âš ï¸ High concentration risk â€” underperformance in these branches would significantly impact overall numbers.</p>' : '<p class="text-success">âœ… Revenue is fairly distributed â€” good diversification.</p>'}
+                ${top3Share > 50 ? '<p class="text-warning"> High concentration risk ” underperformance in these branches would significantly impact overall numbers.</p>' : '<p class="text-success">âœ… Revenue is fairly distributed ” good diversification.</p>'}
                 <div class="insight-solution">
-                    <strong>Ã°Å¸â€™Â¡ Recommendation:</strong> ${top3Share > 50 ? 'Invest in growing smaller branches. Reduce dependency on top branches by improving performance of bottom 50%.' : 'Maintain balanced growth across all branches.'}
+                    <strong>Ã°Å¸’Â¡ Recommendation:</strong> ${top3Share > 50 ? 'Invest in growing smaller branches. Reduce dependency on top branches by improving performance of bottom 50%.' : 'Maintain balanced growth across all branches.'}
                 </div>
             `);
         }
@@ -1923,7 +1923,7 @@
         }
         deepAnalysisHtml += `</ul>`;
 
-        html += insightCard('Ã°Å¸â€Â', 'Deep Root Cause Analysis', 'danger', `
+        html += insightCard('Ã°Å¸”Â', 'Deep Root Cause Analysis', 'danger', `
             <p style="margin-bottom:1rem; color:var(--text-primary); font-weight:500;">Based on combinatorial data analysis, the primary drivers of lost conversion are:</p>
             ${deepAnalysisHtml}
         `);
@@ -1932,12 +1932,12 @@
         const urgentActions = [];
         if (zeroConvStaff.length > 5) urgentActions.push(`Train ${zeroConvStaff.length} zero-conversion staff on OSG selling immediately`);
         if (weakBranches.length > 0) urgentActions.push(`Conduct branch visits to ${weakBranches.map(b => b.name).join(', ')}`);
-        if (conv.qtyConv < 5) urgentActions.push(`Overall qty conversion (${conv.qtyConv.toFixed(1)}%) is below target â€” launch org-wide OSG campaign`);
+        if (conv.qtyConv < 5) urgentActions.push(`Overall qty conversion (${conv.qtyConv.toFixed(1)}%) is below target ” launch org-wide OSG campaign`);
         urgentActions.push('Review and update staff-wise weekly conversion targets');
         urgentActions.push('Share top performer success stories in team meetings');
         if (topQty.length > 0) urgentActions.push(`Reward top converters: ${topQty.slice(0, 3).map(s => s.name).join(', ')}`);
 
-        html += insightCard('Ã°Å¸Å½Â¯', 'Action Plan â€” Next Steps', 'action', `
+        html += insightCard('', 'Action Plan ” Next Steps', 'action', `
             <ol class="insight-actions">
                 ${urgentActions.map(a => `<li>${a}</li>`).join('')}
             </ol>
@@ -2163,7 +2163,7 @@
                                 parseFloat(prod.valConv.toFixed(2)), 
                                 parseFloat(e.qtyConv.toFixed(2)), 
                                 parseFloat(e.valConv.toFixed(2)), 
-                                e.bdm || 'â€”'
+                                e.bdm || '”'
                             ]);
                         } else {
                             data.push([
@@ -2185,7 +2185,7 @@
                         mergeCols.forEach(c => mergeRanges.push({ s: { r: startRow, c }, e: { r: endRow, c } }));
                     }
                 } else {
-                    data.push([rank, e.name, '', 0, 0, 0, 0, parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2)), e.bdm || 'â€”']);
+                    data.push([rank, e.name, '', 0, 0, 0, 0, parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2)), e.bdm || '”']);
                 }
             });
 
@@ -2299,7 +2299,7 @@
         if (selBDM) filtP = filtP.filter(r => r.bdm === selBDM);
         if (selProduct) filtP = filtP.filter(r => r.product === selProduct);
 
-        // Build invoice lookup from product data â€” only count OSG entries that match a product invoice
+        // Build invoice lookup from product data ” only count OSG entries that match a product invoice
         const productInvoices = new Set();
         filtP.forEach(r => { if (r.invoice) productInvoices.add(r.invoice); });
 
@@ -2438,7 +2438,7 @@
         let missedUnique = [];
 
         if (window.sharedMissedUnique) {
-            // We are in shared view mode â€” apply client-side filters
+            // We are in shared view mode ” apply client-side filters
             document.querySelectorAll('#customers-osg-section .lowconv-controls').forEach(el => el.style.display = 'none');
 
             // Init shared filter state
@@ -2584,7 +2584,7 @@
         }
 
         if (missedUnique.length === 0) {
-            $('coMissedTable').innerHTML = noDataHTML('All invoices have OSG entries â€” great conversion! Ã°Å¸Å½â€°');
+            $('coMissedTable').innerHTML = noDataHTML('All invoices have OSG entries ” great conversion! °');
             return;
         }
 
@@ -2650,7 +2650,7 @@
             </div>
             ${currentCaller
                 ? `<span style="margin-left:auto;font-size:0.8rem;color:var(--text-muted);">Logging calls as <strong style="color:var(--text-primary);">${currentCaller}</strong></span>`
-                : '<span style="margin-left:auto;font-size:0.8rem;color:#f59e0b;">âš ï¸ Select your name to log calls</span>'}
+                : '<span style="margin-left:auto;font-size:0.8rem;color:#f59e0b;"> Select your name to log calls</span>'}
         </div>`;
 
         // ---- Table scaffold + first page of rows ----
@@ -2896,8 +2896,8 @@
             <option value="" ${!st.interest ? 'selected' : ''}>- Select -</option>
             <option value="interested" ${st.interest === 'interested' ? 'selected' : ''}>âœ… Interested</option>
             <option value="not-interested" ${st.interest === 'not-interested' ? 'selected' : ''}>âŒ Not Interested</option>
-            <option value="follow-up" ${st.interest === 'follow-up' ? 'selected' : ''}>Ã°Å¸â€œâ€¦ Follow-up</option>
-            <option value="bought" ${st.interest === 'bought' ? 'selected' : ''}>Ã°Å¸â€ºâ€™ Bought</option>
+            <option value="follow-up" ${st.interest === 'follow-up' ? 'selected' : ''}>Follow-up</option>
+            <option value="bought" ${st.interest === 'bought' ? 'selected' : ''}>Bought</option>
         `;
 
         let setDateBtn = '';
@@ -2932,9 +2932,9 @@
                     font-size:0.85rem;font-family:inherit;cursor:pointer;font-weight:600;
                     background:var(--bg-input); color:var(--text-primary); outline:none; max-width:140px; ${opcStyle}">
                     <option value="" ${!st.callStatus ? 'selected' : ''}>- Status -</option>
-                    <option value="connected" ${st.callStatus === 'connected' ? 'selected' : ''}>Ã°Å¸â€œÅ¾ Connected</option>
-                    <option value="not-connected" ${st.callStatus === 'not-connected' ? 'selected' : ''}>Ã°Å¸â€â€¢ Not Connected</option>
-                    <option value="disconnected" ${st.callStatus === 'disconnected' ? 'selected' : ''}>Ã°Å¸â€œÂµ Disconnected</option>
+                    <option value="connected" ${st.callStatus === 'connected' ? 'selected' : ''}>Connected</option>
+                    <option value="not-connected" ${st.callStatus === 'not-connected' ? 'selected' : ''}>🔴 Not Connected</option>
+                    <option value="disconnected" ${st.callStatus === 'disconnected' ? 'selected' : ''}>Ã°Å¸“Âµ Disconnected</option>
                 </select>
                 ${callerInfo}
             </div>` : '';
@@ -2946,7 +2946,7 @@
                 width:130px; outline:none; ${opcStyle}" />
         `;
 
-        let dStr = 'â€”';
+        let dStr = '”';
         if (st.timestamp) {
             const upd = new Date(st.timestamp);
             dStr = `<span style="color:#10b981;font-weight:600;" title="Status Updated">âœ“ ${upd.toLocaleString('en-GB', { day:'numeric', month:'short', hour:'numeric', minute:'numeric' })}</span>`;
@@ -2965,19 +2965,19 @@
         return `<tr id="co-row-${inv}" style="border-bottom:1px solid var(--border);background:${rowBg};transition:background 0.2s;">
             <td style="padding:12px 10px;color:var(--text-muted);font-size:0.8rem;">${i+1}</td>
             <td style="padding:12px 10px;font-family:monospace;font-size:0.82rem;color:var(--text-secondary); width:120px;">${dStr}</td>
-            <td style="padding:12px 10px;"><strong style="color:var(--text-primary);font-size:0.9rem;">${r.customerName||'â€”'}</strong><div style="font-size:0.75rem;color:var(--text-muted)">${r.invoice}</div></td>
+            <td style="padding:12px 10px;"><strong style="color:var(--text-primary);font-size:0.9rem;">${r.customerName||'”'}</strong><div style="font-size:0.75rem;color:var(--text-muted)">${r.invoice}</div></td>
             <td style="padding:12px 10px; width:150px;">${interestBtn}</td>
             <td style="padding:12px 10px; width:160px;">
                 <div style="display:flex;align-items:center;gap:6px;">
-                    <span style="font-weight:600;color:var(--text-primary);font-size:0.88rem;">${r.customerNo||'â€”'}</span>
+                    <span style="font-weight:600;color:var(--text-primary);font-size:0.88rem;">${r.customerNo||'”'}</span>
                     ${r.customerNo?`<a href="tel:${r.customerNo}" title="Call" style="color:var(--primary);display:flex;padding:5px;border-radius:50%;background:rgba(59,130,246,0.12);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>`:''}
                     ${r.customerNo ? `<a href="${(function(){
                         const phone  = '91' + r.customerNo.replace(/\D/g, '');
                         const name   = (r.customerName || 'Customer').split(' ')[0];
                         const prod   = r.product || 'your product';
                         const inv    = r.invoice || '';
-                        const val    = r.soldPrice && r.soldPrice > 0 ? ' (worth â‚¹' + r.soldPrice.toLocaleString('en-IN') + ')' : '';
-                        const msg = 'Dear ' + name + ',\n\nGreetings from myG ðŸ˜Š\n\nThank you for your recent purchase of *' + prod + '*' + val + ' (Invoice: ' + inv + ').\n\nâš ï¸ We noticed your purchase does not yet include an *OSG Extended Warranty* plan. OSG covers:\n\nâœ… Extended protection beyond manufacturer warranty\nâœ… Free doorstep repair service\nâœ… Zero hidden charges\nâœ… Instant claim processing\n\nSecuring your device takes just a minute â€” and gives you complete peace of mind! ðŸ›¡ï¸\n\nWould you be interested? Reply *YES* and we will take care of everything.\n\nWarm regards,\nmyG Team';
+                        const val    = r.soldPrice && r.soldPrice > 0 ? ' (worth ₹' + r.soldPrice.toLocaleString('en-IN') + ')' : '';
+                        const msg = 'Dear ' + name + ',\n\nGreetings from myG ˜Š\n\nThank you for your recent purchase of *' + prod + '*' + val + ' (Invoice: ' + inv + ').\n\n We noticed your purchase does not yet include an *OSG Extended Warranty* plan. OSG covers:\n\nâœ… Extended protection beyond manufacturer warranty\nâœ… Free doorstep repair service\nâœ… Zero hidden charges\nâœ… Instant claim processing\n\nSecuring your device takes just a minute ” and gives you complete peace of mind! \n\nWould you be interested? Reply *YES* and we will take care of everything.\n\nWarm regards,\nmyG Team';
                         return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
                     })()}" target="_blank" title="WhatsApp (English)" style="color:#25D366;display:flex;padding:5px;border-radius:50%;background:rgba(37,211,102,0.12);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>` : ''}
                     ${r.customerNo ? `<a href="${(function(){
@@ -2985,16 +2985,16 @@
                         const name   = (r.customerName || 'Customer').split(' ')[0];
                         const prod   = r.product || 'your product';
                         const inv    = r.invoice || '';
-                        const valML  = r.soldPrice && r.soldPrice > 0 ? ' (â‚¹' + r.soldPrice.toLocaleString('en-IN') + ')' : '';
-                        const msgML = 'à´ªàµà´°à´¿à´¯ ' + name + ',\n\nmyG-àµ½ à´¨à´¿à´¨àµà´¨àµà´³àµà´³ à´†à´¶à´‚à´¸à´•àµ¾ ðŸ˜Š\n\nà´¨à´¿à´™àµà´™àµ¾ à´…à´Ÿàµà´¤àµà´¤à´¿à´Ÿàµ† à´µà´¾à´™àµà´™à´¿à´¯ *' + prod + '*' + valML + ' à´¨àµ à´¨à´¨àµà´¦à´¿. (à´‡àµ»à´µàµ‹à´¯àµà´¸àµ: ' + inv + ').\n\nâš ï¸ à´¨à´¿à´™àµà´™à´³àµà´Ÿàµ† à´ªàµ¼à´šàµà´šàµ‡à´¸à´¿àµ½ à´‡à´¤àµà´µà´°àµ† *OSG à´Žà´•àµà´¸àµà´±àµà´±àµ»à´¡à´¡àµ à´µà´¾à´±àµ»àµà´±à´¿* à´ªàµà´²à´¾àµ» à´‰àµ¾à´ªàµà´ªàµ†à´Ÿàµà´¤àµà´¤à´¿à´¯à´¿à´Ÿàµà´Ÿà´¿à´²àµà´² à´Žà´¨àµà´¨àµ à´žà´™àµà´™àµ¾ à´¶àµà´°à´¦àµà´§à´¿à´šàµà´šàµ. OSG à´µà´´à´¿ à´¨à´¿à´™àµà´™àµ¾à´•àµà´•àµ à´²à´­à´¿à´•àµà´•àµà´¨àµà´¨à´¤àµ:\n\nâœ… à´•à´®àµà´ªà´¨à´¿ à´µà´¾à´±àµ»àµà´±à´¿à´•àµà´•àµ à´¶àµ‡à´·à´µàµà´‚ à´ªà´°à´¿à´°à´•àµà´·\nâœ… à´¸àµ—à´œà´¨àµà´¯ à´¡àµ‹àµ¼à´¸àµà´±àµà´±àµ†à´ªàµà´ªàµ à´±à´¿à´ªàµà´ªà´¯àµ¼ à´¸àµ‡à´µà´¨à´‚\nâœ… à´¹à´¿à´¡àµ» à´šà´¾àµ¼à´œàµà´•àµ¾ à´‡à´²àµà´²\nâœ… à´µàµ‡à´—à´¤àµà´¤à´¿à´²àµà´³àµà´³ à´•àµà´²àµ†à´¯à´¿à´‚ à´ªàµà´°àµ‹à´¸à´¸àµà´¸à´¿à´‚à´—àµ\n\nà´¨à´¿à´™àµà´™à´³àµà´Ÿàµ† à´¡à´¿à´µàµˆà´¸àµ à´¸àµà´°à´•àµà´·à´¿à´¤à´®à´¾à´•àµà´•à´¾àµ» à´µàµ†à´±àµà´‚ à´’à´°àµ à´®à´¿à´¨à´¿à´±àµà´±àµ à´®à´¤à´¿ â€” à´’à´ªàµà´ªà´‚ à´¨à´¿à´™àµà´™àµ¾à´•àµà´•àµ à´ªàµ‚àµ¼à´£àµà´£ à´¸à´®à´¾à´§à´¾à´¨à´µàµà´‚ à´²à´­à´¿à´•àµà´•àµà´‚! ðŸ›¡ï¸\n\nà´¨à´¿à´™àµà´™àµ¾à´•àµà´•àµ à´¤à´¾à´²àµà´ªà´°àµà´¯à´®àµà´£àµà´Ÿàµ‹? *YES* à´Žà´¨àµà´¨àµ à´®à´±àµà´ªà´Ÿà´¿ à´¨àµ½à´•àµà´•, à´¬à´¾à´•àµà´•à´¿ à´•à´¾à´°àµà´¯à´™àµà´™àµ¾ à´žà´™àµà´™àµ¾ à´šàµ†à´¯àµà´¤àµ à´¤à´°à´¾à´‚.\n\nà´¸àµà´¨àµ‡à´¹à´¤àµà´¤àµ‹à´Ÿàµ†,\nmyG à´Ÿàµ€à´‚';
+                        const valML  = r.soldPrice && r.soldPrice > 0 ? ' (₹' + r.soldPrice.toLocaleString('en-IN') + ')' : '';
+                        const msgML = 'à´ªàµà´°à´¿à´¯ ' + name + ',\n\nmyG-àµ½ à´¨à´¿à´¨àµà´¨àµà´³àµà´³ à´†à´¶à´‚à´¸à´•àµ¾ ˜Š\n\nà´¨à´¿à´™àµà´™àµ¾ à´…à´Ÿàµà´¤àµà´¤à´¿à´Ÿàµ† à´µà´¾à´™àµà´™à´¿à´¯ *' + prod + '*' + valML + ' à´¨àµ à´¨à´¨àµà´¦à´¿. (à´‡àµ»à´µàµ‹à´¯àµà´¸àµ: ' + inv + ').\n\n à´¨à´¿à´™àµà´™à´³àµà´Ÿàµ† à´ªàµ¼à´šàµà´šàµ‡à´¸à´¿àµ½ à´‡à´¤àµà´µà´°àµ† *OSG à´Žà´•àµà´¸àµà´±àµà´±àµ»à´¡à´¡àµ à´µà´¾à´±àµ»àµà´±à´¿* à´ªàµà´²à´¾àµ» à´‰àµ¾à´ªàµà´ªàµ†à´Ÿàµà´¤àµà´¤à´¿à´¯à´¿à´Ÿàµà´Ÿà´¿à´²àµà´² à´Žà´¨àµà´¨àµ à´žà´™àµà´™àµ¾ à´¶àµà´°à´¦àµà´§à´¿à´šàµà´šàµ. OSG à´µà´´à´¿ à´¨à´¿à´™àµà´™àµ¾à´•àµà´•àµ à´²à´­à´¿à´•àµà´•àµà´¨àµà´¨à´¤àµ:\n\nâœ… à´•à´®àµà´ªà´¨à´¿ à´µà´¾à´±àµ»àµà´±à´¿à´•àµà´•àµ à´¶àµ‡à´·à´µàµà´‚ à´ªà´°à´¿à´°à´•àµà´·\nâœ… à´¸àµ—à´œà´¨àµà´¯ à´¡àµ‹àµ¼à´¸àµà´±àµà´±àµ†à´ªàµà´ªàµ à´±à´¿à´ªàµà´ªà´¯àµ¼ à´¸àµ‡à´µà´¨à´‚\nâœ… à´¹à´¿à´¡àµ» à´šà´¾àµ¼à´œàµà´•àµ¾ à´‡à´²àµà´²\nâœ… à´µàµ‡à´—à´¤àµà´¤à´¿à´²àµà´³àµà´³ à´•àµà´²àµ†à´¯à´¿à´‚ à´ªàµà´°àµ‹à´¸à´¸àµà´¸à´¿à´‚à´—àµ\n\nà´¨à´¿à´™àµà´™à´³àµà´Ÿàµ† à´¡à´¿à´µàµˆà´¸àµ à´¸àµà´°à´•àµà´·à´¿à´¤à´®à´¾à´•àµà´•à´¾àµ» à´µàµ†à´±àµà´‚ à´’à´°àµ à´®à´¿à´¨à´¿à´±àµà´±àµ à´®à´¤à´¿ ” à´’à´ªàµà´ªà´‚ à´¨à´¿à´™àµà´™àµ¾à´•àµà´•àµ à´ªàµ‚àµ¼à´£àµà´£ à´¸à´®à´¾à´§à´¾à´¨à´µàµà´‚ à´²à´­à´¿à´•àµà´•àµà´‚! \n\nà´¨à´¿à´™àµà´™àµ¾à´•àµà´•àµ à´¤à´¾à´²àµà´ªà´°àµà´¯à´®àµà´£àµà´Ÿàµ‹? *YES* à´Žà´¨àµà´¨àµ à´®à´±àµà´ªà´Ÿà´¿ à´¨àµ½à´•àµà´•, à´¬à´¾à´•àµà´•à´¿ à´•à´¾à´°àµà´¯à´™àµà´™àµ¾ à´žà´™àµà´™àµ¾ à´šàµ†à´¯àµà´¤àµ à´¤à´°à´¾à´‚.\n\nà´¸àµà´¨àµ‡à´¹à´¤àµà´¤àµ‹à´Ÿàµ†,\nmyG à´Ÿàµ€à´‚';
                         return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msgML);
                     })()}" target="_blank" title="WhatsApp (Malayalam)" style="color:#25D366;display:flex;padding:3px 6px;border-radius:12px;background:rgba(37,211,102,0.12);font-size:0.75rem;font-weight:700;text-decoration:none;align-items:center;">ML</a>` : ''}
                 </div>
                 ${callBtns}
             </td>
             <td style="padding:12px 10px;">${remarksInput}</td>
-            <td style="padding:12px 10px;color:var(--text-secondary);font-size:0.85rem;">${r.branch||'â€”'}</td>
-            <td style="padding:12px 10px;color:var(--text-secondary);font-size:0.85rem;">${r.product||'â€”'}</td>
+            <td style="padding:12px 10px;color:var(--text-secondary);font-size:0.85rem;">${r.branch||'”'}</td>
+            <td style="padding:12px 10px;color:var(--text-secondary);font-size:0.85rem;">${r.product||'”'}</td>
             <td style="padding:12px 10px;text-align:right;font-weight:600;color:var(--text-primary);font-size:0.88rem;white-space:nowrap;">${fmtShort(r.soldPrice)}</td>
         </tr>`;
     }
@@ -3104,16 +3104,16 @@ function exportCustomersOSGExcel() {
         arr.forEach(r => { const k = r[key] || 'Unknown'; if (!m[k]) m[k] = []; m[k].push(r); });
         return m;
     }
-    function formatCurrency(n) { return 'â‚¹' + n.toLocaleString('en-IN', { maximumFractionDigits: 0 }); }
+    function formatCurrency(n) { return '₹' + n.toLocaleString('en-IN', { maximumFractionDigits: 0 }); }
     function fmtShort(n) {
-        if (Math.abs(n) >= 1e7) return 'â‚¹' + (n / 1e7).toFixed(1) + 'Cr';
-        if (Math.abs(n) >= 1e5) return 'â‚¹' + (n / 1e5).toFixed(1) + 'L';
-        if (Math.abs(n) >= 1e3) return 'â‚¹' + (n / 1e3).toFixed(1) + 'K';
-        return 'â‚¹' + n.toFixed(0);
+        if (Math.abs(n) >= 1e7) return '₹' + (n / 1e7).toFixed(1) + 'Cr';
+        if (Math.abs(n) >= 1e5) return '₹' + (n / 1e5).toFixed(1) + 'L';
+        if (Math.abs(n) >= 1e3) return '₹' + (n / 1e3).toFixed(1) + 'K';
+        return '₹' + n.toFixed(0);
     }
     function formatNumber(n) { return n.toLocaleString('en-IN'); }
     function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
-    function truncate(s, len) { return s.length > len ? s.substring(0, len) + 'â€¦' : s; }
+    function truncate(s, len) { return s.length > len ? s.substring(0, len) + '…' : s; }
     function showLoading(show) { loadingOverlay.classList.toggle('active', show); }
     function q(s) { return '"' + (s || '').replace(/"/g, '""') + '"'; }
 
@@ -3182,12 +3182,12 @@ function exportCustomersOSGExcel() {
         html += '<div class="conversion-card" style="border-left: 4px solid var(--loss); border-radius: 8px; padding: 20px; background:var(--bg-card);">';
         html += '<h3 style="margin-top:0; color:var(--loss); display:flex; align-items:center; gap:8px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Critical Focus Areas</h3>';
 
-        html += '<div style="margin-bottom: 16px;"><strong>Ã°Å¸Å¡Â¨ High Volume, Low Conversion Branches:</strong><ul style="margin:8px 0 0 20px; color:var(--text-muted); line-height: 1.6;">';
+        html += '<div style="margin-bottom: 16px;"><strong> High Volume, Low Conversion Branches:</strong><ul style="margin:8px 0 0 20px; color:var(--text-muted); line-height: 1.6;">';
         if (worstBranches.length) worstBranches.forEach(b => html += `<li><strong>${b.branch}</strong>: ${b.pQ} products sold but only ${b.oQ} OSG attached (${b.conv.toFixed(1)}%). Estimated missed tracking revenue: ${fmtShort(b.valP * 0.1)}</li>`);
         else html += '<li>No significantly underperforming branches detected.</li>';
         html += '</ul></div>';
 
-        html += '<div style="margin-bottom: 16px;"><strong>Ã°Å¸â€™Å½ Missed Premium Device Attachments:</strong><ul style="margin:8px 0 0 20px; color:var(--text-muted); line-height: 1.6;">';
+        html += '<div style="margin-bottom: 16px;"><strong>Ã°Å¸’Å½ Missed Premium Device Attachments:</strong><ul style="margin:8px 0 0 20px; color:var(--text-muted); line-height: 1.6;">';
         if (premiumMisses.length) premiumMisses.forEach(m => html += `<li><strong>${m.staff} (${m.branch})</strong> sold a ${m.product} for ${fmtShort(m.soldPrice)} without OSG (Inv: ${m.invoice}).</li>`);
         else html += '<li>Great job! High-value premium products seem to be attached correctly.</li>';
         html += '</ul></div>';
@@ -3205,7 +3205,7 @@ function exportCustomersOSGExcel() {
             reasonHTML += `<li><strong>Systemic Branch Failure (${worstBranches[0].branch}):</strong> Conversion is near zero (${worstBranches[0].conv.toFixed(1)}%) despite moving ${worstBranches[0].pQ} units. This indicates a store-wide knowledge gap or a leadership failure to enforce pitching at the POS, rather than individual poor performance.</li>`;
         }
         if (premiumMisses.length >= 2) {
-            reasonHTML += `<li><strong>Premium Pitch Avoidance:</strong> Found multiple premium devices > â‚¹50K sold with no OSG attached. Sales reps might be avoiding the OSG pitch on high-ticket items out of fear of losing the primary sale due to total cart value shock.</li>`;
+            reasonHTML += `<li><strong>Premium Pitch Avoidance:</strong> Found multiple premium devices > ₹50K sold with no OSG attached. Sales reps might be avoiding the OSG pitch on high-ticket items out of fear of losing the primary sale due to total cart value shock.</li>`;
         }
         const topPerformers = staffStats.filter(s => s.conv > 20);
         if (topPerformers.length > 0 && worstStaff.length > 0) {
@@ -3224,7 +3224,7 @@ function exportCustomersOSGExcel() {
         html += '<h3 style="margin-top:0; color:var(--primary); display:flex; align-items:center; gap:8px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Immediate Action Plan</h3>';
         html += '<ol style="margin:8px 0 0 24px; color:var(--text-muted); line-height:1.8;">';
         if (worstBranches.length) html += `<li><strong>RBM/BDM Intercept:</strong> Immediately deploy regional trainers to ${worstBranches.map(b => `<strong>${b.branch}</strong>`).join(', ')} for POS floor shadowing.</li>`;
-        if (premiumMisses.length) html += `<li><strong>Premium Bundling Rule:</strong> Institute a strict rule that any manager override/discount on products over â‚¹50K ideally requires an OSG attachment commitment.</li>`;
+        if (premiumMisses.length) html += `<li><strong>Premium Bundling Rule:</strong> Institute a strict rule that any manager override/discount on products over ₹50K ideally requires an OSG attachment commitment.</li>`;
         if (worstStaff.length) html += `<li><strong>Targeted PIPs:</strong> Place <strong>${worstStaff.map(s => `${s.staff}`).join(', ')}</strong> on an accelerated 7-day OSG pitch improvement plan.</li>`;
         html += '<li><strong>Daily Morning Brief:</strong> Have branch managers physically review the "Customers Without OSG" dashboard list from yesterday\'s data before the store opens to identify missed pitch opportunities and contact customers via the WhatsApp quick-links.</li>';
         html += '</ol>';
