@@ -2549,8 +2549,34 @@
             if (selDate) {
                 filtP = filtP.filter(r => {
                     let dStr = '';
-                    if (r.invoiceDate) { dStr = new Date(r.invoiceDate).toISOString().split('T')[0]; }
-                    else if (r.time) { dStr = new Date(r.time).toISOString().split('T')[0]; }
+                    let dt = r.invoiceDate || r.time;
+                    if (!dt) return false;
+                    
+                    if (dt instanceof Date && !isNaN(dt)) {
+                        const y = dt.getFullYear();
+                        const m = String(dt.getMonth() + 1).padStart(2, '0');
+                        const d = String(dt.getDate()).padStart(2, '0');
+                        dStr = `${y}-${m}-${d}`;
+                    } else if (typeof dt === 'string') {
+                        if (dt.match(/^\d{4}-\d{2}-\d{2}/)) {
+                            dStr = dt.substring(0, 10);
+                        } else {
+                            let match = dt.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+                            if (match) {
+                                let yy = match[3].length === 2 ? "20" + match[3] : match[3];
+                                dStr = `${yy}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}`;
+                            } else {
+                                const pd = new Date(dt);
+                                if (!isNaN(pd)) {
+                                    dStr = `${pd.getFullYear()}-${String(pd.getMonth() + 1).padStart(2, '0')}-${String(pd.getDate()).padStart(2, '0')}`;
+                                }
+                            }
+                        }
+                    } else if (typeof dt === 'number') {
+                        // Excel serial number (days since 1900)
+                        let dObj = new Date(Math.round((dt - 25569) * 86400 * 1000));
+                        dStr = `${dObj.getUTCFullYear()}-${String(dObj.getUTCMonth()+1).padStart(2,'0')}-${String(dObj.getUTCDate()).padStart(2,'0')}`;
+                    }
                     return dStr === selDate;
                 });
             }
