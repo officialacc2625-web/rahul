@@ -374,6 +374,26 @@
         }
     }
 
+    function showFileStatus(el, name, count) {
+        if (!el) return;
+        el.className = 'upload-status has-data';
+        el.innerHTML = `
+            <span class="status-icon">✅</span>
+            <span class="status-text">${name}</span>
+            <span class="status-count">${count} rows</span>
+        `;
+    }
+
+    function checkGenerateReady() {
+        const btn = document.getElementById('btnGenerate');
+        if (!btn) return;
+        if (productData && osgData && productData.length > 0 && osgData.length > 0) {
+            btn.disabled = false;
+        } else {
+            btn.disabled = true;
+        }
+    }
+
     function parseProductFile(file) {
         return parseExcel(file, PRODUCT_COL_MAP, (row, mapping) => {
             const r = {};
