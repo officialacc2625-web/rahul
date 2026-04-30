@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=5">
+    <link rel="stylesheet" href="style.css?v=20">
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
@@ -20,18 +20,38 @@
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
-            <div class="brand-icon">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
-                    <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
-                    <path d="M18 12a2 2 0 0 0 0 4h4v-4Z" />
+            <div class="brand-icon" style="background: transparent;">
+                <svg width="38" height="38" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="orgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#f97316" />
+                            <stop offset="100%" stop-color="#ea580c" />
+                        </linearGradient>
+                        <linearGradient id="orgGradLight" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#fb923c" />
+                            <stop offset="100%" stop-color="#f26e21" />
+                        </linearGradient>
+                    </defs>
+                    <!-- Sleek Data Donut 'G' -->
+                    <path d="M50 10 A 40 40 0 1 0 90 50 H 72 A 22 22 0 1 1 50 28 V 10 Z" fill="url(#orgGrad)"/>
+                    <rect x="72" y="42" width="18" height="14" fill="url(#orgGrad)"/>
+                    <!-- Data Node -->
+                    <circle cx="82" cy="18" r="8" fill="url(#orgGradLight)"/>
+                    <!-- Mini 'my' text embedded centrally -->
+                    <text x="50" y="56" font-family="'Arial Rounded MT Bold', 'Ubuntu', sans-serif" font-weight="900" font-size="20" fill="#ffffff" text-anchor="middle">my</text>
                 </svg>
             </div>
-            <span class="brand-text">Analytics Portal</span>
+            <span class="brand-text" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-family: 'Arial Rounded MT Bold', system-ui, sans-serif; letter-spacing: -0.5px; font-weight: 800; font-size: 1.3rem;">Analytics Portal</span>
         </div>
         <nav class="sidebar-nav">
             <a href="#" class="nav-item active" data-section="upload-section" id="nav-upload">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="url(#navGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <defs>
+                        <linearGradient id="navGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#f97316" />
+                            <stop offset="100%" stop-color="#ea580c" />
+                        </linearGradient>
+                    </defs>
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                     <polyline points="17 8 12 3 7 8" />
                     <line x1="12" y1="3" x2="12" y2="15" />
@@ -39,11 +59,11 @@
                 <span>Upload Data</span>
             </a>
             <a href="#" class="nav-item" data-section="dashboard-section" id="nav-dashboard">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="3" width="7" height="7" />
-                    <rect x="14" y="3" width="7" height="7" />
-                    <rect x="3" y="14" width="7" height="7" />
-                    <rect x="14" y="14" width="7" height="7" />
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="url(#navGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                    <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                    <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                    <rect x="14" y="14" width="7" height="7" rx="1.5" />
                 </svg>
                 <span>Dashboard</span>
             </a>
@@ -51,38 +71,42 @@
 
 
             <a href="#" class="nav-item" data-section="customers-osg-section" id="nav-customers-osg">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <line x1="23" y1="11" x2="17" y2="11" />
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="url(#osgNavGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <defs>
+                        <linearGradient id="osgNavGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#f97316" />
+                            <stop offset="100%" stop-color="#ea580c" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <path d="M9 12l2 2 4-4"/>
                 </svg>
                 <span>Customers Without OSG</span>
             </a>
             <a href="#" class="nav-item" data-section="lowconv-section" id="nav-lowconv">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path
-                        d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="url(#navGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
                     <line x1="12" y1="9" x2="12" y2="13" />
                     <line x1="12" y1="17" x2="12.01" y2="17" />
                 </svg>
                 <span>Low Conv Staff</span>
             </a>
             <a href="#" class="nav-item" data-section="topconv-section" id="nav-topconv">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="url(#navGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="8" r="6" />
                     <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />
                 </svg>
                 <span>Top Staff</span>
             </a>
             <a href="#" class="nav-item" data-section="future-section" id="nav-future">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="url(#navGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
                     <polyline points="9 22 9 12 15 12 15 22" />
                 </svg>
                 <span>Future Stores</span>
             </a>
             <a href="#" class="nav-item" data-section="insights-section" id="nav-insights">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="url(#navGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M9 18h6" />
                     <path d="M10 22h4" />
                     <path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z" />
@@ -122,7 +146,7 @@
                     <span id="fileCountText">0 rows</span>
                 </div>
                 <button class="btn-primary" id="btnShare"
-                    style="display:none; padding:8px 16px; margin-right:8px; border-radius:var(--radius-sm); border:none; color:#fff; background:var(--primary); cursor:pointer; font-weight:500; font-family:inherit; align-items:center; gap:6px;">
+                    >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="18" cy="5" r="3"></circle>
                         <circle cx="6" cy="12" r="3"></circle>
@@ -132,7 +156,7 @@
                     </svg>
                     Share Dashboard
                 </button>
-                <button class="btn-reset" id="btnReset" style="display:none;" title="Clear all data">
+                <button class="btn-reset" id="btnReset"  title="Clear all data">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="1 4 1 10 7 10" />
                         <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
@@ -145,85 +169,33 @@
         <!-- Upload Section -->
         <section class="content-section active" id="upload-section">
             <div class="upload-container">
-                <div class="upload-dual-grid">
-                    <!-- Product File Upload -->
-                    <div class="upload-card">
-                        <div class="upload-card-header product-header">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <rect x="1" y="3" width="15" height="13" />
-                                <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
-                                <circle cx="5.5" cy="18.5" r="2.5" />
-                                <circle cx="18.5" cy="18.5" r="2.5" />
-                            </svg>
-                            <h3>Product / Sales Data</h3>
-                        </div>
-                        <div class="upload-zone" id="uploadZoneProduct">
-                            <div class="upload-icon-small">
-                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="1.5">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                    <polyline points="17 8 12 3 7 8" />
-                                    <line x1="12" y1="3" x2="12" y2="15" />
-                                </svg>
-                            </div>
-                            <p class="upload-text">Drop Product file here or <span class="browse-link">browse</span></p>
-                            <div class="upload-formats">
-                                <span class="format-tag">.xlsx</span>
-                                <span class="format-tag">.xls</span>
-                                <span class="format-tag">.csv</span>
-                            </div>
-                            <input type="file" id="fileInputProduct" accept=".xlsx,.xls,.csv" hidden>
-                        </div>
-                        <div class="upload-status" id="productStatus"></div>
-                    </div>
-
-                    <!-- OSG File Upload -->
-                    <div class="upload-card">
-                        <div class="upload-card-header osg-header">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
-                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                                <polyline points="22 4 12 14.01 9 11.01" />
-                            </svg>
-                            <h3>OSG / Warranty Data</h3>
-                        </div>
-                        <div class="upload-zone" id="uploadZoneOSG">
-                            <div class="upload-icon-small">
-                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="1.5">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                    <polyline points="17 8 12 3 7 8" />
-                                    <line x1="12" y1="3" x2="12" y2="15" />
-                                </svg>
-                            </div>
-                            <p class="upload-text">Drop OSG file here or <span class="browse-link">browse</span></p>
-                            <div class="upload-formats">
-                                <span class="format-tag">.xlsx</span>
-                                <span class="format-tag">.xls</span>
-                                <span class="format-tag">.csv</span>
-                            </div>
-                            <input type="file" id="fileInputOSG" accept=".xlsx,.xls,.csv" hidden>
-                        </div>
-                        <div class="upload-status" id="osgStatus"></div>
-                    </div>
-                </div>
-
-                <!-- LG AMC optional -->
-                <div class="upload-card upload-card-optional">
-                    <div class="upload-card-header amc-header">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                            <polyline points="14 2 14 8 20 8" />
+                <div class="upload-card" style="margin-bottom: 24px;">
+                    <div class="upload-card-header" style="color: #10b981; justify-content: center; padding-bottom: 0;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
                         </svg>
-                        <h3>LG AMC Data <span class="optional-badge">Optional</span></h3>
+                        <h3 style="font-size: 1.2rem;">Smart Master Upload</h3>
                     </div>
-                    <div class="upload-zone upload-zone-small" id="uploadZoneAMC">
-                        <p class="upload-text">Drop LG AMC file here or <span class="browse-link">browse</span></p>
-                        <input type="file" id="fileInputAMC" accept=".xlsx,.xls,.csv" hidden>
+                    <div class="upload-zone" id="uploadZoneSmart" style="padding: 40px 20px; margin-top: 16px;">
+                        <p class="upload-text" style="font-size: 1.1rem; margin-bottom: 12px;">Drag & Drop all your CSV/Excel files here at once</p>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 16px;">(Product, OSG, AMC, and Samsung reports)</p>
+                        <button class="browse-btn" style="background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.3); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; font-family: inherit;">Browse Files</button>
+                        <div class="upload-formats" style="margin-top: 16px;">
+                            <span class="format-tag">.xlsx</span>
+                            <span class="format-tag">.xls</span>
+                            <span class="format-tag">.csv</span>
+                        </div>
+                        <input type="file" id="fileInputSmart" accept=".xlsx,.xls,.csv" multiple hidden>
                     </div>
-                    <div class="upload-status" id="amcStatus"></div>
+                    
+                    <div class="smart-status-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 16px;">
+                        <div class="upload-status" id="productStatus" style="margin: 0;"></div>
+                        <div class="upload-status" id="osgStatus" style="margin: 0;"></div>
+                        <div class="upload-status" id="amcStatus" style="margin: 0;"></div>
+                        <div class="upload-status" id="samsungStatus" style="margin: 0;"></div>
+                    </div>
                 </div>
 
                 <!-- Generate button -->
@@ -407,10 +379,80 @@
                     </div>
                     <div class="kpi-content">
                         <span class="kpi-label">Without OSG</span>
-                        <span class="kpi-value" id="kpiWithoutOsg" style="color:#ef4444;">0</span>
+                         <span class="kpi-value" id="kpiWithoutOsg" style="color:#ef4444;">0</span>
                     </div>
                 </div>
             </div>
+            </div>
+
+            <!-- LG AMC KPI Row (shown only when AMC data is uploaded) -->
+            <div id="lgAmcKpiRow" style="display:none; margin-bottom:24px;">
+                <h2 class="section-heading">🛡️ LG AMC Conversion (LG Products Only)</h2>
+                <div class="kpi-grid">
+                    <div class="kpi-card kpi-revenue">
+                        <div class="kpi-icon">🔒</div>
+                        <div class="kpi-content">
+                            <span class="kpi-label">Total AMC Qty</span>
+                            <span class="kpi-value" id="kpiAmcTotal" style="color:#8b5cf6;">0</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card kpi-revenue" style="border-top-color:#06b6d4;">
+                        <div class="kpi-icon" style="background:rgba(6,182,212,0.1);color:#06b6d4;">💰</div>
+                        <div class="kpi-content">
+                            <span class="kpi-label">Total AMC Sale</span>
+                            <span class="kpi-value" id="kpiAmcSale" style="color:#06b6d4;">₹0</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card kpi-loss">
+                        <div class="kpi-icon">❌</div>
+                        <div class="kpi-content">
+                            <span class="kpi-label">LG Prdt WITHOUT AMC</span>
+                            <span class="kpi-value" id="kpiAmcWithout" style="color:#ef4444;">0</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card kpi-valconv">
+                        <div class="kpi-icon">📊</div>
+                        <div class="kpi-content">
+                            <span class="kpi-label">AMC Conv%</span>
+                            <span class="kpi-value" id="kpiAmcConv" style="color:#f59e0b;">0%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Samsung KPI Row (shown only when Samsung data is uploaded) -->
+            <div id="samsungKpiRow" style="display:none; margin-bottom:24px;">
+                <h2 class="section-heading">📱 Samsung Conversion (Samsung Products Only)</h2>
+                <div class="kpi-grid">
+                    <div class="kpi-card kpi-revenue" style="border-top-color:#1e3a8a;">
+                        <div class="kpi-icon" style="background:rgba(30,58,138,0.1);color:#1e3a8a;">📱</div>
+                        <div class="kpi-content">
+                            <span class="kpi-label">Total Samsung Qty</span>
+                            <span class="kpi-value" id="kpiSamsungTotal" style="color:#1e3a8a;">0</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card kpi-revenue" style="border-top-color:#3b82f6;">
+                        <div class="kpi-icon" style="background:rgba(59,130,246,0.1);color:#3b82f6;">💰</div>
+                        <div class="kpi-content">
+                            <span class="kpi-label">Total Samsung Sale</span>
+                            <span class="kpi-value" id="kpiSamsungSale" style="color:#3b82f6;">₹0</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card kpi-loss">
+                        <div class="kpi-icon">❌</div>
+                        <div class="kpi-content">
+                            <span class="kpi-label">Samsung WITHOUT Care</span>
+                            <span class="kpi-value" id="kpiSamsungWithout" style="color:#ef4444;">0</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card kpi-valconv" style="border-top-color:#10b981;">
+                        <div class="kpi-icon" style="background:rgba(16,185,129,0.1);color:#10b981;">📊</div>
+                        <div class="kpi-content">
+                            <span class="kpi-label">Samsung Conv%</span>
+                            <span class="kpi-value" id="kpiSamsungConv" style="color:#10b981;">0%</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Conversion Tables -->
@@ -438,7 +480,6 @@
                 </div>
             </div>
         </section>
-    </main>
 
     <!-- Low Conv Staff Section -->
     <section class="content-section" id="lowconv-section">
@@ -457,14 +498,14 @@
                 <div class="lowconv-control-group">
                     <label for="lcRBM">RBM</label>
                     <select id="lcRBM"
-                        style="padding:9px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;">
+                        >
                         <option value="">All RBMs</option>
                     </select>
                 </div>
                 <div class="lowconv-control-group">
                     <label for="lcBDM">BDM</label>
                     <select id="lcBDM"
-                        style="padding:9px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;">
+                        >
                         <option value="">All BDMs</option>
                     </select>
                 </div>
@@ -475,7 +516,7 @@
                     </svg>
                     Refresh
                 </button>
-                <button class="btn-export" id="btnLCExport" style="margin-left:auto;">
+                <button class="btn-export" id="btnLCExport" >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                         <polyline points="7 10 12 15 17 10" />
@@ -521,7 +562,7 @@
                 <div class="lowconv-control-group">
                     <label for="tcSortBy">Sort By</label>
                     <select id="tcSortBy"
-                        style="padding:9px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:0.88rem;">
+                        >
                         <option value="qtyConv">Qty Conversion %</option>
                         <option value="valConv">Value Conversion %</option>
                     </select>
@@ -533,14 +574,14 @@
                 <div class="lowconv-control-group">
                     <label for="tcRBM">RBM</label>
                     <select id="tcRBM"
-                        style="padding:9px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;">
+                        >
                         <option value="">All RBMs</option>
                     </select>
                 </div>
                 <div class="lowconv-control-group">
                     <label for="tcBDM">BDM</label>
                     <select id="tcBDM"
-                        style="padding:9px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;">
+                        >
                         <option value="">All BDMs</option>
                     </select>
                 </div>
@@ -551,7 +592,7 @@
                     </svg>
                     Refresh
                 </button>
-                <button class="btn-export" id="btnTCExport" style="margin-left:auto;">
+                <button class="btn-export" id="btnTCExport" >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                         <polyline points="7 10 12 15 17 10" />
@@ -593,21 +634,21 @@
                 <div class="lowconv-control-group">
                     <label for="fsRBM">RBM</label>
                     <select id="fsRBM"
-                        style="padding:9px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;">
+                        >
                         <option value="">All RBMs</option>
                     </select>
                 </div>
                 <div class="lowconv-control-group">
                     <label for="fsBDM">BDM</label>
                     <select id="fsBDM"
-                        style="padding:9px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;">
+                        >
                         <option value="">All BDMs</option>
                     </select>
                 </div>
                 <div class="lowconv-control-group">
                     <label for="fsBranch">Branch</label>
                     <select id="fsBranch"
-                        style="padding:9px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;">
+                        >
                         <option value="">All Future Stores</option>
                     </select>
                 </div>
@@ -618,7 +659,7 @@
                     </svg>
                     Refresh
                 </button>
-                <button class="btn-export" id="btnFSExport" style="margin-left:auto;">
+                <button class="btn-export" id="btnFSExport" >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                         <polyline points="7 10 12 15 17 10" />
@@ -690,41 +731,41 @@
                 <div class="lowconv-control-group">
                     <label for="coBrand">🏷️ Brand</label>
                     <select id="coBrand"
-                        style="padding:9px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;">
+                        >
                         <option value="">All Brands</option>
                     </select>
                 </div>
                 <div class="lowconv-control-group">
                     <label for="coRBM">RBM</label>
                     <select id="coRBM"
-                        style="padding:9px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;">
+                        >
                         <option value="">All RBMs</option>
                     </select>
                 </div>
                 <div class="lowconv-control-group">
                     <label for="coBDM">BDM</label>
                     <select id="coBDM"
-                        style="padding:9px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;">
+                        >
                         <option value="">All BDMs</option>
                     </select>
                 </div>
                 <div class="lowconv-control-group">
                     <label for="coProduct">Product</label>
                     <select id="coProduct"
-                        style="padding:9px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;">
+                        >
                         <option value="">All Products</option>
                     </select>
                 </div>
                 <div class="lowconv-control-group">
                     <label for="coBranch">Branch</label>
                     <select id="coBranch"
-                        style="padding:9px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;">
+                        >
                         <option value="">All Branches</option>
                     </select>
                 </div>
                 <div class="lowconv-control-group">
                     <label>📆 Purchase Date</label>
-                    <button id="coDateFilterBtn" style="padding:9px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center;" onclick="window.coCalWidget._showFilter(this)">
+                    <button id="coDateFilterBtn"  onclick="window.coCalWidget._showFilter(this)">
                         <span id="coDateFilterLabel">All Dates</span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
                     </button>
@@ -733,7 +774,7 @@
                 <div class="lowconv-control-group">
                     <label for="coStatusFilter">📋 CRM Status</label>
                     <select id="coStatusFilter"
-                        style="padding:9px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;">
+                        >
                         <option value="">All Statuses</option>
                         <option value="follow-up">📅 Follow-up</option>
                         <option value="interested">✅ Interested</option>
@@ -745,7 +786,7 @@
                 <div class="lowconv-control-group">
                     <label for="coSort">Sort By</label>
                     <select id="coSort"
-                        style="padding:9px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;">
+                        >
                         <option value="value-desc">💰 Value: High → Low</option>
                         <option value="value-asc">💰 Value: Low → High</option>
                         <option value="name-asc">🔤 Customer: A → Z</option>
@@ -759,7 +800,7 @@
                     </svg>
                     Refresh
                 </button>
-                <button class="btn-export" id="btnCOExport" style="margin-left:auto;">
+                <button class="btn-export" id="btnCOExport" >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                         <polyline points="7 10 12 15 17 10" />
@@ -774,7 +815,19 @@
             <!-- Table -->
             <div class="lowconv-table-wrap">
                 <div class="report-header" style="margin-bottom:12px;">
-                    <h2>Customers Without OSG</h2>
+                    <h2 style="display: flex; align-items: center; gap: 10px;">
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="url(#osgHeaderGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <defs>
+                                <linearGradient id="osgHeaderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#f97316" />
+                                    <stop offset="100%" stop-color="#ea580c" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            <path d="M9 12l2 2 4-4"/>
+                        </svg>
+                        Customers Without OSG
+                    </h2>
                     <span class="lc-badge" id="coMissedCount">0 customers</span>
                 </div>
                 <div class="table-wrapper" id="coMissedTable">
@@ -798,7 +851,7 @@
             <div class="report-header" style="margin-bottom:20px;">
                 <h2>Deep Analysis & AI Recommendations</h2>
                 <button class="btn-primary" id="btnRefreshInsights"
-                    style="padding:8px 16px; border-radius:var(--radius-sm); border:none; cursor:pointer; font-weight:500;">
+                    >
                     Refresh Analysis
                 </button>
             </div>
@@ -815,6 +868,8 @@
             </div>
         </div>
     </section>
+
+    </main>
 
     <!-- Password Modal -->
     <div class="loading-overlay" id="passwordModal" style="display:none; z-index:9999; backdrop-filter:blur(8px);">
@@ -837,8 +892,8 @@
             </p>
 
             <div style="display:flex; gap:12px;">
-                <button id="btnCancelPassword" class="btn-clear" style="flex:1;">Cancel</button>
-                <button id="btnSubmitPassword" class="btn-primary" style="flex:1;">Unlock</button>
+                <button id="btnCancelPassword" class="btn-clear" >Cancel</button>
+                <button id="btnSubmitPassword" class="btn-primary" >Unlock</button>
             </div>
         </div>
     </div>
@@ -855,7 +910,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=63"></script>
 </body>
 
 </html>
