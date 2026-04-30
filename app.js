@@ -334,7 +334,7 @@
     });
 
     // ---- UPLOAD HANDLING ----
-    // Always use fresh getElementById to avoid safeProxy issues
+        // Always use fresh getElementById to avoid safeProxy issues
     function initUploadZones() {
         const zoneSmart = document.getElementById('uploadZoneSmart');
         const inputSmart = document.getElementById('fileInputSmart');
@@ -366,7 +366,7 @@
                         showFileStatus(statusOSG, file.name, rows.length);
                     } else {
                         console.warn('Could not detect file type for:', file.name);
-                        alert('Could not detect type for file: ' + file.name + '\\nPlease include "product", "osg", "amc", or "samsung" in the filename.');
+                        alert('Could not detect type for file: ' + file.name + '\nPlease include "product", "osg", "amc", or "samsung" in the filename.');
                     }
                 }
                 checkGenerateReady();
@@ -374,11 +374,54 @@
         }
     }
 
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initUploadZones);
+    } else {
+        initUploadZones();
+    }
+
+    function setupUploadZone(zone, input, onFiles) {
+        zone.addEventListener('click', (e) => {
+            if (e.target === input) return;
+            input.click();
+        });
+        input.addEventListener('click', (e) => e.stopPropagation());
+        zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+        zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+        zone.addEventListener('drop', async e => {
+            e.preventDefault();
+            zone.classList.remove('drag-over');
+            if (e.dataTransfer.files.length > 0) {
+                showLoading(true);
+                try {
+                    await onFiles(Array.from(e.dataTransfer.files));
+                } catch (err) {
+                    console.error(err);
+                } finally {
+                    showLoading(false);
+                    input.value = '';
+                }
+            }
+        });
+        input.addEventListener('change', async () => {
+            if (input.files.length > 0) {
+                showLoading(true);
+                try {
+                    await onFiles(Array.from(input.files));
+                } catch (err) {
+                    console.error(err);
+                } finally {
+                    showLoading(false);
+                    input.value = '';
+                }
+            }
+        });
+    }
+
     function showFileStatus(el, name, count) {
-        if (!el) return;
         el.className = 'upload-status has-data';
         el.innerHTML = `
-            <span class="status-icon">✅</span>
+            <span class="status-icon">âœ…</span>
             <span class="status-text">${name}</span>
             <span class="status-count">${count} rows</span>
         `;
@@ -386,14 +429,103 @@
 
     function checkGenerateReady() {
         const btn = document.getElementById('btnGenerate');
-        if (!btn) return;
-        if (productData && osgData && productData.length > 0 && osgData.length > 0) {
-            btn.disabled = false;
-        } else {
-            btn.disabled = true;
-        }
+        if (btn) btn.disabled = !(productData.length > 0 && osgData.length > 0);
     }
 
+    (function() {
+        var btnGen = document.getElementById('btnGenerate');
+        if (!btnGen) return;
+        btnGen.addEventListener('click', function() {
+            showLoading(true);
+            setTimeout(function() {
+                try {
+                    allData = [...productData, ...amcData];
+
+                    var fcb = document.getElementById('fileCountBadge');
+                    var fct = document.getElementById('fileCountText');
+                    var bShr = document.getElementById('btnShare');
+                    var bRst = document.getElementById('btnReset');
+                    if (fcb) fcb.style.display = 'flex';
+                    if (fct) fct.textContent = allData.length + ' product · ' + osgData.length + ' OSG';
+                    if (bShr) bShr.style.display = 'flex';
+                    if (bRst) bRst.style.display = 'flex';
+
+                    populateFilters();
+                    applyFilters();
+
+                    document.querySelector('[data-section="dashboard-section"]').click();
+                } catch (err) {
+                    console.error('[Generate Error]', err);
+                    alert('An error occurred while generating reports:\n' + err.message);
+                } finally {
+                    showLoading(false);
+                }
+            }, 50);
+        });
+    })();
+
+    // ---- SHARE DASHBOARD LOGIC ----
+    (function() {
+        var btnShareEl = document.getElementById('btnShare');
+        if (!btnShareEl) return;
+        btnShareEl.addEventListener('click', function() {
+        if (productData.length === 0) return alert('Upload data first via Dashboard.');
+
+        // Find missedUnique for the whole dataset
+        const osgInvoices = new Set();
+        osgData.forEach(r => { if (r.invoice) osgInvoices.add(r.invoice); });
+        const seenInv = new Set();
+        const fullMissedUnique = [];
+        productData.forEach(r => {
+            if (r.invoice && !osgInvoices.has(r.invoice) && !seenInv.has(r.invoice)) {
+                seenInv.add(r.invoice);
+                fullMissedUnique.push(r);
+            }
+        });
+
+        // Strip to only display fields, sort by value high-to-low, cap at 2000 top-priority customers
+        const payload = fullMissedUnique
+            .sort((a, b) => (b.soldPrice || 0) - (a.soldPrice || 0))
+            .slice(0, 2000)
+            .map(r => ({
+                invoice:      r.invoice      || '',
+                customerName: r.customerName || '',
+                customerNo:   r.customerNo   || '',
+                staff:        r.staff        || '',
+                branch:       r.branch       || '',
+                product:      r.product      || '',
+                soldPrice:    r.soldPrice    || 0,
+                qty:          r.qty          || 0,
+            }));
+
+        showLoading(true);
+        try {
+            const shareRef = firebase.database().ref('shares').push();
+            shareRef.set({ missedUnique: payload, timestamp: Date.now() })
+                .then(() => {
+                    showLoading(false);
+                    const base = window.location.protocol === 'file:' ? 'http://myg-analytics-2026.surge.sh/' : window.location.origin + window.location.pathname;
+                    const shareUrl = base + '?share=' + shareRef.key;
+                    if (navigator.clipboard) {
+                        navigator.clipboard.writeText(shareUrl).then(() => {
+                            alert('Share link copied to clipboard!\n\nLink: ' + shareUrl);
+                        }).catch(() => alert('Share Link generated: \n\n' + shareUrl));
+                    } else {
+                        alert('Share Link generated: \n\n' + shareUrl);
+                    }
+                }).catch(e => {
+                    showLoading(false);
+                    alert('Failed to generate share link: ' + e.message);
+                });
+        } catch (err) {
+            showLoading(false);
+            console.error(err);
+            alert('Firebase configuration error (likely missing databaseURL). Cannot share dashboard right now: ' + err.message);
+        }
+        });
+    })();
+
+    // ---- PARSING ----
     function parseProductFile(file) {
         return parseExcel(file, PRODUCT_COL_MAP, (row, mapping) => {
             const r = {};
