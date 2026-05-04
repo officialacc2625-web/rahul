@@ -2412,6 +2412,200 @@
 
     }
 
+    // ---- WITHOUT OSG DASHBOARD PAGE ----
+    document.querySelector('[data-section="wosg-dashboard-section"]').addEventListener('click', () => {
+        loadCoStatuses(() => setTimeout(renderWosgDashboard, 50));
+    });
+
+    function renderWosgDashboard() {
+        const container = document.getElementById('wosgReportContainer');
+        if (!container) return;
+
+        if (productData.length === 0) {
+            container.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted);">Upload data and generate reports first.</div>';
+            return;
+        }
+
+        // Build the missedUnique list (same logic as main page, no filters)
+        const osgInv = new Set();
+        osgData.forEach(r => { if (r.invoice) osgInv.add(r.invoice); });
+        amcData.forEach(r => { if (r.invoice) osgInv.add(r.invoice); });
+        samsungData.forEach(r => { if (r.invoice) osgInv.add(r.invoice); });
+
+        const seenInv = new Set();
+        const allMissed = [];
+        productData.forEach(r => {
+            if (r.invoice && !osgInv.has(r.invoice) && !seenInv.has(r.invoice)) {
+                seenInv.add(r.invoice);
+                allMissed.push(r);
+            }
+        });
+
+        // Per-caller, per-status breakdown
+        const STATUS_LABELS = {
+            'connected':     { label: 'Connected',      bg: '#2563eb22', color: '#2563eb' },
+            'disconnected':  { label: 'Disconnected',   bg: '#9333ea22', color: '#9333ea' },
+            'not-connected': { label: 'Not Connected',  bg: '#64748b22', color: '#64748b' },
+        };
+        const INTEREST_LABELS = {
+            'interested':     { label: 'Interested',     bg: '#16a34a22', color: '#16a34a' },
+            'not-interested': { label: 'Not Interested', bg: '#dc262622', color: '#dc2626' },
+            'follow-up':      { label: 'Follow-up',      bg: '#f59e0b22', color: '#d97706' },
+            'bought':         { label: 'Bought',         bg: '#10b98122', color: '#059669' },
+        };
+
+        const callers = CO_CALLERS.map(c => c.name);
+
+        // Build data: for each caller, collect rows they've called
+        const callerData = {};
+        callers.forEach(name => {
+            callerData[name] = {
+                callerName: name,
+                callRows: {},   // callStatus => { count, value }
+                interestRows: {}, // interest => { count, value }
+                total: { count: 0, value: 0 }
+            };
+        });
+
+        allMissed.forEach(r => {
+            const st = coStatusMap[r.invoice || ''] || {};
+            const caller = st.calledBy;
+            if (!caller || !callerData[caller]) return;
+
+            const cd = callerData[caller];
+            const val = r.soldPrice || 0;
+
+            cd.total.count++;
+            cd.total.value += val;
+
+            const cs = st.callStatus || '';
+            if (cs) {
+                if (!cd.callRows[cs]) cd.callRows[cs] = { count: 0, value: 0 };
+                cd.callRows[cs].count++;
+                cd.callRows[cs].value += val;
+            }
+
+            const interest = st.interest || '';
+            if (interest) {
+                if (!cd.interestRows[interest]) cd.interestRows[interest] = { count: 0, value: 0 };
+                cd.interestRows[interest].count++;
+                cd.interestRows[interest].value += val;
+            }
+        });
+
+        // Grand totals
+        let grandCount = 0, grandValue = 0;
+
+        // Date for title
+        const today = new Date().toLocaleDateString('en-IN', { day:'2-digit', month:'2-digit', year:'numeric' });
+
+        // Build table HTML
+        let html = `
+        <div style="overflow-x:auto;">
+        <table id="wosgReportTable" style="
+            width:100%; border-collapse:collapse;
+            font-family:'Inter',sans-serif; font-size:0.88rem;
+            border:2px solid #1e2a45; border-radius:8px; overflow:hidden;
+        ">
+        <thead>
+            <tr>
+                <td colspan="5" style="
+                    background:linear-gradient(135deg,#f59e0b,#f97316);
+                    color:#1a1100; font-size:1.05rem; font-weight:800;
+                    text-align:center; padding:14px 10px;
+                    letter-spacing:0.5px; text-transform:uppercase;
+                ">
+                    WITHOUT OSG CALLER REPORT &nbsp;${today}
+                </td>
+            </tr>
+            <tr style="background:#1e2a45; color:#f97316;">
+                <th style="padding:10px 14px;text-align:left;border:1px solid #2d3e5a;font-weight:700;white-space:nowrap;">CALLER</th>
+                <th style="padding:10px 14px;text-align:left;border:1px solid #2d3e5a;font-weight:700;">STATUS</th>
+                <th style="padding:10px 14px;text-align:right;border:1px solid #2d3e5a;font-weight:700;">VALUE</th>
+                <th style="padding:10px 14px;text-align:center;border:1px solid #2d3e5a;font-weight:700;">COUNT</th>
+            </tr>
+        </thead>
+        <tbody>`;
+
+        callers.forEach((callerName, ci) => {
+            const cd = callerData[callerName];
+            const callerCfg = CO_CALLERS.find(c => c.name === callerName) || { color:'#f97316', bg:'rgba(249,115,22,0.15)' };
+            const rowBg = ci % 2 === 0 ? 'var(--bg-card)' : 'var(--bg-input)';
+
+            // Collect all status rows for this caller
+            const statuses = [];
+
+            Object.entries(cd.callRows).forEach(([key, v]) => {
+                const info = STATUS_LABELS[key] || { label: key, bg:'#64748b22', color:'#64748b' };
+                statuses.push({ label: info.label, bg: info.bg, color: info.color, count: v.count, value: v.value });
+            });
+            Object.entries(cd.interestRows).forEach(([key, v]) => {
+                const info = INTEREST_LABELS[key] || { label: key, bg:'#64748b22', color:'#64748b' };
+                statuses.push({ label: info.label, bg: info.bg, color: info.color, count: v.count, value: v.value });
+            });
+
+            if (statuses.length === 0) {
+                statuses.push({ label: '— No calls logged —', bg: 'transparent', color: 'var(--text-muted)', count: 0, value: 0 });
+            }
+
+            // First row has rowspan for Caller cell
+            const totalRows = statuses.length + 1; // +1 for subtotal row
+
+            statuses.forEach((st, si) => {
+                html += `<tr style="background:${rowBg};border-bottom:1px solid var(--border);">`;
+                if (si === 0) {
+                    html += `<td rowspan="${totalRows}" style="
+                        padding:12px 14px; border:1px solid var(--border);
+                        font-weight:700; font-size:0.92rem; vertical-align:middle;
+                        text-align:center; white-space:nowrap;
+                        background:${callerCfg.bg}; color:${callerCfg.color};
+                        border-left:4px solid ${callerCfg.color};
+                    ">
+                        <div style="width:32px;height:32px;border-radius:50%;background:${callerCfg.color};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:1rem;font-weight:800;margin-bottom:4px;">${callerName[0]}</div>
+                        <br>${callerName}
+                    </td>`;
+                }
+                html += `
+                    <td style="padding:10px 14px;border:1px solid var(--border);">
+                        <span style="display:inline-block;padding:3px 10px;border-radius:20px;background:${st.bg};color:${st.color};font-weight:600;font-size:0.8rem;">${st.label}</span>
+                    </td>
+                    <td style="padding:10px 14px;border:1px solid var(--border);text-align:right;font-weight:600;color:var(--text-primary);white-space:nowrap;">${fmtShort(st.value)}</td>
+                    <td style="padding:10px 14px;border:1px solid var(--border);text-align:center;font-weight:700;color:var(--text-primary);">${st.count}</td>
+                </tr>`;
+            });
+
+            // Subtotal row for caller
+            grandCount += cd.total.count;
+            grandValue += cd.total.value;
+            html += `<tr style="background:${callerCfg.bg};border-bottom:2px solid ${callerCfg.color};">
+                <td colspan="2" style="padding:10px 14px;border:1px solid var(--border);font-weight:800;color:${callerCfg.color};font-size:0.85rem;letter-spacing:0.3px;">TOTAL — ${callerName.toUpperCase()}</td>
+                <td style="padding:10px 14px;border:1px solid var(--border);text-align:right;font-weight:800;color:${callerCfg.color};white-space:nowrap;">${fmtShort(cd.total.value)}</td>
+                <td style="padding:10px 14px;border:1px solid var(--border);text-align:center;font-weight:800;color:${callerCfg.color};">${cd.total.count}</td>
+            </tr>`;
+        });
+
+        // Grand Total row
+        html += `
+        <tr style="background:linear-gradient(135deg,#f97316,#ea580c);">
+            <td colspan="2" style="padding:13px 16px;font-weight:800;color:#fff;font-size:0.95rem;letter-spacing:0.5px;text-transform:uppercase;border-top:2px solid rgba(255,255,255,0.2);">GRAND TOTAL</td>
+            <td style="padding:13px 16px;text-align:right;font-weight:800;color:#fff;font-size:1rem;white-space:nowrap;border-top:2px solid rgba(255,255,255,0.2);">${fmtShort(grandValue)}</td>
+            <td style="padding:13px 16px;text-align:center;font-weight:800;color:#fff;font-size:1rem;border-top:2px solid rgba(255,255,255,0.2);">${grandCount}</td>
+        </tr>
+        </tbody></table></div>`;
+
+        container.innerHTML = html;
+    }
+
+    // Export WOSG report as Excel
+    window.exportWosgReport = function() {
+        const table = document.getElementById('wosgReportTable');
+        if (!table) return;
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.table_to_sheet(table);
+        XLSX.utils.book_append_sheet(wb, ws, 'Without OSG Report');
+        XLSX.writeFile(wb, 'without_osg_dashboard_report.xlsx');
+    };
+
     // ---- CUSTOMERS WITHOUT OSG PAGE ----
     $('btnCORefresh').addEventListener('click', renderCustomersOSGPage);
     $('btnCOExport').addEventListener('click', exportCustomersOSGExcel);
