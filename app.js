@@ -3363,10 +3363,12 @@ window.coCalWidget = {
         document.querySelectorAll('.cal-day').forEach(el => {
             el.onclick = (e) => {
                 const val = e.target.getAttribute('data-date');
-                this.activeValue = val;
-                this.render(); 
-                if (this.activeCallback) this.activeCallback(val);
-                this.close();
+                // Toggle: clicking the already-selected date clears the filter
+                const newVal = (val === this.activeValue) ? '' : val;
+                this.activeValue = newVal;
+                this.render();
+                if (this.activeCallback) this.activeCallback(newVal);
+                if (newVal) this.close();
             };
         });
     }
