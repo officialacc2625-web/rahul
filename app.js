@@ -2426,7 +2426,7 @@
             return;
         }
 
-        // Build the missedUnique list (same logic as main page, no filters)
+        // Build the missedUnique list
         const osgInv = new Set();
         osgData.forEach(r => { if (r.invoice) osgInv.add(r.invoice); });
         amcData.forEach(r => { if (r.invoice) osgInv.add(r.invoice); });
@@ -2441,30 +2441,12 @@
             }
         });
 
-        // Per-caller, per-status breakdown
-        const STATUS_LABELS = {
-            'connected':     { label: 'Connected',      bg: '#2563eb22', color: '#2563eb' },
-            'disconnected':  { label: 'Disconnected',   bg: '#9333ea22', color: '#9333ea' },
-            'not-connected': { label: 'Not Connected',  bg: '#64748b22', color: '#64748b' },
-        };
-        const INTEREST_LABELS = {
-            'interested':     { label: 'Interested',     bg: '#16a34a22', color: '#16a34a' },
-            'not-interested': { label: 'Not Interested', bg: '#dc262622', color: '#dc2626' },
-            'follow-up':      { label: 'Follow-up',      bg: '#f59e0b22', color: '#d97706' },
-            'bought':         { label: 'Bought',         bg: '#10b98122', color: '#059669' },
-        };
-
         const callers = CO_CALLERS.map(c => c.name);
 
-        // Build data: for each caller, collect rows they've called
+        // Aggregate data per caller
         const callerData = {};
         callers.forEach(name => {
-            callerData[name] = {
-                callerName: name,
-                callRows: {},   // callStatus => { count, value }
-                interestRows: {}, // interest => { count, value }
-                total: { count: 0, value: 0 }
-            };
+            callerData[name] = { rows: [], totalCount: 0, totalValue: 0 };
         });
 
         allMissed.forEach(r => {
@@ -2473,140 +2455,241 @@
             if (!caller || !callerData[caller]) return;
 
             const cd = callerData[caller];
-            const val = r.soldPrice || 0;
-
-            cd.total.count++;
-            cd.total.value += val;
-
+            const val = Math.abs(r.soldPrice || 0);
             const cs = st.callStatus || '';
-            if (cs) {
-                if (!cd.callRows[cs]) cd.callRows[cs] = { count: 0, value: 0 };
-                cd.callRows[cs].count++;
-                cd.callRows[cs].value += val;
-            }
-
             const interest = st.interest || '';
-            if (interest) {
-                if (!cd.interestRows[interest]) cd.interestRows[interest] = { count: 0, value: 0 };
-                cd.interestRows[interest].count++;
-                cd.interestRows[interest].value += val;
+
+            cd.totalCount++;
+            cd.totalValue += val;
+
+            // Use interest as primary label if exists, else callStatus
+            let statusLabel = '';
+            if (interest === 'interested') statusLabel = 'Interested';
+            else if (interest === 'not-interested') statusLabel = 'Not Interested';
+            else if (interest === 'follow-up') statusLabel = 'Follow-up';
+            else if (interest === 'bought') statusLabel = 'Bought';
+            else if (cs === 'connected') statusLabel = 'Connected';
+            else if (cs === 'disconnected') statusLabel = 'Disconnected';
+            else if (cs === 'not-connected') statusLabel = 'Not Connected';
+            else statusLabel = 'Called';
+
+            // Aggregate by statusLabel
+            const existingRow = cd.rows.find(x => x.status === statusLabel);
+            if (existingRow) {
+                existingRow.count++;
+                existingRow.value += val;
+            } else {
+                cd.rows.push({ status: statusLabel, count: 1, value: val });
             }
         });
 
-        // Grand totals
+        // Sort rows within each caller for consistency
+        const statusOrder = ['Connected', 'Disconnected', 'Not Connected', 'Interested', 'Not Interested', 'Follow-up', 'Bought', 'Called'];
+        callers.forEach(name => {
+            callerData[name].rows.sort((a, b) => statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status));
+        });
+
+        // Store for Excel export
+        window._wosgCallerData = callerData;
+        window._wosgCallers = callers;
+        window._wosgTotalMissed = allMissed.length;
+
+        // Date
+        const today = new Date();
+        const dateStr = String(today.getDate()).padStart(2,'0') + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + today.getFullYear();
+
+        // Status color map
+        const sColors = {
+            'Connected':      { bg: '#dbeafe', color: '#1e40af', border: '#93c5fd' },
+            'Disconnected':   { bg: '#f3e8ff', color: '#6b21a8', border: '#c4b5fd' },
+            'Not Connected':  { bg: '#f1f5f9', color: '#475569', border: '#cbd5e1' },
+            'Interested':     { bg: '#dcfce7', color: '#166534', border: '#86efac' },
+            'Not Interested': { bg: '#fee2e2', color: '#991b1b', border: '#fca5a5' },
+            'Follow-up':      { bg: '#fef3c7', color: '#92400e', border: '#fcd34d' },
+            'Bought':         { bg: '#d1fae5', color: '#065f46', border: '#6ee7b7' },
+            'Called':         { bg: '#e0e7ff', color: '#3730a3', border: '#a5b4fc' },
+        };
+
+        // Build professional table
+        const cellBorder = '1px solid #334155';
         let grandCount = 0, grandValue = 0;
 
-        // Date for title
-        const today = new Date().toLocaleDateString('en-IN', { day:'2-digit', month:'2-digit', year:'numeric' });
-
-        // Build table HTML
         let html = `
-        <div style="overflow-x:auto;">
-        <table id="wosgReportTable" style="
-            width:100%; border-collapse:collapse;
-            font-family:'Inter',sans-serif; font-size:0.88rem;
-            border:2px solid #1e2a45; border-radius:8px; overflow:hidden;
-        ">
+        <div style="overflow-x:auto; border-radius:12px; border:2px solid #334155; box-shadow:0 4px 24px rgba(0,0,0,0.3);">
+        <table id="wosgReportTable" style="width:100%;border-collapse:collapse;font-family:'Inter',sans-serif;font-size:0.88rem;background:var(--bg-card);">
+        <!-- Title Row -->
         <thead>
-            <tr>
-                <td colspan="5" style="
-                    background:linear-gradient(135deg,#f59e0b,#f97316);
-                    color:#1a1100; font-size:1.05rem; font-weight:800;
-                    text-align:center; padding:14px 10px;
-                    letter-spacing:0.5px; text-transform:uppercase;
-                ">
-                    WITHOUT OSG CALLER REPORT &nbsp;${today}
-                </td>
-            </tr>
-            <tr style="background:#1e2a45; color:#f97316;">
-                <th style="padding:10px 14px;text-align:left;border:1px solid #2d3e5a;font-weight:700;white-space:nowrap;">CALLER</th>
-                <th style="padding:10px 14px;text-align:left;border:1px solid #2d3e5a;font-weight:700;">STATUS</th>
-                <th style="padding:10px 14px;text-align:right;border:1px solid #2d3e5a;font-weight:700;">VALUE</th>
-                <th style="padding:10px 14px;text-align:center;border:1px solid #2d3e5a;font-weight:700;">COUNT</th>
-            </tr>
+        <tr><td colspan="4" style="
+            background:linear-gradient(135deg,#f59e0b,#ea580c);
+            color:#fff; font-size:1.1rem; font-weight:800;
+            text-align:center; padding:16px 10px;
+            letter-spacing:1px; text-transform:uppercase;
+            border-bottom:3px solid #c2410c;
+        ">WITHOUT OSG CALLER REPORT &mdash; ${dateStr}</td></tr>
+        <!-- Column Headers -->
+        <tr style="background:#0f172a;">
+            <th style="padding:12px 18px;text-align:left;color:#f97316;font-weight:700;font-size:0.82rem;letter-spacing:1px;text-transform:uppercase;border:${cellBorder};width:160px;">CALLER</th>
+            <th style="padding:12px 18px;text-align:left;color:#f97316;font-weight:700;font-size:0.82rem;letter-spacing:1px;text-transform:uppercase;border:${cellBorder};">STATUS</th>
+            <th style="padding:12px 18px;text-align:right;color:#f97316;font-weight:700;font-size:0.82rem;letter-spacing:1px;text-transform:uppercase;border:${cellBorder};width:130px;">VALUE</th>
+            <th style="padding:12px 18px;text-align:center;color:#f97316;font-weight:700;font-size:0.82rem;letter-spacing:1px;text-transform:uppercase;border:${cellBorder};width:90px;">COUNT</th>
+        </tr>
         </thead>
         <tbody>`;
 
         callers.forEach((callerName, ci) => {
             const cd = callerData[callerName];
             const callerCfg = CO_CALLERS.find(c => c.name === callerName) || { color:'#f97316', bg:'rgba(249,115,22,0.15)' };
-            const rowBg = ci % 2 === 0 ? 'var(--bg-card)' : 'var(--bg-input)';
 
-            // Collect all status rows for this caller
-            const statuses = [];
+            const rows = cd.rows.length > 0 ? cd.rows : [{ status: 'No calls logged', count: 0, value: 0 }];
+            const rowCount = rows.length + 1; // +1 for subtotal
 
-            Object.entries(cd.callRows).forEach(([key, v]) => {
-                const info = STATUS_LABELS[key] || { label: key, bg:'#64748b22', color:'#64748b' };
-                statuses.push({ label: info.label, bg: info.bg, color: info.color, count: v.count, value: v.value });
-            });
-            Object.entries(cd.interestRows).forEach(([key, v]) => {
-                const info = INTEREST_LABELS[key] || { label: key, bg:'#64748b22', color:'#64748b' };
-                statuses.push({ label: info.label, bg: info.bg, color: info.color, count: v.count, value: v.value });
-            });
+            rows.forEach((st, si) => {
+                const sc = sColors[st.status] || { bg:'#1e293b', color:'#94a3b8', border:'#475569' };
+                const isNoCall = st.status === 'No calls logged';
+                const rowBg = ci % 2 === 0 ? '#0f172a' : '#1e293b';
 
-            if (statuses.length === 0) {
-                statuses.push({ label: '— No calls logged —', bg: 'transparent', color: 'var(--text-muted)', count: 0, value: 0 });
-            }
+                html += '<tr style="background:' + rowBg + ';">';
 
-            // First row has rowspan for Caller cell
-            const totalRows = statuses.length + 1; // +1 for subtotal row
-
-            statuses.forEach((st, si) => {
-                html += `<tr style="background:${rowBg};border-bottom:1px solid var(--border);">`;
+                // Caller cell (only first row, rowspan)
                 if (si === 0) {
-                    html += `<td rowspan="${totalRows}" style="
-                        padding:12px 14px; border:1px solid var(--border);
-                        font-weight:700; font-size:0.92rem; vertical-align:middle;
-                        text-align:center; white-space:nowrap;
-                        background:${callerCfg.bg}; color:${callerCfg.color};
-                        border-left:4px solid ${callerCfg.color};
-                    ">
-                        <div style="width:32px;height:32px;border-radius:50%;background:${callerCfg.color};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:1rem;font-weight:800;margin-bottom:4px;">${callerName[0]}</div>
-                        <br>${callerName}
-                    </td>`;
+                    html += '<td rowspan="' + rowCount + '" style="' +
+                        'padding:16px 14px;border:' + cellBorder + ';vertical-align:middle;text-align:center;' +
+                        'background:' + callerCfg.bg + ';border-left:4px solid ' + callerCfg.color + ';">' +
+                        '<div style="width:38px;height:38px;border-radius:50%;background:' + callerCfg.color +
+                        ';color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:800;margin:0 auto 6px;">' +
+                        callerName[0] + '</div>' +
+                        '<div style="font-weight:700;font-size:0.88rem;color:' + callerCfg.color + ';">' + callerName + '</div></td>';
                 }
-                html += `
-                    <td style="padding:10px 14px;border:1px solid var(--border);">
-                        <span style="display:inline-block;padding:3px 10px;border-radius:20px;background:${st.bg};color:${st.color};font-weight:600;font-size:0.8rem;">${st.label}</span>
-                    </td>
-                    <td style="padding:10px 14px;border:1px solid var(--border);text-align:right;font-weight:600;color:var(--text-primary);white-space:nowrap;">${fmtShort(st.value)}</td>
-                    <td style="padding:10px 14px;border:1px solid var(--border);text-align:center;font-weight:700;color:var(--text-primary);">${st.count}</td>
-                </tr>`;
+
+                // Status cell
+                if (isNoCall) {
+                    html += '<td style="padding:10px 18px;border:' + cellBorder + ';color:#64748b;font-style:italic;">&#8212; No calls logged &#8212;</td>';
+                } else {
+                    html += '<td style="padding:10px 18px;border:' + cellBorder + ';">' +
+                        '<span style="display:inline-block;padding:4px 14px;border-radius:6px;font-weight:700;font-size:0.82rem;' +
+                        'background:' + sc.bg + ';color:' + sc.color + ';border:1px solid ' + sc.border + ';">' +
+                        st.status + '</span></td>';
+                }
+
+                // Value cell
+                html += '<td style="padding:10px 18px;border:' + cellBorder + ';text-align:right;font-weight:700;color:#e2e8f0;font-family:\'JetBrains Mono\',monospace;font-size:0.9rem;">' +
+                    (st.value > 0 ? fmtShort(st.value) : '&#8212;') + '</td>';
+
+                // Count cell
+                html += '<td style="padding:10px 18px;border:' + cellBorder + ';text-align:center;font-weight:800;color:#e2e8f0;font-size:0.95rem;">' +
+                    (st.count > 0 ? st.count : '&#8212;') + '</td>';
+
+                html += '</tr>';
             });
 
-            // Subtotal row for caller
-            grandCount += cd.total.count;
-            grandValue += cd.total.value;
-            html += `<tr style="background:${callerCfg.bg};border-bottom:2px solid ${callerCfg.color};">
-                <td colspan="2" style="padding:10px 14px;border:1px solid var(--border);font-weight:800;color:${callerCfg.color};font-size:0.85rem;letter-spacing:0.3px;">TOTAL — ${callerName.toUpperCase()}</td>
-                <td style="padding:10px 14px;border:1px solid var(--border);text-align:right;font-weight:800;color:${callerCfg.color};white-space:nowrap;">${fmtShort(cd.total.value)}</td>
-                <td style="padding:10px 14px;border:1px solid var(--border);text-align:center;font-weight:800;color:${callerCfg.color};">${cd.total.count}</td>
-            </tr>`;
+            // Subtotal row
+            grandCount += cd.totalCount;
+            grandValue += cd.totalValue;
+            html += '<tr style="background:' + callerCfg.bg + ';border-bottom:2px solid ' + callerCfg.color + ';">' +
+                '<td style="padding:11px 18px;border:' + cellBorder + ';font-weight:800;color:' + callerCfg.color + ';font-size:0.82rem;letter-spacing:0.5px;">SUBTOTAL</td>' +
+                '<td style="padding:11px 18px;border:' + cellBorder + ';text-align:right;font-weight:800;color:' + callerCfg.color + ';font-family:\'JetBrains Mono\',monospace;font-size:0.9rem;">' + fmtShort(cd.totalValue) + '</td>' +
+                '<td style="padding:11px 18px;border:' + cellBorder + ';text-align:center;font-weight:800;color:' + callerCfg.color + ';font-size:1rem;">' + cd.totalCount + '</td>' +
+                '</tr>';
         });
 
-        // Grand Total row
-        html += `
-        <tr style="background:linear-gradient(135deg,#f97316,#ea580c);">
-            <td colspan="2" style="padding:13px 16px;font-weight:800;color:#fff;font-size:0.95rem;letter-spacing:0.5px;text-transform:uppercase;border-top:2px solid rgba(255,255,255,0.2);">GRAND TOTAL</td>
-            <td style="padding:13px 16px;text-align:right;font-weight:800;color:#fff;font-size:1rem;white-space:nowrap;border-top:2px solid rgba(255,255,255,0.2);">${fmtShort(grandValue)}</td>
-            <td style="padding:13px 16px;text-align:center;font-weight:800;color:#fff;font-size:1rem;border-top:2px solid rgba(255,255,255,0.2);">${grandCount}</td>
-        </tr>
-        </tbody></table></div>`;
+        // Grand Total
+        html += '<tr style="background:linear-gradient(135deg,#ea580c,#dc2626);">' +
+            '<td colspan="2" style="padding:14px 18px;font-weight:800;color:#fff;font-size:0.95rem;letter-spacing:1px;text-transform:uppercase;border:1px solid rgba(255,255,255,0.15);">GRAND TOTAL</td>' +
+            '<td style="padding:14px 18px;text-align:right;font-weight:800;color:#fff;font-size:1.05rem;font-family:\'JetBrains Mono\',monospace;border:1px solid rgba(255,255,255,0.15);">' + fmtShort(grandValue) + '</td>' +
+            '<td style="padding:14px 18px;text-align:center;font-weight:800;color:#fff;font-size:1.1rem;border:1px solid rgba(255,255,255,0.15);">' + grandCount + '</td>' +
+            '</tr>';
 
-        container.innerHTML = html;
+        html += '</tbody></table></div>';
+
+        // Summary KPIs above the table
+        const notCalled = allMissed.length - grandCount;
+        const kpiHtml = `
+        <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:24px;">
+            <div style="flex:1;min-width:140px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;border-top:3px solid #f97316;">
+                <div style="font-size:1.8rem;font-weight:800;color:#f97316;">${allMissed.length.toLocaleString()}</div>
+                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:3px;">Total Without OSG</div>
+            </div>
+            <div style="flex:1;min-width:140px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;border-top:3px solid #2563eb;">
+                <div style="font-size:1.8rem;font-weight:800;color:#2563eb;">${grandCount.toLocaleString()}</div>
+                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:3px;">Total Calls Made</div>
+            </div>
+            <div style="flex:1;min-width:140px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;border-top:3px solid #64748b;">
+                <div style="font-size:1.8rem;font-weight:800;color:#94a3b8;">${notCalled.toLocaleString()}</div>
+                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:3px;">Not Yet Called</div>
+            </div>
+            <div style="flex:1;min-width:140px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;border-top:3px solid #16a34a;">
+                <div style="font-size:1.8rem;font-weight:800;color:#16a34a;">${fmtShort(grandValue)}</div>
+                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:3px;">Total Called Value</div>
+            </div>
+        </div>`;
+
+        container.innerHTML = kpiHtml + html;
     }
 
-    // Export WOSG report as Excel
+    // Export WOSG report as styled Excel
     window.exportWosgReport = function() {
-        const table = document.getElementById('wosgReportTable');
-        if (!table) return;
+        if (!window._wosgCallerData || !window._wosgCallers) return;
+
+        const callerData = window._wosgCallerData;
+        const callers = window._wosgCallers;
+        const today = new Date();
+        const dateStr = String(today.getDate()).padStart(2,'0') + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + today.getFullYear();
+
+        // Build AOA (array of arrays) for the Excel
+        const aoa = [];
+
+        // Title row
+        aoa.push(['WITHOUT OSG CALLER REPORT — ' + dateStr, '', '', '']);
+        // Header row
+        aoa.push(['CALLER', 'STATUS', 'VALUE', 'COUNT']);
+
+        let grandCount = 0, grandValue = 0;
+
+        callers.forEach(callerName => {
+            const cd = callerData[callerName];
+            const rows = cd.rows.length > 0 ? cd.rows : [{ status: 'No calls logged', count: 0, value: 0 }];
+
+            rows.forEach((st, si) => {
+                aoa.push([
+                    si === 0 ? callerName : '',
+                    st.status,
+                    st.value > 0 ? Math.round(st.value) : 0,
+                    st.count
+                ]);
+            });
+
+            // Subtotal
+            aoa.push(['', 'SUBTOTAL — ' + callerName.toUpperCase(), Math.round(cd.totalValue), cd.totalCount]);
+            grandCount += cd.totalCount;
+            grandValue += cd.totalValue;
+        });
+
+        // Grand Total
+        aoa.push(['GRAND TOTAL', '', Math.round(grandValue), grandCount]);
+
         const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.table_to_sheet(table);
-        XLSX.utils.book_append_sheet(wb, ws, 'Without OSG Report');
-        XLSX.writeFile(wb, 'without_osg_dashboard_report.xlsx');
+        const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+        // Column widths
+        ws['!cols'] = [{ wch: 18 }, { wch: 30 }, { wch: 16 }, { wch: 12 }];
+
+        // Merge title row
+        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }];
+
+        // Style cells (if xlsx-style or sheetjs-style available)
+        // For basic SheetJS we set number format on value column
+        for (let r = 2; r < aoa.length; r++) {
+            const cellRef = XLSX.utils.encode_cell({ r: r, c: 2 });
+            if (ws[cellRef]) ws[cellRef].t = 'n';
+            const cellRef2 = XLSX.utils.encode_cell({ r: r, c: 3 });
+            if (ws[cellRef2]) ws[cellRef2].t = 'n';
+        }
+
+        XLSX.utils.book_append_sheet(wb, ws, 'Caller Report');
+        XLSX.writeFile(wb, 'Without_OSG_Caller_Report_' + dateStr + '.xlsx');
     };
 
-    // ---- CUSTOMERS WITHOUT OSG PAGE ----
+        // ---- CUSTOMERS WITHOUT OSG PAGE ----
     $('btnCORefresh').addEventListener('click', renderCustomersOSGPage);
     $('btnCOExport').addEventListener('click', exportCustomersOSGExcel);
     document.querySelector('[data-section="customers-osg-section"]').addEventListener('click', () => {
