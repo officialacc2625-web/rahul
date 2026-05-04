@@ -2413,7 +2413,7 @@
     }
 
     // ---- WITHOUT OSG DASHBOARD PAGE ----
-    window._wosgActiveTab = 'caller';
+    window._wosgActiveTab = 'main';
     window.switchWosgTab = function(tab) {
         window._wosgActiveTab = tab;
         document.querySelectorAll('.wosg-tab').forEach(btn => {
@@ -2425,13 +2425,68 @@
                 btn.style.color = '#64748b';
             }
         });
-        if (tab === 'caller') renderWosgDashboard();
+        if (tab === 'main') renderWosgMain();
+        else if (tab === 'caller') renderWosgDashboard();
         else if (tab === 'daily') renderWosgDaily();
         else if (tab === 'monthly') renderWosgMonthly();
     };
+    
+    function renderWosgMain() {
+        const container = document.getElementById('wosgReportContainer');
+        if (!container) return;
+        const allMissed = getMissedInvoices();
+        if (allMissed.length === 0) {
+            container.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted);">Upload data and generate reports first.</div>';
+            return;
+        }
+
+        const data = {
+            date: 'OVERALL',
+            sKey: 'OVERALL',
+            rows: [],
+            totalCount: 0,
+            totalValue: 0
+        };
+
+        allMissed.forEach(r => {
+            const val = Math.abs(r.soldPrice || 0);
+            const st = coStatusMap[r.invoice || ''] || {};
+            const cs = st.callStatus || '';
+            const interest = st.interest || '';
+
+            data.totalCount++;
+            data.totalValue += val;
+
+            let statusLabel = '';
+            if (interest === 'interested') statusLabel = 'Interested';
+            else if (interest === 'not-interested') statusLabel = 'Not Interested';
+            else if (interest === 'follow-up') statusLabel = 'Follow-up';
+            else if (interest === 'bought') statusLabel = 'Bought';
+            else if (cs === 'connected') statusLabel = 'Connected';
+            else if (cs === 'disconnected') statusLabel = 'Disconnected';
+            else if (cs === 'not-connected') statusLabel = 'Not Connected';
+            else statusLabel = 'Not Called';
+
+            const existingRow = data.rows.find(x => x.status === statusLabel);
+            if (existingRow) {
+                existingRow.count++;
+                existingRow.value += val;
+            } else {
+                data.rows.push({ status: statusLabel, count: 1, value: val });
+            }
+        });
+
+        window._wosgMainData = [data]; // Stored as array to reuse generic builder
+        buildGenericWosgTable(container, [data], 'SUMMARY', 'WITHOUT OSG MAIN REPORT');
+    }
 
     document.querySelector('[data-section="wosg-dashboard-section"]').addEventListener('click', () => {
-        loadCoStatuses(() => setTimeout(renderWosgDashboard, 50));
+        loadCoStatuses(() => setTimeout(() => {
+            if (window._wosgActiveTab === 'main') renderWosgMain();
+            else if (window._wosgActiveTab === 'caller') renderWosgDashboard();
+            else if (window._wosgActiveTab === 'daily') renderWosgDaily();
+            else if (window._wosgActiveTab === 'monthly') renderWosgMonthly();
+        }, 50));
     });
 
     function renderWosgDashboard() {
@@ -2950,7 +3005,19 @@
         let title = '';
         let fileName = '';
 
-        if (tab === 'caller') {
+        if (tab === 'main') {
+            if (!window._wosgMainData) return;
+            title = 'WITHOUT OSG MAIN REPORT — ' + dateStr;
+            fileName = 'Without_OSG_Main_Report_' + dateStr + '.xlsx';
+            aoa.push([title, '', '', '']);
+            aoa.push(['SUMMARY', 'STATUS', 'VALUE', 'COUNT']);
+            window._wosgMainData.forEach(grp => {
+                const rows = grp.rows.length > 0 ? grp.rows : [{ status: 'No records', count: 0, value: 0 }];
+                rows.forEach((st, si) => aoa.push([si === 0 ? 'Overall' : '', st.status, st.value > 0 ? Math.round(st.value) : 0, st.count]));
+                aoa.push(['', 'SUBTOTAL', Math.round(grp.totalValue), grp.totalCount]);
+                grandCount += grp.totalCount; grandValue += grp.totalValue;
+            });
+        } else if (tab === 'caller') {
             if (!window._wosgCallerData || !window._wosgCallers) return;
             title = 'WITHOUT OSG CALLER REPORT — ' + dateStr;
             fileName = 'Without_OSG_Caller_Report_' + dateStr + '.xlsx';
