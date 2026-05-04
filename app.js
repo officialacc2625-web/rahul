@@ -2413,6 +2413,23 @@
     }
 
     // ---- WITHOUT OSG DASHBOARD PAGE ----
+    window._wosgActiveTab = 'caller';
+    window.switchWosgTab = function(tab) {
+        window._wosgActiveTab = tab;
+        document.querySelectorAll('.wosg-tab').forEach(btn => {
+            if (btn.dataset.wosgTab === tab) {
+                btn.style.background = 'linear-gradient(135deg,#f97316,#ea580c)';
+                btn.style.color = '#fff';
+            } else {
+                btn.style.background = 'transparent';
+                btn.style.color = '#64748b';
+            }
+        });
+        if (tab === 'caller') renderWosgDashboard();
+        else if (tab === 'daily') renderWosgDaily();
+        else if (tab === 'monthly') renderWosgMonthly();
+    };
+
     document.querySelector('[data-section="wosg-dashboard-section"]').addEventListener('click', () => {
         loadCoStatuses(() => setTimeout(renderWosgDashboard, 50));
     });
@@ -2626,58 +2643,359 @@
         container.innerHTML = kpiHtml + html;
     }
 
-    // Export WOSG report as styled Excel
-    window.exportWosgReport = function() {
-        if (!window._wosgCallerData || !window._wosgCallers) return;
+    function getMissedInvoices() {
+        if (productData.length === 0) return [];
+        const osgInv = new Set();
+        osgData.forEach(r => { if (r.invoice) osgInv.add(r.invoice); });
+        amcData.forEach(r => { if (r.invoice) osgInv.add(r.invoice); });
+        samsungData.forEach(r => { if (r.invoice) osgInv.add(r.invoice); });
 
-        const callerData = window._wosgCallerData;
-        const callers = window._wosgCallers;
+        const seenInv = new Set();
+        const allMissed = [];
+        productData.forEach(r => {
+            if (r.invoice && !osgInv.has(r.invoice) && !seenInv.has(r.invoice)) {
+                seenInv.add(r.invoice);
+                allMissed.push(r);
+            }
+        });
+        return allMissed;
+    }
+
+    function renderWosgDaily() {
+        const container = document.getElementById('wosgReportContainer');
+        if (!container) return;
+        const allMissed = getMissedInvoices();
+        if (allMissed.length === 0) {
+            container.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted);">Upload data and generate reports first.</div>';
+            return;
+        }
+
+        // Group by Date
+        const dateData = {};
+        allMissed.forEach(r => {
+            let dtStr = '';
+            let dt = r.invoiceDate || r.time;
+            if (dt) {
+                if (dt instanceof Date && !isNaN(dt)) {
+                    dtStr = String(dt.getDate()).padStart(2,'0') + '-' + String(dt.getMonth()+1).padStart(2,'0') + '-' + dt.getFullYear();
+                } else if (typeof dt === 'string') {
+                    if (dt.match(/^\d{4}-\d{2}-\d{2}/)) {
+                        const parts = dt.substring(0,10).split('-');
+                        dtStr = parts[2] + '-' + parts[1] + '-' + parts[0];
+                    } else {
+                        dtStr = dt; // fallback
+                    }
+                } else if (typeof dt === 'number') {
+                    let dObj = new Date(Math.round((dt - 25569) * 86400 * 1000));
+                    dtStr = String(dObj.getUTCDate()).padStart(2,'0') + '-' + String(dObj.getUTCMonth()+1).padStart(2,'0') + '-' + dObj.getUTCFullYear();
+                }
+            }
+            if (!dtStr) dtStr = 'Unknown Date';
+
+            if (!dateData[dtStr]) {
+                dateData[dtStr] = {
+                    date: dtStr,
+                    rows: [],
+                    totalCount: 0,
+                    totalValue: 0,
+                    timestamp: (dt instanceof Date && !isNaN(dt)) ? dt.getTime() : 0
+                };
+            }
+
+            const cd = dateData[dtStr];
+            const val = Math.abs(r.soldPrice || 0);
+            
+            const st = coStatusMap[r.invoice || ''] || {};
+            const cs = st.callStatus || '';
+            const interest = st.interest || '';
+
+            cd.totalCount++;
+            cd.totalValue += val;
+
+            let statusLabel = '';
+            if (interest === 'interested') statusLabel = 'Interested';
+            else if (interest === 'not-interested') statusLabel = 'Not Interested';
+            else if (interest === 'follow-up') statusLabel = 'Follow-up';
+            else if (interest === 'bought') statusLabel = 'Bought';
+            else if (cs === 'connected') statusLabel = 'Connected';
+            else if (cs === 'disconnected') statusLabel = 'Disconnected';
+            else if (cs === 'not-connected') statusLabel = 'Not Connected';
+            else statusLabel = 'Not Called';
+
+            const existingRow = cd.rows.find(x => x.status === statusLabel);
+            if (existingRow) {
+                existingRow.count++;
+                existingRow.value += val;
+            } else {
+                cd.rows.push({ status: statusLabel, count: 1, value: val });
+            }
+        });
+
+        // Sort dates descending
+        const sortedDates = Object.values(dateData).sort((a,b) => {
+            if (a.date === 'Unknown Date') return 1;
+            if (b.date === 'Unknown Date') return -1;
+            // Parse DD-MM-YYYY
+            const ap = a.date.split('-');
+            const bp = b.date.split('-');
+            if (ap.length === 3 && bp.length === 3) {
+                const da = new Date(ap[2], ap[1]-1, ap[0]);
+                const db = new Date(bp[2], bp[1]-1, bp[0]);
+                return db.getTime() - da.getTime();
+            }
+            return 0;
+        });
+
+        // Store for Export
+        window._wosgDailyData = sortedDates;
+
+        buildGenericWosgTable(container, sortedDates, 'DATE', 'WITHOUT OSG DAILY REPORT');
+    }
+
+    function renderWosgMonthly() {
+        const container = document.getElementById('wosgReportContainer');
+        if (!container) return;
+        const allMissed = getMissedInvoices();
+        if (allMissed.length === 0) {
+            container.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted);">Upload data and generate reports first.</div>';
+            return;
+        }
+
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+        const monthData = {};
+        allMissed.forEach(r => {
+            let mStr = '';
+            let sKey = '';
+            let dt = r.invoiceDate || r.time;
+            if (dt) {
+                if (dt instanceof Date && !isNaN(dt)) {
+                    mStr = monthNames[dt.getMonth()] + ' ' + dt.getFullYear();
+                    sKey = dt.getFullYear() + String(dt.getMonth()).padStart(2,'0');
+                } else if (typeof dt === 'string') {
+                    if (dt.match(/^\d{4}-\d{2}-\d{2}/)) {
+                        const parts = dt.substring(0,10).split('-');
+                        mStr = monthNames[parseInt(parts[1])-1] + ' ' + parts[0];
+                        sKey = parts[0] + parts[1];
+                    }
+                } else if (typeof dt === 'number') {
+                    let dObj = new Date(Math.round((dt - 25569) * 86400 * 1000));
+                    mStr = monthNames[dObj.getUTCMonth()] + ' ' + dObj.getUTCFullYear();
+                    sKey = dObj.getUTCFullYear() + String(dObj.getUTCMonth()).padStart(2,'0');
+                }
+            }
+            if (!mStr) { mStr = 'Unknown Month'; sKey = '000000'; }
+
+            if (!monthData[mStr]) {
+                monthData[mStr] = {
+                    date: mStr,
+                    sKey: sKey,
+                    rows: [],
+                    totalCount: 0,
+                    totalValue: 0
+                };
+            }
+
+            const cd = monthData[mStr];
+            const val = Math.abs(r.soldPrice || 0);
+            
+            const st = coStatusMap[r.invoice || ''] || {};
+            const cs = st.callStatus || '';
+            const interest = st.interest || '';
+
+            cd.totalCount++;
+            cd.totalValue += val;
+
+            let statusLabel = '';
+            if (interest === 'interested') statusLabel = 'Interested';
+            else if (interest === 'not-interested') statusLabel = 'Not Interested';
+            else if (interest === 'follow-up') statusLabel = 'Follow-up';
+            else if (interest === 'bought') statusLabel = 'Bought';
+            else if (cs === 'connected') statusLabel = 'Connected';
+            else if (cs === 'disconnected') statusLabel = 'Disconnected';
+            else if (cs === 'not-connected') statusLabel = 'Not Connected';
+            else statusLabel = 'Not Called';
+
+            const existingRow = cd.rows.find(x => x.status === statusLabel);
+            if (existingRow) {
+                existingRow.count++;
+                existingRow.value += val;
+            } else {
+                cd.rows.push({ status: statusLabel, count: 1, value: val });
+            }
+        });
+
+        const sortedMonths = Object.values(monthData).sort((a,b) => b.sKey.localeCompare(a.sKey));
+
+        // Store for Export
+        window._wosgMonthlyData = sortedMonths;
+
+        buildGenericWosgTable(container, sortedMonths, 'MONTH', 'WITHOUT OSG MONTHLY REPORT');
+    }
+
+    function buildGenericWosgTable(container, dataArr, groupColName, title) {
         const today = new Date();
         const dateStr = String(today.getDate()).padStart(2,'0') + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + today.getFullYear();
 
-        // Build AOA (array of arrays) for the Excel
-        const aoa = [];
+        const sColors = {
+            'Connected':      { bg: '#dbeafe', color: '#1e40af', border: '#93c5fd' },
+            'Disconnected':   { bg: '#f3e8ff', color: '#6b21a8', border: '#c4b5fd' },
+            'Not Connected':  { bg: '#f1f5f9', color: '#475569', border: '#cbd5e1' },
+            'Interested':     { bg: '#dcfce7', color: '#166534', border: '#86efac' },
+            'Not Interested': { bg: '#fee2e2', color: '#991b1b', border: '#fca5a5' },
+            'Follow-up':      { bg: '#fef3c7', color: '#92400e', border: '#fcd34d' },
+            'Bought':         { bg: '#d1fae5', color: '#065f46', border: '#6ee7b7' },
+            'Not Called':     { bg: '#e0e7ff', color: '#3730a3', border: '#a5b4fc' },
+        };
 
-        // Title row
-        aoa.push(['WITHOUT OSG CALLER REPORT — ' + dateStr, '', '', '']);
-        // Header row
-        aoa.push(['CALLER', 'STATUS', 'VALUE', 'COUNT']);
-
-        let grandCount = 0, grandValue = 0;
-
-        callers.forEach(callerName => {
-            const cd = callerData[callerName];
-            const rows = cd.rows.length > 0 ? cd.rows : [{ status: 'No calls logged', count: 0, value: 0 }];
-
-            rows.forEach((st, si) => {
-                aoa.push([
-                    si === 0 ? callerName : '',
-                    st.status,
-                    st.value > 0 ? Math.round(st.value) : 0,
-                    st.count
-                ]);
-            });
-
-            // Subtotal
-            aoa.push(['', 'SUBTOTAL — ' + callerName.toUpperCase(), Math.round(cd.totalValue), cd.totalCount]);
-            grandCount += cd.totalCount;
-            grandValue += cd.totalValue;
+        const statusOrder = ['Connected', 'Disconnected', 'Not Connected', 'Interested', 'Not Interested', 'Follow-up', 'Bought', 'Not Called'];
+        dataArr.forEach(d => {
+            d.rows.sort((a, b) => statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status));
         });
 
-        // Grand Total
+        const cellBorder = '1px solid #334155';
+        let grandCount = 0, grandValue = 0;
+
+        let html = `
+        <div style="overflow-x:auto; border-radius:12px; border:2px solid #334155; box-shadow:0 4px 24px rgba(0,0,0,0.3);">
+        <table id="wosgReportTable" style="width:100%;border-collapse:collapse;font-family:'Inter',sans-serif;font-size:0.88rem;background:var(--bg-card);">
+        <thead>
+        <tr><td colspan="4" style="
+            background:linear-gradient(135deg,#2563eb,#1d4ed8);
+            color:#fff; font-size:1.1rem; font-weight:800;
+            text-align:center; padding:16px 10px;
+            letter-spacing:1px; text-transform:uppercase;
+            border-bottom:3px solid #1e3a8a;
+        ">${title} &mdash; ${dateStr}</td></tr>
+        <tr style="background:#0f172a;">
+            <th style="padding:12px 18px;text-align:left;color:#60a5fa;font-weight:700;font-size:0.82rem;letter-spacing:1px;text-transform:uppercase;border:${cellBorder};width:160px;">${groupColName}</th>
+            <th style="padding:12px 18px;text-align:left;color:#60a5fa;font-weight:700;font-size:0.82rem;letter-spacing:1px;text-transform:uppercase;border:${cellBorder};">STATUS</th>
+            <th style="padding:12px 18px;text-align:right;color:#60a5fa;font-weight:700;font-size:0.82rem;letter-spacing:1px;text-transform:uppercase;border:${cellBorder};width:130px;">VALUE</th>
+            <th style="padding:12px 18px;text-align:center;color:#60a5fa;font-weight:700;font-size:0.82rem;letter-spacing:1px;text-transform:uppercase;border:${cellBorder};width:90px;">COUNT</th>
+        </tr>
+        </thead>
+        <tbody>`;
+
+        dataArr.forEach((grp, ci) => {
+            const rows = grp.rows.length > 0 ? grp.rows : [{ status: 'No records', count: 0, value: 0 }];
+            const rowCount = rows.length + 1;
+            const rowBg = ci % 2 === 0 ? '#0f172a' : '#1e293b';
+
+            rows.forEach((st, si) => {
+                const sc = sColors[st.status] || { bg:'#1e293b', color:'#94a3b8', border:'#475569' };
+                const isNoCall = st.status === 'No records';
+
+                html += '<tr style="background:' + rowBg + ';">';
+
+                if (si === 0) {
+                    html += `<td rowspan="${rowCount}" style="padding:16px 14px;border:${cellBorder};vertical-align:middle;text-align:center;background:rgba(37,99,235,0.05);border-left:4px solid #3b82f6;">
+                        <div style="font-weight:800;font-size:1rem;color:#60a5fa;">${grp.date}</div>
+                    </td>`;
+                }
+
+                if (isNoCall) {
+                    html += `<td style="padding:10px 18px;border:${cellBorder};color:#64748b;font-style:italic;">&#8212; No records &#8212;</td>`;
+                } else {
+                    html += `<td style="padding:10px 18px;border:${cellBorder};">
+                        <span style="display:inline-block;padding:4px 14px;border-radius:6px;font-weight:700;font-size:0.82rem;background:${sc.bg};color:${sc.color};border:1px solid ${sc.border};">${st.status}</span>
+                    </td>`;
+                }
+
+                html += `<td style="padding:10px 18px;border:${cellBorder};text-align:right;font-weight:700;color:#e2e8f0;font-family:'JetBrains Mono',monospace;font-size:0.9rem;">${st.value > 0 ? fmtShort(st.value) : '&#8212;'}</td>`;
+                html += `<td style="padding:10px 18px;border:${cellBorder};text-align:center;font-weight:800;color:#e2e8f0;font-size:0.95rem;">${st.count > 0 ? st.count : '&#8212;'}</td>`;
+                html += '</tr>';
+            });
+
+            grandCount += grp.totalCount;
+            grandValue += grp.totalValue;
+
+            html += `<tr style="background:rgba(37,99,235,0.1);border-bottom:2px solid #3b82f6;">
+                <td style="padding:11px 18px;border:${cellBorder};font-weight:800;color:#60a5fa;font-size:0.82rem;letter-spacing:0.5px;">SUBTOTAL</td>
+                <td style="padding:11px 18px;border:${cellBorder};text-align:right;font-weight:800;color:#60a5fa;font-family:'JetBrains Mono',monospace;font-size:0.9rem;">${fmtShort(grp.totalValue)}</td>
+                <td style="padding:11px 18px;border:${cellBorder};text-align:center;font-weight:800;color:#60a5fa;font-size:1rem;">${grp.totalCount}</td>
+            </tr>`;
+        });
+
+        html += `<tr style="background:linear-gradient(135deg,#1d4ed8,#1e3a8a);">
+            <td colspan="2" style="padding:14px 18px;font-weight:800;color:#fff;font-size:0.95rem;letter-spacing:1px;text-transform:uppercase;border:1px solid rgba(255,255,255,0.15);">GRAND TOTAL</td>
+            <td style="padding:14px 18px;text-align:right;font-weight:800;color:#fff;font-size:1.05rem;font-family:'JetBrains Mono',monospace;border:1px solid rgba(255,255,255,0.15);">${fmtShort(grandValue)}</td>
+            <td style="padding:14px 18px;text-align:center;font-weight:800;color:#fff;font-size:1.1rem;border:1px solid rgba(255,255,255,0.15);">${grandCount}</td>
+        </tr>`;
+
+        html += '</tbody></table></div>';
+        
+        const kpiHtml = `
+        <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:24px;">
+            <div style="flex:1;min-width:140px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;border-top:3px solid #2563eb;">
+                <div style="font-size:1.8rem;font-weight:800;color:#3b82f6;">${grandCount.toLocaleString()}</div>
+                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:3px;">Total Records</div>
+            </div>
+            <div style="flex:1;min-width:140px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;border-top:3px solid #16a34a;">
+                <div style="font-size:1.8rem;font-weight:800;color:#16a34a;">${fmtShort(grandValue)}</div>
+                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:3px;">Total Value</div>
+            </div>
+        </div>`;
+
+        container.innerHTML = kpiHtml + html;
+    }
+
+    // Replace the export logic to handle all three tabs
+    window.exportWosgReport = function() {
+        const tab = window._wosgActiveTab || 'caller';
+        const today = new Date();
+        const dateStr = String(today.getDate()).padStart(2,'0') + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + today.getFullYear();
+        
+        let aoa = [];
+        let grandCount = 0, grandValue = 0;
+        let title = '';
+        let fileName = '';
+
+        if (tab === 'caller') {
+            if (!window._wosgCallerData || !window._wosgCallers) return;
+            title = 'WITHOUT OSG CALLER REPORT — ' + dateStr;
+            fileName = 'Without_OSG_Caller_Report_' + dateStr + '.xlsx';
+            aoa.push([title, '', '', '']);
+            aoa.push(['CALLER', 'STATUS', 'VALUE', 'COUNT']);
+            window._wosgCallers.forEach(callerName => {
+                const cd = window._wosgCallerData[callerName];
+                const rows = cd.rows.length > 0 ? cd.rows : [{ status: 'No calls logged', count: 0, value: 0 }];
+                rows.forEach((st, si) => aoa.push([si === 0 ? callerName : '', st.status, st.value > 0 ? Math.round(st.value) : 0, st.count]));
+                aoa.push(['', 'SUBTOTAL — ' + callerName.toUpperCase(), Math.round(cd.totalValue), cd.totalCount]);
+                grandCount += cd.totalCount; grandValue += cd.totalValue;
+            });
+        } else if (tab === 'daily') {
+            if (!window._wosgDailyData) return;
+            title = 'WITHOUT OSG DAILY REPORT — ' + dateStr;
+            fileName = 'Without_OSG_Daily_Report_' + dateStr + '.xlsx';
+            aoa.push([title, '', '', '']);
+            aoa.push(['DATE', 'STATUS', 'VALUE', 'COUNT']);
+            window._wosgDailyData.forEach(grp => {
+                const rows = grp.rows.length > 0 ? grp.rows : [{ status: 'No records', count: 0, value: 0 }];
+                rows.forEach((st, si) => aoa.push([si === 0 ? grp.date : '', st.status, st.value > 0 ? Math.round(st.value) : 0, st.count]));
+                aoa.push(['', 'SUBTOTAL', Math.round(grp.totalValue), grp.totalCount]);
+                grandCount += grp.totalCount; grandValue += grp.totalValue;
+            });
+        } else if (tab === 'monthly') {
+            if (!window._wosgMonthlyData) return;
+            title = 'WITHOUT OSG MONTHLY REPORT — ' + dateStr;
+            fileName = 'Without_OSG_Monthly_Report_' + dateStr + '.xlsx';
+            aoa.push([title, '', '', '']);
+            aoa.push(['MONTH', 'STATUS', 'VALUE', 'COUNT']);
+            window._wosgMonthlyData.forEach(grp => {
+                const rows = grp.rows.length > 0 ? grp.rows : [{ status: 'No records', count: 0, value: 0 }];
+                rows.forEach((st, si) => aoa.push([si === 0 ? grp.date : '', st.status, st.value > 0 ? Math.round(st.value) : 0, st.count]));
+                aoa.push(['', 'SUBTOTAL', Math.round(grp.totalValue), grp.totalCount]);
+                grandCount += grp.totalCount; grandValue += grp.totalValue;
+            });
+        }
+
         aoa.push(['GRAND TOTAL', '', Math.round(grandValue), grandCount]);
 
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.aoa_to_sheet(aoa);
-
-        // Column widths
         ws['!cols'] = [{ wch: 18 }, { wch: 30 }, { wch: 16 }, { wch: 12 }];
-
-        // Merge title row
         ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }];
 
-        // Style cells (if xlsx-style or sheetjs-style available)
-        // For basic SheetJS we set number format on value column
         for (let r = 2; r < aoa.length; r++) {
             const cellRef = XLSX.utils.encode_cell({ r: r, c: 2 });
             if (ws[cellRef]) ws[cellRef].t = 'n';
@@ -2685,11 +3003,11 @@
             if (ws[cellRef2]) ws[cellRef2].t = 'n';
         }
 
-        XLSX.utils.book_append_sheet(wb, ws, 'Caller Report');
-        XLSX.writeFile(wb, 'Without_OSG_Caller_Report_' + dateStr + '.xlsx');
+        XLSX.utils.book_append_sheet(wb, ws, tab === 'caller' ? 'Caller Report' : (tab === 'daily' ? 'Daily Report' : 'Monthly Report'));
+        XLSX.writeFile(wb, fileName);
     };
 
-        // ---- CUSTOMERS WITHOUT OSG PAGE ----
+    // ---- CUSTOMERS WITHOUT OSG PAGE ----
     $('btnCORefresh').addEventListener('click', renderCustomersOSGPage);
     $('btnCOExport').addEventListener('click', exportCustomersOSGExcel);
     document.querySelector('[data-section="customers-osg-section"]').addEventListener('click', () => {
