@@ -439,6 +439,23 @@
             showLoading(true);
             setTimeout(function() {
                 try {
+                    // Remove returned products (negative values) and their original positive pairs
+                    const cancelledInv = new Set();
+                    const pR = [], nR = [];
+                    productData.forEach(r => { if (r.soldPrice < 0) nR.push(r); else pR.push(r); });
+                    nR.forEach(nr => {
+                        const mIdx = pR.findIndex(pr => !cancelledInv.has(pr.invoice) &&
+                            (pr.customerNo === nr.customerNo || pr.customerName === nr.customerName) &&
+                            pr.product === nr.product && Math.abs(pr.soldPrice + nr.soldPrice) < 2);
+                        if (mIdx !== -1) {
+                            cancelledInv.add(pR[mIdx].invoice);
+                            cancelledInv.add(nr.invoice);
+                        } else {
+                            cancelledInv.add(nr.invoice);
+                        }
+                    });
+                    productData = productData.filter(r => !cancelledInv.has(r.invoice));
+
                     allData = [...productData, ...amcData];
 
                     var fcb = document.getElementById('fileCountBadge');
