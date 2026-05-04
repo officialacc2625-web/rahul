@@ -419,12 +419,11 @@
     }
 
     function showFileStatus(el, name, count) {
+        if (!el) return;
         el.className = 'upload-status has-data';
-        el.innerHTML = `
-            <span class="status-icon">âœ…</span>
-            <span class="status-text">${name}</span>
-            <span class="status-count">${count} rows</span>
-        `;
+        el.innerHTML = '<span class="status-icon" style="color:#10b981;">&#x2714;</span> ' +
+            '<span class="status-text">' + name + '</span> ' +
+            '<span class="status-count">' + count + ' rows</span>';
     }
 
     function checkGenerateReady() {
