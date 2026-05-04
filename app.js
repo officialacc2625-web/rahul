@@ -2513,7 +2513,14 @@
             }
         });
 
-        const callers = CO_CALLERS.map(c => c.name);
+        const allCallers = CO_CALLERS.map(c => c.name);
+        
+        // Add Dropdown UI for Caller Report
+        const selectedCaller = window._wosgCallerFilter || '';
+        let callers = allCallers;
+        if (selectedCaller) {
+            callers = [selectedCaller];
+        }
 
         // Aggregate data per caller
         const callerData = {};
@@ -2675,7 +2682,19 @@
 
         // Summary KPIs above the table
         const notCalled = allMissed.length - grandCount;
+        
+        // Dropdown HTML
+        let dropdownHtml = `
+        <div style="margin-bottom:20px;display:flex;align-items:center;gap:12px;">
+            <label style="font-weight:700;color:var(--text-primary);">Filter by Caller:</label>
+            <select onchange="window._wosgCallerFilter = this.value; renderWosgDashboard();" style="padding:8px 14px; border-radius:8px; border:1px solid #334155; background:#1e293b; color:#fff; font-family:inherit; font-size:0.9rem; min-width:200px;">
+                <option value="">All Callers</option>
+                ${allCallers.map(c => `<option value="${c}" ${c === selectedCaller ? 'selected' : ''}>${c}</option>`).join('')}
+            </select>
+        </div>`;
+
         const kpiHtml = `
+        ${dropdownHtml}
         <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:24px;">
             <div style="flex:1;min-width:140px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;border-top:3px solid #f97316;">
                 <div style="font-size:1.8rem;font-weight:800;color:#f97316;">${allMissed.length.toLocaleString()}</div>
