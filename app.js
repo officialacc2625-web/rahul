@@ -491,6 +491,8 @@
         // Find missedUnique for the whole dataset
         const osgInvoices = new Set();
         osgData.forEach(r => { if (r.invoice) osgInvoices.add(r.invoice); });
+        amcData.forEach(r => { if (r.invoice) osgInvoices.add(r.invoice); });
+        samsungData.forEach(r => { if (r.invoice) osgInvoices.add(r.invoice); });
         const seenInv = new Set();
         const fullMissedUnique = [];
         productData.forEach(r => {
@@ -2311,6 +2313,8 @@
         // Build invoice lookup from ALL OSG data (for missed customers section)
         const osgInvoices = new Set();
         osgData.forEach(r => { if (r.invoice) osgInvoices.add(r.invoice); });
+        amcData.forEach(r => { if (r.invoice) osgInvoices.add(r.invoice); });
+        samsungData.forEach(r => { if (r.invoice) osgInvoices.add(r.invoice); });
 
         // Filter OSG: only entries whose invoice exists in product data
         let filtO = osgData.filter(r => r.invoice && productInvoices.has(r.invoice));
@@ -3059,6 +3063,8 @@ function exportCustomersOSGExcel() {
 
         const osgInvoices = new Set();
         osgData.forEach(r => { if (r.invoice) osgInvoices.add(r.invoice); });
+        amcData.forEach(r => { if (r.invoice) osgInvoices.add(r.invoice); });
+        samsungData.forEach(r => { if (r.invoice) osgInvoices.add(r.invoice); });
 
         const seenInv = new Set();
         const missedUnique = [];
@@ -3208,7 +3214,7 @@ function exportCustomersOSGExcel() {
         const worstBranches = branchStats.slice(0, 3);
 
         // 2. Missed Premium Opportunities (Products > 50,000 sold without OSG)
-        const osgInvoices = new Set(osgData.map(r => r.invoice).filter(Boolean));
+        const osgInvoices = new Set([...osgData, ...amcData, ...samsungData].map(r => r.invoice).filter(Boolean));
         const premiumMisses = filteredProduct.filter(r =>
             r.soldPrice > 50000 && r.invoice && !osgInvoices.has(r.invoice)
         ).sort((a, b) => b.soldPrice - a.soldPrice).slice(0, 5);
