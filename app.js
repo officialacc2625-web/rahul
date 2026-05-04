@@ -2419,7 +2419,7 @@
         // Load saved statuses from Firebase first, then render
         loadCoStatuses(() => setTimeout(renderCustomersOSGPage, 50));
     });
-    ['coBrand', 'coRBM', 'coBDM', 'coProduct', 'coBranch', 'coSort', 'coStatusFilter'].forEach(id => {
+    ['coBrand', 'coRBM', 'coBDM', 'coProduct', 'coBranch', 'coSort', 'coStatusFilter', 'coCallerFilter'].forEach(id => {
         $(id).addEventListener('change', () => {
             if (id === 'coSort') window.coSortMode = $('coSort').value;
             renderCustomersOSGPage();
@@ -2534,6 +2534,7 @@
             const selDate = document.getElementById('coDateFilter') ? document.getElementById('coDateFilter').value : '';
             coCurrentSelDate = selDate;
             const selStatusFilter = document.getElementById('coStatusFilter') ? document.getElementById('coStatusFilter').value : '';
+              const selCallerFilter = document.getElementById('coCallerFilter') ? document.getElementById('coCallerFilter').value : '';
 
             // Populate filter dropdowns (preserve selection)
             const brandSet = [...new Set(productData.map(r => r.brand).filter(Boolean))].sort();
@@ -2603,6 +2604,16 @@
                     missedUnique.push(r);
                 }
             });
+
+            // Apply caller filter - only show rows called by selected caller
+            if (selCallerFilter) {
+                const filtered = missedUnique.filter(r => {
+                    const st = coStatusMap[r.invoice || ''] || {};
+                    return st.calledBy === selCallerFilter;
+                });
+                missedUnique.length = 0;
+                filtered.forEach(r => missedUnique.push(r));
+            }
 
             $('coMissedCount').textContent = `${missedUnique.length} customers`;
         }
