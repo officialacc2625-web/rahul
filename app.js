@@ -182,7 +182,8 @@
         { name: 'Sarath',   color: '#10b981', bg: 'rgba(16,185,129,0.15)', pass: '3456' },
     ];
     let currentCaller = localStorage.getItem('co_caller') || null;
-    let coCurrentRows = [];   // current filtered rows
+    let coCurrentRows = [];
+    let coCurrentSelDate = '';   // current filtered rows
     let coDisplayLimit = 100; // pagination: rows shown so far
 
     // ---- GLOBAL DOWNLOAD STAFF DETAILS ----
@@ -2510,6 +2511,7 @@
             const selProduct = $('coProduct').value;
             const selBranch = $('coBranch').value;
             const selDate = document.getElementById('coDateFilter') ? document.getElementById('coDateFilter').value : '';
+            coCurrentSelDate = selDate;
             const selStatusFilter = document.getElementById('coStatusFilter') ? document.getElementById('coStatusFilter').value : '';
 
             // Populate filter dropdowns (preserve selection)
@@ -2959,11 +2961,14 @@
                 width:130px; outline:none; ${opcStyle}" />
         `;
 
-        let dStr = '”';
+
+        let dStr = '';
         if (st.timestamp) {
+            // Always show caller activity timestamp
             const upd = new Date(st.timestamp);
-            dStr = `<span style="color:#10b981;font-weight:600;" title="Status Updated">âœ“ ${upd.toLocaleString('en-GB', { day:'numeric', month:'short', hour:'numeric', minute:'numeric' })}</span>`;
-        } else {
+            dStr = `<span style="color:#10b981;font-weight:600;" title="Status Updated">&#x2714; ${upd.toLocaleString('en-GB', { day:'numeric', month:'short', hour:'numeric', minute:'numeric' })}</span>`;
+        } else if (coCurrentSelDate) {
+            // Only show purchase date when a date filter is active
             let dt = r.time || r.invoiceDate;
             if (dt) {
                 const pd = new Date(dt);
