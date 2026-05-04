@@ -3024,7 +3024,7 @@
             <td style="padding:12px 10px;">${remarksInput}</td>
             <td style="padding:12px 10px;color:var(--text-secondary);font-size:0.85rem;">${r.branch||'”'}</td>
             <td style="padding:12px 10px;color:var(--text-secondary);font-size:0.85rem;">${r.product||'”'}</td>
-            <td style="padding:12px 10px;text-align:right;font-weight:600;color:var(--text-primary);font-size:0.88rem;white-space:nowrap;">${fmtShort(r.soldPrice)}</td>
+            <td style="padding:12px 10px;text-align:right;font-weight:600;color:var(--text-primary);font-size:0.88rem;white-space:nowrap;">${fmtShort(Math.abs(r.soldPrice || 0))}</td>
         </tr>`;
     }
 function exportCustomersOSGExcel() {
