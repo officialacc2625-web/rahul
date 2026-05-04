@@ -454,7 +454,7 @@
                             cancelledInv.add(nr.invoice);
                         }
                     });
-                    productData = productData.filter(r => !cancelledInv.has(r.invoice));
+                    productData = productData.filter(r => !cancelledInv.has(r.invoice) && (r.soldPrice > 0));
 
                     allData = [...productData, ...amcData];
 
