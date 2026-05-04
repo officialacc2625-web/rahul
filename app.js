@@ -2759,9 +2759,10 @@
             
             if (!coStatusMap[inv].callStatus && !coStatusMap[inv].interest && !coStatusMap[inv].remarks) {
                 coStatusMap[inv].calledBy = null;
+                delete coStatusMap[inv].timestamp;
+            } else {
+                coStatusMap[inv].timestamp = new Date().toISOString();
             }
-
-            coStatusMap[inv].timestamp = new Date().toISOString();
             saveCoStatus(inv);
             updateCoSingleRow(inv);
             updateCoStatsInPlace();
@@ -2779,9 +2780,10 @@
             
             if (!coStatusMap[inv].callStatus && !coStatusMap[inv].interest && !coStatusMap[inv].remarks) {
                 coStatusMap[inv].calledBy = null;
+                delete coStatusMap[inv].timestamp;
+            } else {
+                coStatusMap[inv].timestamp = new Date().toISOString();
             }
-
-            coStatusMap[inv].timestamp = new Date().toISOString();
             saveCoStatus(inv);
             updateCoSingleRow(inv);
             updateCoStatsInPlace();
@@ -2790,7 +2792,14 @@
         window.setCoFollowUpDate = function(inv, dateStr) {
             if (!coStatusMap[inv]) coStatusMap[inv] = { callStatus: null, interest: null, calledBy: null, remarks: '', followUpDate: '' };
             coStatusMap[inv].followUpDate = dateStr;
-            coStatusMap[inv].timestamp = new Date().toISOString();
+            
+            if (!coStatusMap[inv].callStatus && !coStatusMap[inv].interest && !coStatusMap[inv].remarks && (!dateStr || dateStr === '')) {
+                coStatusMap[inv].calledBy = null;
+                delete coStatusMap[inv].timestamp;
+            } else {
+                coStatusMap[inv].timestamp = new Date().toISOString();
+            }
+            
             saveCoStatus(inv);
             updateCoSingleRow(inv);
         };
@@ -2801,12 +2810,14 @@
             
             if (!coStatusMap[inv].callStatus && !coStatusMap[inv].interest && !coStatusMap[inv].remarks) {
                 coStatusMap[inv].calledBy = null;
-            } else if (remark !== "" && currentCaller) {
-                // If they add a remark, claim the row if they are logged in
-                coStatusMap[inv].calledBy = currentCaller;
+                delete coStatusMap[inv].timestamp;
+            } else {
+                if (remark !== "" && currentCaller) {
+                    // If they add a remark, claim the row if they are logged in
+                    coStatusMap[inv].calledBy = currentCaller;
+                }
+                coStatusMap[inv].timestamp = new Date().toISOString();
             }
-
-            coStatusMap[inv].timestamp = new Date().toISOString();
             saveCoStatus(inv);
             updateCoSingleRow(inv);
         };
