@@ -2778,24 +2778,215 @@
         const selRBM = $('fsRBM').value;
         const selBDM = $('fsBDM').value;
         const selBranch = $('fsBranch').value;
-        const allStats = buildFutureStaffStats();
         
-        // Sort by Branch -> BDM -> Staff
-        const filtered = allStats
+        // --------------------------------------------------------------------------------
+        // DATA PROCESSING FOR SHEET 1: FUTURE_STORES_OVERVIEW (Grouped by BDM -> Branch)
+        // --------------------------------------------------------------------------------
+        
+        // Filter Future Product Data
+        const fProduct = productData.filter(r => r.branch && r.branch.toUpperCase().includes('FUTURE')
+            && (!selRBM || r.rbm === selRBM)
+            && (!selBDM || r.bdm === selBDM)
+            && (!selBranch || r.branch === selBranch));
+
+        // Invoice mapping to branch/bdm
+        const invMeta = {};
+        fProduct.forEach(r => { if (r.invoice) invMeta[r.invoice] = { branch: r.branch, bdm: r.bdm || 'Unknown' }; });
+
+        // Group Product by BDM -> Branch
+        const branchGroups = {}; // key: BDM|Branch
+        fProduct.forEach(r => {
+            const key = (r.bdm || 'Unknown') + '|' + (r.branch || 'Unknown');
+            if (!branchGroups[key]) branchGroups[key] = { bdm: r.bdm || 'Unknown', branch: r.branch || 'Unknown', pRows: [], oRows: [], aRows: [], sRows: [] };
+            branchGroups[key].pRows.push(r);
+        });
+
+        osgData.forEach(r => {
+            if (r.invoice && invMeta[r.invoice]) {
+                const meta = invMeta[r.invoice];
+                const key = meta.bdm + '|' + meta.branch;
+                if (branchGroups[key]) branchGroups[key].oRows.push(r);
+            }
+        });
+        amcData.forEach(r => {
+            if (r.invoice && invMeta[r.invoice]) {
+                const meta = invMeta[r.invoice];
+                const key = meta.bdm + '|' + meta.branch;
+                if (branchGroups[key]) branchGroups[key].aRows.push(r);
+            }
+        });
+        samsungData.forEach(r => {
+            if (r.invoice && invMeta[r.invoice]) {
+                const meta = invMeta[r.invoice];
+                const key = meta.bdm + '|' + meta.branch;
+                if (branchGroups[key]) branchGroups[key].sRows.push(r);
+            }
+        });
+
+        // Convert to array and sort by BDM -> Branch
+        const branchStats = Object.values(branchGroups).sort((a,b) => a.bdm.localeCompare(b.bdm) || a.branch.localeCompare(b.branch));
+
+        // Build Sheet 1 AoA
+        const hdr1 = ['BDM', 'Branch', 'Product', 'Product Qty', 'OSG Qty', 'LG-AMC Qty', 'SAMSUNG Qty', 'Osg Qty Conv%', 'Osg Val Conv%', 'OVERALL Osg Qty Conv%', 'OVERALL Osg Val Conv%', 'OVERALL LG-AMC Qty Conv%', 'OVERALL LG-AMC Val Conv%', 'OVERALL Samsung Qty Conv%', 'OVERALL Samsung Val Conv%'];
+        const aoa1 = [['FUTURE STORES — EXPORT CSV'], hdr1];
+        const merges1 = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 14 } }]; // Header merge
+        
+        let bdmStart = 2, branchStart = 2;
+
+        branchStats.forEach((grp, grpIdx) => {
+            // Overall calculations for this branch
+            const tPQty = grp.pRows.reduce((s, r) => s + r.qty, 0);
+            const tOQty = grp.oRows.reduce((s, r) => s + r.qty, 0);
+            const tAQty = grp.aRows.reduce((s, r) => s + r.qty, 0);
+            const tSQty = grp.sRows.reduce((s, r) => s + r.qty, 0);
+            
+            const tPRev = grp.pRows.reduce((s, r) => s + r.soldPrice, 0);
+            const tORev = grp.oRows.reduce((s, r) => s + r.soldPrice, 0);
+            const tARev = grp.aRows.reduce((s, r) => s + r.soldPrice, 0);
+            const tSRev = grp.sRows.reduce((s, r) => s + r.soldPrice, 0);
+
+            // Need LG specific totals for AMC conversion
+            const lgPQty = grp.pRows.reduce((s, r) => s + ((r.brand && r.brand.toUpperCase().includes('LG')) ? (r.qty || 0) : 0), 0);
+            const lgPRev = grp.pRows.reduce((s, r) => s + ((r.brand && r.brand.toUpperCase().includes('LG')) ? (r.soldPrice || 0) : 0), 0);
+            
+            // Need Samsung specific totals for Samsung conversion
+            const samsungAllowedCats = ['AC', 'MICROWAVE OVEN', 'REFRIGERATOR', 'WASHING MACHINE'];
+            const samPQty = grp.pRows.reduce((s, r) => {
+                const p = r.product ? r.product.toUpperCase().trim() : '';
+                return s + ((r.brand && r.brand.toUpperCase().includes('SAMSUNG') && samsungAllowedCats.includes(p)) ? (r.qty || 0) : 0);
+            }, 0);
+            const samPRev = grp.pRows.reduce((s, r) => {
+                const p = r.product ? r.product.toUpperCase().trim() : '';
+                return s + ((r.brand && r.brand.toUpperCase().includes('SAMSUNG') && samsungAllowedCats.includes(p)) ? (r.soldPrice || 0) : 0);
+            }, 0);
+
+            const ovOsgQtyConv = tPQty > 0 ? (tOQty / tPQty) * 100 : 0;
+            const ovOsgValConv = tPRev > 0 ? (tORev / tPRev) * 100 : 0;
+            const ovAmcQtyConv = lgPQty > 0 ? (tAQty / lgPQty) * 100 : 0;
+            const ovAmcValConv = lgPRev > 0 ? (tARev / lgPRev) * 100 : 0;
+            const ovSamQtyConv = samPQty > 0 ? (tSQty / samPQty) * 100 : 0;
+            const ovSamValConv = samPRev > 0 ? (tSRev / samPRev) * 100 : 0;
+
+            // Product level calculations
+            const pCounts = {}, oCounts = {}, aCounts = {}, sCounts = {};
+            const pRevs = {}, oRevs = {};
+            
+            grp.pRows.forEach(r => {
+                const p = r.product || 'Unknown';
+                pCounts[p] = (pCounts[p] || 0) + (r.qty || 0);
+                pRevs[p] = (pRevs[p] || 0) + (r.soldPrice || 0);
+            });
+            grp.oRows.forEach(r => {
+                const p = r.product || 'Unknown';
+                oCounts[p] = (oCounts[p] || 0) + (r.qty || 0);
+                oRevs[p] = (oRevs[p] || 0) + (r.soldPrice || 0);
+            });
+            grp.aRows.forEach(r => {
+                const p = r.product || 'Unknown';
+                aCounts[p] = (aCounts[p] || 0) + (r.qty || 0);
+            });
+            grp.sRows.forEach(r => {
+                const p = r.product || 'Unknown';
+                sCounts[p] = (sCounts[p] || 0) + (r.qty || 0);
+            });
+
+            const allProds = Array.from(new Set([...Object.keys(pCounts), ...Object.keys(oCounts), ...Object.keys(aCounts), ...Object.keys(sCounts)]));
+            allProds.sort((a,b) => (pCounts[b]||0) - (pCounts[a]||0));
+
+            allProds.forEach((prodName, pIdx) => {
+                const pQ = pCounts[prodName] || 0;
+                const oQ = oCounts[prodName] || 0;
+                const aQ = aCounts[prodName] || 0;
+                const sQ = sCounts[prodName] || 0;
+                const pR = pRevs[prodName] || 0;
+                const oR = oRevs[prodName] || 0;
+                
+                const pOsgQtyConv = pQ > 0 ? (oQ / pQ) * 100 : 0;
+                const pOsgValConv = pR > 0 ? (oR / pR) * 100 : 0;
+
+                const isFirst = pIdx === 0;
+
+                aoa1.push([
+                    isFirst ? grp.bdm : '',
+                    isFirst ? grp.branch : '',
+                    prodName,
+                    pQ, oQ, aQ, sQ,
+                    parseFloat(pOsgQtyConv.toFixed(2)),
+                    parseFloat(pOsgValConv.toFixed(2)),
+                    isFirst ? parseFloat(ovOsgQtyConv.toFixed(2)) : '',
+                    isFirst ? parseFloat(ovOsgValConv.toFixed(2)) : '',
+                    isFirst ? parseFloat(ovAmcQtyConv.toFixed(2)) : '',
+                    isFirst ? parseFloat(ovAmcValConv.toFixed(2)) : '',
+                    isFirst ? parseFloat(ovSamQtyConv.toFixed(2)) : '',
+                    isFirst ? parseFloat(ovSamValConv.toFixed(2)) : ''
+                ]);
+            });
+
+            // Push merges for this group
+            const numProds = allProds.length;
+            if (numProds > 1) {
+                // Determine if BDM should merge (if previous branch had same BDM)
+                const isLastGrp = grpIdx === branchStats.length - 1;
+                const nextGrp = isLastGrp ? null : branchStats[grpIdx + 1];
+                
+                if (isLastGrp || nextGrp.bdm !== grp.bdm) {
+                    merges1.push({ s: { r: bdmStart, c: 0 }, e: { r: bdmStart + numProds - 1, c: 0 } }); // BDM
+                    bdmStart += numProds;
+                } else {
+                    // It will continue to the next branch
+                    // wait, we only push merge when the BDM changes.
+                    // Let's refactor merge logic to process at the end to be perfectly accurate
+                }
+            }
+        });
+
+        // Refactored Merge Logic for Sheet 1
+        const finalMerges1 = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 14 } }]; // Title merge
+        let mBdmStart = 2, mBranchStart = 2;
+        
+        for (let i = 2; i <= aoa1.length; i++) {
+            const isLast = i === aoa1.length;
+            const row = isLast ? [] : aoa1[i];
+            const prevRow = aoa1[i-1];
+            
+            // Branch & Overall Columns Merge (1, 9, 10, 11, 12, 13, 14)
+            if (isLast || (row[1] !== '' && row[1] !== prevRow[1])) {
+                if (i - 1 > mBranchStart) {
+                    finalMerges1.push({ s: { r: mBranchStart, c: 1 }, e: { r: i - 1, c: 1 } });
+                    [9, 10, 11, 12, 13, 14].forEach(colIdx => {
+                        finalMerges1.push({ s: { r: mBranchStart, c: colIdx }, e: { r: i - 1, c: colIdx } });
+                    });
+                }
+                mBranchStart = i;
+            }
+            
+            // BDM (0)
+            if (isLast || (row[0] !== '' && row[0] !== prevRow[0])) {
+                if (i - 1 > mBdmStart) {
+                    finalMerges1.push({ s: { r: mBdmStart, c: 0 }, e: { r: i - 1, c: 0 } });
+                }
+                mBdmStart = i;
+            }
+        }
+
+        // --------------------------------------------------------------------------------
+        // DATA PROCESSING FOR SHEET 2: FUTURE_STAFF_OVERVIEW (Grouped by BDM -> Branch -> Staff)
+        // --------------------------------------------------------------------------------
+        
+        const allStats = buildFutureStaffStats();
+        const filteredStats = allStats
             .filter(s => !selRBM || s.rbm === selRBM)
             .filter(s => !selBDM || s.bdm === selBDM)
             .filter(s => !selBranch || s.branch === selBranch)
             .sort((a, b) => (a.branch||'').localeCompare(b.branch||'') || (a.bdm||'').localeCompare(b.bdm||'') || (a.name||'').localeCompare(b.name||''));
-        
-        if (filtered.length === 0) return;
 
-        const hdr = ['BRANCH', 'BDM', 'Staff', 'Product', 'Product Qty', 'OSG Qty', 'AMC Qty', 'SAMSUNG Qty', 'Osg Qty Conv%', 'Osg Val Conv%'];
-        const aoa = [hdr];
+        const hdr2 = ['BRANCH', 'BDM', 'Staff', 'Product', 'Product Qty', 'OSG Qty', 'AMC Qty', 'SAMSUNG Qty', 'Osg Qty Conv%', 'Osg Val Conv%'];
+        const aoa2 = [hdr2];
 
-        filtered.forEach(e => {
+        filteredStats.forEach(e => {
             if (e.products && e.products.length > 0) {
                 e.products.forEach(prod => {
-                    aoa.push([
+                    aoa2.push([
                         e.branch || 'Unknown',
                         e.bdm || 'Unknown',
                         e.name || 'Unknown',
@@ -2811,64 +3002,37 @@
             }
         });
 
+        // --------------------------------------------------------------------------------
+        // WRITE TO EXCEL
+        // --------------------------------------------------------------------------------
+        
         const wb = XLSX.utils.book_new();
 
-        // --- SHEET 1: Merged UI (Like Photo 1) ---
-        const aoaMerged = [];
-        const merges1 = [];
-        let bStart = 1, bdmStart = 1, sStart = 1;
+        // Add Sheet 1
+        const ws1 = XLSX.utils.aoa_to_sheet(aoa1);
+        ws1['!merges'] = finalMerges1;
+        ws1['!cols'] = [{wch:15}, {wch:22}, {wch:20}, {wch:12}, {wch:10}, {wch:12}, {wch:14}, {wch:14}, {wch:14}, {wch:24}, {wch:24}, {wch:28}, {wch:28}, {wch:28}, {wch:28}];
+        
+        // Add Sheet 2
+        const ws2 = XLSX.utils.aoa_to_sheet(aoa2);
+        ws2['!cols'] = [{wch:22}, {wch:15}, {wch:20}, {wch:25}, {wch:12}, {wch:10}, {wch:10}, {wch:14}, {wch:16}, {wch:16}];
 
-        aoa.forEach((row, i) => {
-            if (i === 0) { aoaMerged.push([...row]); return; }
-            const prevRow = aoa[i-1];
-            const isLast = i === aoa.length - 1;
-            
-            let r0 = row[0], r1 = row[1], r2 = row[2];
-            
-            // Check boundaries to create merges
-            // Branch (Col 0)
-            if (isLast || (i < aoa.length - 1 && aoa[i+1][0] !== row[0])) {
-                if (i > bStart) merges1.push({ s: { r: bStart, c: 0 }, e: { r: i, c: 0 } });
-                bStart = i + 1;
-            }
-            if (i > 1 && row[0] === prevRow[0]) r0 = '';
-            
-            // BDM (Col 1)
-            if (isLast || (i < aoa.length - 1 && (aoa[i+1][0] !== row[0] || aoa[i+1][1] !== row[1]))) {
-                if (i > bdmStart) merges1.push({ s: { r: bdmStart, c: 1 }, e: { r: i, c: 1 } });
-                bdmStart = i + 1;
-            }
-            if (i > 1 && row[0] === prevRow[0] && row[1] === prevRow[1]) r1 = '';
-            
-            // Staff (Col 2)
-            if (isLast || (i < aoa.length - 1 && (aoa[i+1][0] !== row[0] || aoa[i+1][1] !== row[1] || aoa[i+1][2] !== row[2]))) {
-                if (i > sStart) merges1.push({ s: { r: sStart, c: 2 }, e: { r: i, c: 2 } });
-                sStart = i + 1;
-            }
-            if (i > 1 && row[0] === prevRow[0] && row[1] === prevRow[1] && row[2] === prevRow[2]) r2 = '';
-
-            aoaMerged.push([r0, r1, r2, row[3], row[4], row[5], row[6], row[7], row[8], row[9]]);
-        });
-
-        const ws1 = XLSX.utils.aoa_to_sheet(aoaMerged);
-        ws1['!merges'] = merges1;
-        ws1['!cols'] = [{ wch: 22 }, { wch: 15 }, { wch: 20 }, { wch: 25 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 14 }, { wch: 16 }, { wch: 16 }];
-        XLSX.utils.book_append_sheet(wb, ws1, 'Merged View');
-
-        // --- SHEET 2: Unmerged UI (Like Photo 2) ---
-        const ws2 = XLSX.utils.aoa_to_sheet(aoa);
-        ws2['!cols'] = [{ wch: 22 }, { wch: 15 }, { wch: 20 }, { wch: 25 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 14 }, { wch: 16 }, { wch: 16 }];
-        XLSX.utils.book_append_sheet(wb, ws2, 'Flat View');
-
-        // Force numeric types for export columns (Cols 4 to 9)
-        for (let r = 1; r < aoa.length; r++) {
-            for (let c = 4; c <= 9; c++) {
-                [ws1, ws2].forEach(ws => {
-                    const cell = ws[XLSX.utils.encode_cell({ r, c })];
-                    if (cell) cell.t = 'n';
-                });
-            }
+        // Force numeric types for calculations
+        for (let r = 2; r < aoa1.length; r++) {
+            [3,4,5,6,7,8,9,10,11,12,13,14].forEach(c => {
+                const cell = ws1[XLSX.utils.encode_cell({ r, c })];
+                if (cell && cell.v !== '') cell.t = 'n';
+            });
         }
+        for (let r = 1; r < aoa2.length; r++) {
+            [4,5,6,7,8,9].forEach(c => {
+                const cell = ws2[XLSX.utils.encode_cell({ r, c })];
+                if (cell) cell.t = 'n';
+            });
+        }
+
+        XLSX.utils.book_append_sheet(wb, ws1, 'Future_Stores_Overview');
+        XLSX.utils.book_append_sheet(wb, ws2, 'Future_Staff_Overview');
 
         XLSX.writeFile(wb, 'Future_Stores_Report.xlsx');
     }
