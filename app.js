@@ -2985,34 +2985,52 @@
 
         [ws1, ws2].forEach(ws => {
             const range = XLSX.utils.decode_range(ws['!ref']);
+            const keyCol = (ws === ws1) ? 1 : 2; // Toggle color by Branch for ws1, by Staff for ws2
+            let isAlt = false;
+            let lastKey = null;
+
+            // Set row heights
+            if (!ws['!rows']) ws['!rows'] = [];
+
             for (let R = range.s.r; R <= range.e.r; R++) {
-                // Determine if it's an alternate row (based on branch grouping to look nice)
-                let style = R % 2 === 0 ? rowStyleAlt : rowStyle;
+                ws['!rows'][R] = { hpt: (R === 0 || R === 1) ? 25 : 20 };
+
+                // Header rows
+                if (R === 0 || (ws === ws1 && R === 1)) {
+                    for (let C = range.s.c; C <= range.e.c; C++) {
+                        const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+                        if (!ws[cellRef]) ws[cellRef] = { t: 's', v: '' };
+                        ws[cellRef].s = headerStyle;
+                    }
+                    continue;
+                }
+
+                // Check key column to toggle color
+                const keyCellRef = XLSX.utils.encode_cell({ r: R, c: keyCol });
+                const currentKey = ws[keyCellRef] ? ws[keyCellRef].v : '';
+                
+                // Toggle if we hit a new group (ignore empty cells from merges)
+                if (currentKey !== '' && currentKey !== lastKey) {
+                    isAlt = !isAlt;
+                    lastKey = currentKey;
+                }
+                
+                let style = isAlt ? rowStyleAlt : rowStyle;
                 
                 for (let C = range.s.c; C <= range.e.c; C++) {
                     const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
-                    if (!ws[cellRef]) ws[cellRef] = { t: 's', v: '' }; // Ensure cell exists
+                    if (!ws[cellRef]) ws[cellRef] = { t: 's', v: '' };
                     
-                    if (R === 0 || (ws === ws1 && R === 1)) {
-                        ws[cellRef].s = headerStyle;
-                    } else {
-                        ws[cellRef].s = { ...style };
-                        // Center align numbers
-                        if (ws[cellRef].t === 'n') {
-                            ws[cellRef].s = { ...style, ...numStyle };
-                        }
-                        // Center align text for BDM, Branch, Staff
-                        if (C <= 2) {
-                            ws[cellRef].s = { ...style, alignment: { horizontal: "center", vertical: "center" } };
-                        }
+                    ws[cellRef].s = { ...style };
+                    // Center align numbers
+                    if (ws[cellRef].t === 'n') {
+                        ws[cellRef].s = { ...style, ...numStyle };
+                    }
+                    // Center align text for BDM, Branch, Staff
+                    if (C <= 2) {
+                        ws[cellRef].s = { ...style, alignment: { horizontal: "center", vertical: "center" } };
                     }
                 }
-            }
-            
-            // Set row heights
-            if (!ws['!rows']) ws['!rows'] = [];
-            for (let R = range.s.r; R <= range.e.r; R++) {
-                ws['!rows'][R] = { hpt: (R === 0 || R === 1) ? 25 : 20 };
             }
         });
         
