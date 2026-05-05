@@ -46,7 +46,17 @@
                 if (loadingOverlay) loadingOverlay.style.display = 'none';
                 const data = snap.val();
                 if (data) {
-                    window.sharedMissedUnique = data.missedUnique || [];
+                    if (data.compressedData) {
+                        try {
+                            const decompressed = LZString.decompressFromUTF16(data.compressedData);
+                            window.sharedMissedUnique = JSON.parse(decompressed) || [];
+                        } catch(e) {
+                            console.error("Failed to decompress shared data:", e);
+                            window.sharedMissedUnique = [];
+                        }
+                    } else {
+                        window.sharedMissedUnique = data.missedUnique || [];
+                    }
                     // Do NOT set isAuthenticated=true ” keep all other pages locked
                     document.querySelector('[data-section="customers-osg-section"]').click();
                 } else {
@@ -520,7 +530,9 @@
         showLoading(true);
         try {
             const shareRef = firebase.database().ref('shares').push();
-            shareRef.set({ missedUnique: payload, timestamp: Date.now() })
+            const compressed = LZString.compressToUTF16(JSON.stringify(payload));
+            console.log("Compressed share payload from ~" + JSON.stringify(payload).length + " bytes to " + compressed.length + " bytes");
+            shareRef.set({ compressedData: compressed, timestamp: Date.now() })
                 .then(() => {
                     showLoading(false);
                     const base = window.location.protocol === 'file:' ? 'https://officialacc2625-web.github.io/rahul/' : window.location.origin + window.location.pathname;
