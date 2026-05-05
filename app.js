@@ -454,7 +454,7 @@
                               cancelledInv.add(nr.invoice);
                           }
                       });
-                      productData = productData.filter(r => !cancelledInv.has(r.invoice));
+                      productData = productData.filter(r => !cancelledInv.has(r.invoice) && (r.qty || 0) > 0);
 
                     allData = [...productData, ...amcData];
 
@@ -563,7 +563,7 @@
             r.soldPrice = num(getVal(row, mapping.soldPrice, 0));
             r.taxableVal = num(getVal(row, mapping.taxableVal, 0));
             r.tax = num(getVal(row, mapping.tax, 0));
-            r.qty = num(getVal(row, mapping.qty, 1)) || 1;
+            r.qty = num(getVal(row, mapping.qty, 0));
             r.discount = num(getVal(row, mapping.discount, 0));
             r.indDiscount = num(getVal(row, mapping.indDiscount, 0));
             r.dbdCharge = num(getVal(row, mapping.dbdCharge, 0));
@@ -589,7 +589,7 @@
             r.category = strVal(row, mapping.category);
             r.brand = strVal(row, mapping.brand);
             r.soldPrice = num(getVal(row, mapping.soldPrice, 0));
-            r.qty = num(getVal(row, mapping.qty, 1)) || 1;
+            r.qty = num(getVal(row, mapping.qty, 0));
             r.invoice = strVal(row, mapping.invoice);
             return r;
         });
