@@ -2613,77 +2613,6 @@
         setTimeout(renderFutureStoresPage, 50);
     });
 
-    function buildFutureStaffStats() {
-        // Only include product rows whose branch contains "FUTURE" (case-insensitive)
-        const futureProduct = productData.filter(r => r.branch && r.branch.toUpperCase().includes('FUTURE'));
-
-        // Build invoice â†’ staff lookup from future product data
-        const invoiceStaff = {};
-        futureProduct.forEach(r => { if (r.invoice && r.staff) invoiceStaff[r.invoice] = r.staff; });
-
-        // Group product data by staff
-        const pByStaff = {};
-        futureProduct.forEach(r => {
-            const s = r.staff || 'Unknown';
-            if (!pByStaff[s]) pByStaff[s] = { branch: r.branch, rbm: r.rbm, bdm: r.bdm, rows: [] };
-            pByStaff[s].rows.push(r);
-        });
-
-        // Group OSG data by staff via invoice mapping (only future-related invoices)
-        const oByStaff = {};
-        osgData.forEach(r => {
-            const s = r.invoice ? (invoiceStaff[r.invoice] || null) : null;
-            if (!s) return;
-            if (!oByStaff[s]) oByStaff[s] = [];
-            oByStaff[s].push(r);
-        });
-
-        const allStaff = new Set([...Object.keys(pByStaff), ...Object.keys(oByStaff)]);
-        allStaff.delete('Unknown');
-
-        return Array.from(allStaff).map(name => {
-            const pInfo = pByStaff[name] || { branch: '', rbm: '', bdm: '', rows: [] };
-            const oRows = oByStaff[name] || [];
-            const pQty = pInfo.rows.reduce((s, r) => s + r.qty, 0);
-            const oQty = oRows.reduce((s, r) => s + r.qty, 0);
-            const pRev = pInfo.rows.reduce((s, r) => s + r.soldPrice, 0);
-            const oRev = oRows.reduce((s, r) => s + r.soldPrice, 0);
-            const qtyConv = pQty > 0 ? (oQty / pQty) * 100 : 0;
-            const valConv = pRev > 0 ? (oRev / pRev) * 100 : 0;
-            
-            const prodCounts = {};
-            const prodRev = {};
-            pInfo.rows.forEach(r => {
-                const p = r.product || 'Unknown';
-                prodCounts[p] = (prodCounts[p] || 0) + (r.qty || 0);
-                prodRev[p]    = (prodRev[p] || 0) + (r.soldPrice || 0);
-            });
-            const oProdCounts = {};
-            const oProdRev = {};
-            oRows.forEach(r => {
-                const p = r.product || 'Unknown';
-                oProdCounts[p] = (oProdCounts[p] || 0) + (r.qty || 0);
-                oProdRev[p]    = (oProdRev[p] || 0) + (r.soldPrice || 0);
-            });
-            const allProds = new Set([...Object.keys(prodCounts), ...Object.keys(oProdCounts)]);
-            const products = Array.from(allProds).map(p => {
-                const q = prodCounts[p] || 0;
-                const oQ = oProdCounts[p] || 0;
-                const r = prodRev[p] || 0;
-                const oR = oProdRev[p] || 0;
-                return {
-                    name: p,
-                    qty: q,
-                    osgQty: oQ,
-                    qtyConv: q > 0 ? (oQ / q) * 100 : 0,
-                    valConv: r > 0 ? (oR / r) * 100 : 0
-                };
-            }).sort((a,b) => b.qty - a.qty);
-
-            return { name, branch: pInfo.branch, rbm: pInfo.rbm, bdm: pInfo.bdm, pQty, oQty, pRev, oRev, qtyConv, valConv, products };
-        });
-    }
-
     function renderFutureStoresPage() {
         if (productData.length === 0) {
             $('fsTableWrapper').innerHTML = noDataHTML('Upload data and generate reports first.');
@@ -3034,8 +2963,62 @@
         XLSX.utils.book_append_sheet(wb, ws1, 'Future_Stores_Overview');
         XLSX.utils.book_append_sheet(wb, ws2, 'Future_Staff_Overview');
 
+
+        // Apply beautiful styles using xlsx-js-style
+        const headerStyle = {
+            fill: { fgColor: { rgb: "0F243E" } }, // Dark blue
+            font: { color: { rgb: "FFFFFF" }, bold: true, sz: 11 },
+            alignment: { horizontal: "center", vertical: "center", wrapText: true },
+            border: { top: {style:'thin', color:{rgb:'334155'}}, bottom: {style:'thin', color:{rgb:'334155'}} }
+        };
+        const rowStyleAlt = {
+            fill: { fgColor: { rgb: "E2E8F0" } }, // Light blue/gray
+            font: { color: { rgb: "0F172A" }, sz: 10 },
+            alignment: { vertical: "center" }
+        };
+        const rowStyle = {
+            fill: { fgColor: { rgb: "F8FAFC" } }, // Lighter
+            font: { color: { rgb: "0F172A" }, sz: 10 },
+            alignment: { vertical: "center" }
+        };
+        const numStyle = { alignment: { horizontal: "center", vertical: "center" } };
+
+        [ws1, ws2].forEach(ws => {
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            for (let R = range.s.r; R <= range.e.r; R++) {
+                // Determine if it's an alternate row (based on branch grouping to look nice)
+                let style = R % 2 === 0 ? rowStyleAlt : rowStyle;
+                
+                for (let C = range.s.c; C <= range.e.c; C++) {
+                    const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+                    if (!ws[cellRef]) ws[cellRef] = { t: 's', v: '' }; // Ensure cell exists
+                    
+                    if (R === 0 || (ws === ws1 && R === 1)) {
+                        ws[cellRef].s = headerStyle;
+                    } else {
+                        ws[cellRef].s = { ...style };
+                        // Center align numbers
+                        if (ws[cellRef].t === 'n') {
+                            ws[cellRef].s = { ...style, ...numStyle };
+                        }
+                        // Center align text for BDM, Branch, Staff
+                        if (C <= 2) {
+                            ws[cellRef].s = { ...style, alignment: { horizontal: "center", vertical: "center" } };
+                        }
+                    }
+                }
+            }
+            
+            // Set row heights
+            if (!ws['!rows']) ws['!rows'] = [];
+            for (let R = range.s.r; R <= range.e.r; R++) {
+                ws['!rows'][R] = { hpt: (R === 0 || R === 1) ? 25 : 20 };
+            }
+        });
+        
         XLSX.writeFile(wb, 'Future_Stores_Report.xlsx');
     }
+
 
     // ---- PRODUCT DETAILS PAGE ----
     $('btnPDRefresh').addEventListener('click', renderProductDetailsPage);
