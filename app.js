@@ -2589,131 +2589,77 @@
             'Called':         { bg: '#e0e7ff', color: '#3730a3', border: '#a5b4fc' },
         };
 
-        // Build professional table
+        // Build professional pivoted table
         const cellBorder = '1px solid #334155';
         let grandCount = 0, grandValue = 0;
+        
+        const cols = ['Connected', 'Disconnected', 'Not Connected', 'Interested', 'Not Interested', 'Follow-up', 'Bought'];
 
         let html = `
         <div style="overflow-x:auto; border-radius:12px; border:2px solid #334155; box-shadow:0 4px 24px rgba(0,0,0,0.3);">
-        <table id="wosgReportTable" style="width:100%;border-collapse:collapse;font-family:'Inter',sans-serif;font-size:0.88rem;background:var(--bg-card);">
-        <!-- Title Row -->
+        <table id="wosgReportTable" style="width:100%;border-collapse:collapse;font-family:'Inter',sans-serif;font-size:0.88rem;background:var(--bg-card);text-align:center;">
         <thead>
-        <tr><td colspan="4" style="
+        <tr><td colspan="${cols.length + 3}" style="
             background:linear-gradient(135deg,#f59e0b,#ea580c);
             color:#fff; font-size:1.1rem; font-weight:800;
             text-align:center; padding:16px 10px;
             letter-spacing:1px; text-transform:uppercase;
             border-bottom:3px solid #c2410c;
         ">WITHOUT OSG CALLER REPORT &mdash; ${dateStr}</td></tr>
-        <!-- Column Headers -->
         <tr style="background:#0f172a;">
-            <th style="padding:12px 18px;text-align:left;color:#f97316;font-weight:700;font-size:0.82rem;letter-spacing:1px;text-transform:uppercase;border:${cellBorder};width:160px;">CALLER</th>
-            <th style="padding:12px 18px;text-align:left;color:#f97316;font-weight:700;font-size:0.82rem;letter-spacing:1px;text-transform:uppercase;border:${cellBorder};">STATUS</th>
-            <th style="padding:12px 18px;text-align:right;color:#f97316;font-weight:700;font-size:0.82rem;letter-spacing:1px;text-transform:uppercase;border:${cellBorder};width:130px;">VALUE</th>
-            <th style="padding:12px 18px;text-align:center;color:#f97316;font-weight:700;font-size:0.82rem;letter-spacing:1px;text-transform:uppercase;border:${cellBorder};width:90px;">COUNT</th>
+            <th style="padding:12px 14px;text-align:left;color:#f97316;font-weight:700;font-size:0.75rem;letter-spacing:1px;text-transform:uppercase;border:${cellBorder};width:140px;">CALLER</th>
+            ${cols.map(c => `<th style="padding:12px 6px;color:#f97316;font-weight:700;font-size:0.75rem;letter-spacing:1px;text-transform:uppercase;border:${cellBorder};">${c}</th>`).join('')}
+            <th style="padding:12px 10px;text-align:right;color:#f97316;font-weight:700;font-size:0.75rem;letter-spacing:1px;text-transform:uppercase;border:${cellBorder};">TOTAL VAL</th>
+            <th style="padding:12px 10px;color:#f97316;font-weight:700;font-size:0.75rem;letter-spacing:1px;text-transform:uppercase;border:${cellBorder};">TOTAL CNT</th>
         </tr>
         </thead>
         <tbody>`;
 
+        let colTotals = {};
+        cols.forEach(c => colTotals[c] = 0);
+
         callers.forEach((callerName, ci) => {
             const cd = callerData[callerName];
             const callerCfg = CO_CALLERS.find(c => c.name === callerName) || { color:'#f97316', bg:'rgba(249,115,22,0.15)' };
+            const rowBg = ci % 2 === 0 ? '#0f172a' : '#1e293b';
 
-            const rows = cd.rows.length > 0 ? cd.rows : [{ status: 'No calls logged', count: 0, value: 0 }];
-            const rowCount = rows.length + 1; // +1 for subtotal
+            let counts = {};
+            cd.rows.forEach(r => counts[r.status] = r.count);
 
-            rows.forEach((st, si) => {
-                const sc = sColors[st.status] || { bg:'#1e293b', color:'#94a3b8', border:'#475569' };
-                const isNoCall = st.status === 'No calls logged';
-                const rowBg = ci % 2 === 0 ? '#0f172a' : '#1e293b';
-
-                html += '<tr style="background:' + rowBg + ';">';
-
-                // Caller cell (only first row, rowspan)
-                if (si === 0) {
-                    html += '<td rowspan="' + rowCount + '" style="' +
-                        'padding:16px 14px;border:' + cellBorder + ';vertical-align:middle;text-align:center;' +
-                        'background:' + callerCfg.bg + ';border-left:4px solid ' + callerCfg.color + ';">' +
-                        '<div style="width:38px;height:38px;border-radius:50%;background:' + callerCfg.color +
-                        ';color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:800;margin:0 auto 6px;">' +
-                        callerName[0] + '</div>' +
-                        '<div style="font-weight:700;font-size:0.88rem;color:' + callerCfg.color + ';">' + callerName + '</div></td>';
-                }
-
-                // Status cell
-                if (isNoCall) {
-                    html += '<td style="padding:10px 18px;border:' + cellBorder + ';color:#64748b;font-style:italic;">&#8212; No calls logged &#8212;</td>';
-                } else {
-                    html += '<td style="padding:10px 18px;border:' + cellBorder + ';">' +
-                        '<span style="display:inline-block;padding:4px 14px;border-radius:6px;font-weight:700;font-size:0.82rem;' +
-                        'background:' + sc.bg + ';color:' + sc.color + ';border:1px solid ' + sc.border + ';">' +
-                        st.status + '</span></td>';
-                }
-
-                // Value cell
-                html += '<td style="padding:10px 18px;border:' + cellBorder + ';text-align:right;font-weight:700;color:#e2e8f0;font-family:\'JetBrains Mono\',monospace;font-size:0.9rem;">' +
-                    (st.value > 0 ? fmtShort(st.value) : '&#8212;') + '</td>';
-
-                // Count cell
-                html += '<td style="padding:10px 18px;border:' + cellBorder + ';text-align:center;font-weight:800;color:#e2e8f0;font-size:0.95rem;">' +
-                    (st.count > 0 ? st.count : '&#8212;') + '</td>';
-
-                html += '</tr>';
-            });
-
-            // Subtotal row
             grandCount += cd.totalCount;
             grandValue += cd.totalValue;
-            html += '<tr style="background:' + callerCfg.bg + ';border-bottom:2px solid ' + callerCfg.color + ';">' +
-                '<td style="padding:11px 18px;border:' + cellBorder + ';font-weight:800;color:' + callerCfg.color + ';font-size:0.82rem;letter-spacing:0.5px;">SUBTOTAL</td>' +
-                '<td style="padding:11px 18px;border:' + cellBorder + ';text-align:right;font-weight:800;color:' + callerCfg.color + ';font-family:\'JetBrains Mono\',monospace;font-size:0.9rem;">' + fmtShort(cd.totalValue) + '</td>' +
-                '<td style="padding:11px 18px;border:' + cellBorder + ';text-align:center;font-weight:800;color:' + callerCfg.color + ';font-size:1rem;">' + cd.totalCount + '</td>' +
-                '</tr>';
+
+            html += `<tr style="background:${rowBg}; transition:background 0.2s;" onmouseover="this.style.background='rgba(249,115,22,0.1)';" onmouseout="this.style.background='${rowBg}';">`;
+            html += `<td style="padding:12px 14px;border:${cellBorder};vertical-align:middle;text-align:left;background:${callerCfg.bg};border-left:4px solid ${callerCfg.color};">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="width:28px;height:28px;border-radius:50%;background:${callerCfg.color};color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.9rem;font-weight:800;flex-shrink:0;">${callerName[0]}</div>
+                    <div style="font-weight:700;font-size:0.85rem;color:${callerCfg.color};">${callerName}</div>
+                </div>
+            </td>`;
+
+            cols.forEach(c => {
+                const cnt = counts[c] || 0;
+                colTotals[c] += cnt;
+                html += `<td style="padding:12px 6px;border:${cellBorder};font-weight:${cnt > 0 ? '700' : '500'};color:${cnt > 0 ? '#e2e8f0' : '#475569'};font-size:0.9rem;">${cnt > 0 ? cnt : '-'}</td>`;
+            });
+
+            html += `<td style="padding:12px 10px;border:${cellBorder};text-align:right;font-weight:800;color:${callerCfg.color};font-family:'JetBrains Mono',monospace;font-size:0.9rem;">${fmtShort(cd.totalValue)}</td>`;
+            html += `<td style="padding:12px 10px;border:${cellBorder};font-weight:800;color:${callerCfg.color};font-size:0.95rem;">${cd.totalCount}</td>`;
+            html += `</tr>`;
         });
 
-        // Grand Total
-        html += '<tr style="background:linear-gradient(135deg,#ea580c,#dc2626);">' +
-            '<td colspan="2" style="padding:14px 18px;font-weight:800;color:#fff;font-size:0.95rem;letter-spacing:1px;text-transform:uppercase;border:1px solid rgba(255,255,255,0.15);">GRAND TOTAL</td>' +
-            '<td style="padding:14px 18px;text-align:right;font-weight:800;color:#fff;font-size:1.05rem;font-family:\'JetBrains Mono\',monospace;border:1px solid rgba(255,255,255,0.15);">' + fmtShort(grandValue) + '</td>' +
-            '<td style="padding:14px 18px;text-align:center;font-weight:800;color:#fff;font-size:1.1rem;border:1px solid rgba(255,255,255,0.15);">' + grandCount + '</td>' +
-            '</tr>';
+        html += `<tr style="background:linear-gradient(135deg,#ea580c,#dc2626);">
+            <td style="padding:14px 14px;font-weight:800;color:#fff;font-size:0.85rem;letter-spacing:1px;text-transform:uppercase;border:1px solid rgba(255,255,255,0.15);text-align:left;">GRAND TOTAL</td>`;
+        
+        cols.forEach(c => {
+            html += `<td style="padding:14px 6px;font-weight:800;color:#fff;font-size:0.95rem;border:1px solid rgba(255,255,255,0.15);">${colTotals[c] > 0 ? colTotals[c] : '-'}</td>`;
+        });
+
+        html += `<td style="padding:14px 10px;text-align:right;font-weight:800;color:#fff;font-size:1rem;font-family:'JetBrains Mono',monospace;border:1px solid rgba(255,255,255,0.15);">${fmtShort(grandValue)}</td>
+            <td style="padding:14px 10px;font-weight:800;color:#fff;font-size:1.1rem;border:1px solid rgba(255,255,255,0.15);">${grandCount}</td>
+            </tr>`;
 
         html += '</tbody></table></div>';
-
-        // Summary KPIs above the table
-        const notCalled = allMissed.length - grandCount;
-        
-        // Dropdown HTML
-        let dropdownHtml = `
-        <div style="margin-bottom:20px;display:flex;align-items:center;gap:12px;">
-            <label style="font-weight:700;color:var(--text-primary);">Filter by Caller:</label>
-            <select onchange="window._wosgCallerFilter = this.value; renderWosgDashboard();" style="padding:8px 14px; border-radius:8px; border:1px solid #334155; background:#1e293b; color:#fff; font-family:inherit; font-size:0.9rem; min-width:200px;">
-                <option value="">All Callers</option>
-                ${allCallers.map(c => `<option value="${c}" ${c === selectedCaller ? 'selected' : ''}>${c}</option>`).join('')}
-            </select>
-        </div>`;
-
-        const kpiHtml = `
-        ${dropdownHtml}
-        <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:24px;">
-            <div style="flex:1;min-width:140px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;border-top:3px solid #f97316;">
-                <div style="font-size:1.8rem;font-weight:800;color:#f97316;">${allMissed.length.toLocaleString()}</div>
-                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:3px;">Total Without OSG</div>
-            </div>
-            <div style="flex:1;min-width:140px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;border-top:3px solid #2563eb;">
-                <div style="font-size:1.8rem;font-weight:800;color:#2563eb;">${grandCount.toLocaleString()}</div>
-                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:3px;">Total Calls Made</div>
-            </div>
-            <div style="flex:1;min-width:140px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;border-top:3px solid #64748b;">
-                <div style="font-size:1.8rem;font-weight:800;color:#94a3b8;">${notCalled.toLocaleString()}</div>
-                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:3px;">Not Yet Called</div>
-            </div>
-            <div style="flex:1;min-width:140px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;border-top:3px solid #16a34a;">
-                <div style="font-size:1.8rem;font-weight:800;color:#16a34a;">${fmtShort(grandValue)}</div>
-                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:3px;">Total Called Value</div>
-            </div>
-        </div>`;
-
         container.innerHTML = kpiHtml + html;
     }
 
@@ -2911,30 +2857,18 @@
         const today = new Date();
         const dateStr = String(today.getDate()).padStart(2,'0') + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + today.getFullYear();
 
-        const sColors = {
-            'Connected':      { bg: '#dbeafe', color: '#1e40af', border: '#93c5fd' },
-            'Disconnected':   { bg: '#f3e8ff', color: '#6b21a8', border: '#c4b5fd' },
-            'Not Connected':  { bg: '#f1f5f9', color: '#475569', border: '#cbd5e1' },
-            'Interested':     { bg: '#dcfce7', color: '#166534', border: '#86efac' },
-            'Not Interested': { bg: '#fee2e2', color: '#991b1b', border: '#fca5a5' },
-            'Follow-up':      { bg: '#fef3c7', color: '#92400e', border: '#fcd34d' },
-            'Bought':         { bg: '#d1fae5', color: '#065f46', border: '#6ee7b7' },
-            'Not Called':     { bg: '#e0e7ff', color: '#3730a3', border: '#a5b4fc' },
-        };
-
-        const statusOrder = ['Connected', 'Disconnected', 'Not Connected', 'Interested', 'Not Interested', 'Follow-up', 'Bought', 'Not Called'];
-        dataArr.forEach(d => {
-            d.rows.sort((a, b) => statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status));
-        });
+        const cols = ['Connected', 'Disconnected', 'Not Connected', 'Interested', 'Not Interested', 'Follow-up', 'Bought', 'Not Called'];
 
         const cellBorder = '1px solid #334155';
         let grandCount = 0, grandValue = 0;
+        let colTotals = {};
+        cols.forEach(c => colTotals[c] = 0);
 
         let html = `
         <div style="overflow-x:auto; border-radius:12px; border:2px solid #334155; box-shadow:0 4px 24px rgba(0,0,0,0.3);">
-        <table id="wosgReportTable" style="width:100%;border-collapse:collapse;font-family:'Inter',sans-serif;font-size:0.88rem;background:var(--bg-card);">
+        <table id="wosgReportTable" style="width:100%;border-collapse:collapse;font-family:'Inter',sans-serif;font-size:0.88rem;background:var(--bg-card);text-align:center;">
         <thead>
-        <tr><td colspan="4" style="
+        <tr><td colspan="${cols.length + 3}" style="
             background:linear-gradient(135deg,#2563eb,#1d4ed8);
             color:#fff; font-size:1.1rem; font-weight:800;
             text-align:center; padding:16px 10px;
@@ -2942,58 +2876,48 @@
             border-bottom:3px solid #1e3a8a;
         ">${title} &mdash; ${dateStr}</td></tr>
         <tr style="background:#0f172a;">
-            <th style="padding:12px 18px;text-align:left;color:#60a5fa;font-weight:700;font-size:0.82rem;letter-spacing:1px;text-transform:uppercase;border:${cellBorder};width:160px;">${groupColName}</th>
-            <th style="padding:12px 18px;text-align:left;color:#60a5fa;font-weight:700;font-size:0.82rem;letter-spacing:1px;text-transform:uppercase;border:${cellBorder};">STATUS</th>
-            <th style="padding:12px 18px;text-align:right;color:#60a5fa;font-weight:700;font-size:0.82rem;letter-spacing:1px;text-transform:uppercase;border:${cellBorder};width:130px;">VALUE</th>
-            <th style="padding:12px 18px;text-align:center;color:#60a5fa;font-weight:700;font-size:0.82rem;letter-spacing:1px;text-transform:uppercase;border:${cellBorder};width:90px;">COUNT</th>
+            <th style="padding:12px 14px;text-align:left;color:#60a5fa;font-weight:700;font-size:0.75rem;letter-spacing:1px;text-transform:uppercase;border:${cellBorder};width:150px;">${groupColName}</th>
+            ${cols.map(c => `<th style="padding:12px 6px;color:#60a5fa;font-weight:700;font-size:0.75rem;letter-spacing:1px;text-transform:uppercase;border:${cellBorder};">${c}</th>`).join('')}
+            <th style="padding:12px 10px;text-align:right;color:#60a5fa;font-weight:700;font-size:0.75rem;letter-spacing:1px;text-transform:uppercase;border:${cellBorder};">TOTAL VAL</th>
+            <th style="padding:12px 10px;color:#60a5fa;font-weight:700;font-size:0.75rem;letter-spacing:1px;text-transform:uppercase;border:${cellBorder};">TOTAL CNT</th>
         </tr>
         </thead>
         <tbody>`;
 
         dataArr.forEach((grp, ci) => {
-            const rows = grp.rows.length > 0 ? grp.rows : [{ status: 'No records', count: 0, value: 0 }];
-            const rowCount = rows.length + 1;
             const rowBg = ci % 2 === 0 ? '#0f172a' : '#1e293b';
-
-            rows.forEach((st, si) => {
-                const sc = sColors[st.status] || { bg:'#1e293b', color:'#94a3b8', border:'#475569' };
-                const isNoCall = st.status === 'No records';
-
-                html += '<tr style="background:' + rowBg + ';">';
-
-                if (si === 0) {
-                    html += `<td rowspan="${rowCount}" style="padding:16px 14px;border:${cellBorder};vertical-align:middle;text-align:center;background:rgba(37,99,235,0.05);border-left:4px solid #3b82f6;">
-                        <div style="font-weight:800;font-size:1rem;color:#60a5fa;">${grp.date}</div>
-                    </td>`;
-                }
-
-                if (isNoCall) {
-                    html += `<td style="padding:10px 18px;border:${cellBorder};color:#64748b;font-style:italic;">&#8212; No records &#8212;</td>`;
-                } else {
-                    html += `<td style="padding:10px 18px;border:${cellBorder};">
-                        <span style="display:inline-block;padding:4px 14px;border-radius:6px;font-weight:700;font-size:0.82rem;background:${sc.bg};color:${sc.color};border:1px solid ${sc.border};">${st.status}</span>
-                    </td>`;
-                }
-
-                html += `<td style="padding:10px 18px;border:${cellBorder};text-align:right;font-weight:700;color:#e2e8f0;font-family:'JetBrains Mono',monospace;font-size:0.9rem;">${st.value > 0 ? fmtShort(st.value) : '&#8212;'}</td>`;
-                html += `<td style="padding:10px 18px;border:${cellBorder};text-align:center;font-weight:800;color:#e2e8f0;font-size:0.95rem;">${st.count > 0 ? st.count : '&#8212;'}</td>`;
-                html += '</tr>';
-            });
+            let counts = {};
+            grp.rows.forEach(r => counts[r.status] = r.count);
 
             grandCount += grp.totalCount;
             grandValue += grp.totalValue;
 
-            html += `<tr style="background:rgba(37,99,235,0.1);border-bottom:2px solid #3b82f6;">
-                <td style="padding:11px 18px;border:${cellBorder};font-weight:800;color:#60a5fa;font-size:0.82rem;letter-spacing:0.5px;">SUBTOTAL</td>
-                <td style="padding:11px 18px;border:${cellBorder};text-align:right;font-weight:800;color:#60a5fa;font-family:'JetBrains Mono',monospace;font-size:0.9rem;">${fmtShort(grp.totalValue)}</td>
-                <td style="padding:11px 18px;border:${cellBorder};text-align:center;font-weight:800;color:#60a5fa;font-size:1rem;">${grp.totalCount}</td>
-            </tr>`;
+            html += `<tr style="background:${rowBg}; transition:background 0.2s;" onmouseover="this.style.background='rgba(37,99,235,0.1)';" onmouseout="this.style.background='${rowBg}';">`;
+            
+            html += `<td style="padding:12px 14px;border:${cellBorder};vertical-align:middle;text-align:left;background:rgba(37,99,235,0.05);border-left:4px solid #3b82f6;">
+                <div style="font-weight:800;font-size:0.9rem;color:#60a5fa;">${grp.date === 'OVERALL' ? 'Company Total' : grp.date}</div>
+            </td>`;
+
+            cols.forEach(c => {
+                const cnt = counts[c] || 0;
+                colTotals[c] += cnt;
+                html += `<td style="padding:12px 6px;border:${cellBorder};font-weight:${cnt > 0 ? '700' : '500'};color:${cnt > 0 ? '#e2e8f0' : '#475569'};font-size:0.9rem;">${cnt > 0 ? cnt : '-'}</td>`;
+            });
+
+            html += `<td style="padding:12px 10px;border:${cellBorder};text-align:right;font-weight:800;color:#60a5fa;font-family:'JetBrains Mono',monospace;font-size:0.9rem;">${fmtShort(grp.totalValue)}</td>`;
+            html += `<td style="padding:12px 10px;border:${cellBorder};font-weight:800;color:#60a5fa;font-size:0.95rem;">${grp.totalCount}</td>`;
+            html += '</tr>';
         });
 
         html += `<tr style="background:linear-gradient(135deg,#1d4ed8,#1e3a8a);">
-            <td colspan="2" style="padding:14px 18px;font-weight:800;color:#fff;font-size:0.95rem;letter-spacing:1px;text-transform:uppercase;border:1px solid rgba(255,255,255,0.15);">GRAND TOTAL</td>
-            <td style="padding:14px 18px;text-align:right;font-weight:800;color:#fff;font-size:1.05rem;font-family:'JetBrains Mono',monospace;border:1px solid rgba(255,255,255,0.15);">${fmtShort(grandValue)}</td>
-            <td style="padding:14px 18px;text-align:center;font-weight:800;color:#fff;font-size:1.1rem;border:1px solid rgba(255,255,255,0.15);">${grandCount}</td>
+            <td style="padding:14px 14px;font-weight:800;color:#fff;font-size:0.85rem;letter-spacing:1px;text-transform:uppercase;border:1px solid rgba(255,255,255,0.15);text-align:left;">GRAND TOTAL</td>`;
+            
+        cols.forEach(c => {
+            html += `<td style="padding:14px 6px;font-weight:800;color:#fff;font-size:0.95rem;border:1px solid rgba(255,255,255,0.15);">${colTotals[c] > 0 ? colTotals[c] : '-'}</td>`;
+        });
+
+        html += `<td style="padding:14px 10px;text-align:right;font-weight:800;color:#fff;font-size:1rem;font-family:'JetBrains Mono',monospace;border:1px solid rgba(255,255,255,0.15);">${fmtShort(grandValue)}</td>
+            <td style="padding:14px 10px;font-weight:800;color:#fff;font-size:1.1rem;border:1px solid rgba(255,255,255,0.15);">${grandCount}</td>
         </tr>`;
 
         html += '</tbody></table></div>';
@@ -3013,85 +2937,134 @@
         container.innerHTML = kpiHtml + html;
     }
 
-    // Replace the export logic to handle all three tabs
+
     window.exportWosgReport = function() {
-        const tab = window._wosgActiveTab || 'caller';
+        const tab = window._wosgActiveTab || 'main';
         const today = new Date();
         const dateStr = String(today.getDate()).padStart(2,'0') + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + today.getFullYear();
         
         let aoa = [];
-        let grandCount = 0, grandValue = 0;
         let title = '';
         let fileName = '';
+
+        const cols = ['Connected', 'Disconnected', 'Not Connected', 'Interested', 'Not Interested', 'Follow-up', 'Bought', 'Not Called'];
+        let grandCount = 0, grandValue = 0;
+        let colTotals = {};
+        cols.forEach(c => colTotals[c] = 0);
 
         if (tab === 'main') {
             if (!window._wosgMainData) return;
             title = 'WITHOUT OSG MAIN REPORT — ' + dateStr;
             fileName = 'Without_OSG_Main_Report_' + dateStr + '.xlsx';
-            aoa.push([title, '', '', '']);
-            aoa.push(['SUMMARY', 'STATUS', 'VALUE', 'COUNT']);
+            aoa.push([title]);
+            aoa.push(['SUMMARY', ...cols, 'TOTAL VALUE', 'TOTAL COUNT']);
+            
             window._wosgMainData.forEach(grp => {
-                const rows = grp.rows.length > 0 ? grp.rows : [{ status: 'No records', count: 0, value: 0 }];
-                rows.forEach((st, si) => aoa.push([si === 0 ? 'Overall' : '', st.status, st.value > 0 ? Math.round(st.value) : 0, st.count]));
-                aoa.push(['', 'SUBTOTAL', Math.round(grp.totalValue), grp.totalCount]);
+                let counts = {};
+                grp.rows.forEach(r => counts[r.status] = r.count);
+                
+                let row = ['Overall'];
+                cols.forEach(c => {
+                    row.push(counts[c] || 0);
+                    colTotals[c] += (counts[c] || 0);
+                });
+                row.push(Math.round(grp.totalValue));
+                row.push(grp.totalCount);
+                aoa.push(row);
+                
                 grandCount += grp.totalCount; grandValue += grp.totalValue;
             });
         } else if (tab === 'caller') {
             if (!window._wosgCallerData || !window._wosgCallers) return;
             title = 'WITHOUT OSG CALLER REPORT — ' + dateStr;
             fileName = 'Without_OSG_Caller_Report_' + dateStr + '.xlsx';
-            aoa.push([title, '', '', '']);
-            aoa.push(['CALLER', 'STATUS', 'VALUE', 'COUNT']);
+            aoa.push([title]);
+            aoa.push(['CALLER', ...cols, 'TOTAL VALUE', 'TOTAL COUNT']);
+            
             window._wosgCallers.forEach(callerName => {
                 const cd = window._wosgCallerData[callerName];
-                const rows = cd.rows.length > 0 ? cd.rows : [{ status: 'No calls logged', count: 0, value: 0 }];
-                rows.forEach((st, si) => aoa.push([si === 0 ? callerName : '', st.status, st.value > 0 ? Math.round(st.value) : 0, st.count]));
-                aoa.push(['', 'SUBTOTAL — ' + callerName.toUpperCase(), Math.round(cd.totalValue), cd.totalCount]);
+                let counts = {};
+                cd.rows.forEach(r => counts[r.status] = r.count);
+                
+                let row = [callerName];
+                cols.forEach(c => {
+                    row.push(counts[c] || 0);
+                    colTotals[c] += (counts[c] || 0);
+                });
+                row.push(Math.round(cd.totalValue));
+                row.push(cd.totalCount);
+                aoa.push(row);
+                
                 grandCount += cd.totalCount; grandValue += cd.totalValue;
             });
         } else if (tab === 'daily') {
             if (!window._wosgDailyData) return;
             title = 'WITHOUT OSG DAILY REPORT — ' + dateStr;
             fileName = 'Without_OSG_Daily_Report_' + dateStr + '.xlsx';
-            aoa.push([title, '', '', '']);
-            aoa.push(['DATE', 'STATUS', 'VALUE', 'COUNT']);
+            aoa.push([title]);
+            aoa.push(['DATE', ...cols, 'TOTAL VALUE', 'TOTAL COUNT']);
+            
             window._wosgDailyData.forEach(grp => {
-                const rows = grp.rows.length > 0 ? grp.rows : [{ status: 'No records', count: 0, value: 0 }];
-                rows.forEach((st, si) => aoa.push([si === 0 ? grp.date : '', st.status, st.value > 0 ? Math.round(st.value) : 0, st.count]));
-                aoa.push(['', 'SUBTOTAL', Math.round(grp.totalValue), grp.totalCount]);
+                let counts = {};
+                grp.rows.forEach(r => counts[r.status] = r.count);
+                
+                let row = [grp.date];
+                cols.forEach(c => {
+                    row.push(counts[c] || 0);
+                    colTotals[c] += (counts[c] || 0);
+                });
+                row.push(Math.round(grp.totalValue));
+                row.push(grp.totalCount);
+                aoa.push(row);
+                
                 grandCount += grp.totalCount; grandValue += grp.totalValue;
             });
         } else if (tab === 'monthly') {
             if (!window._wosgMonthlyData) return;
             title = 'WITHOUT OSG MONTHLY REPORT — ' + dateStr;
             fileName = 'Without_OSG_Monthly_Report_' + dateStr + '.xlsx';
-            aoa.push([title, '', '', '']);
-            aoa.push(['MONTH', 'STATUS', 'VALUE', 'COUNT']);
+            aoa.push([title]);
+            aoa.push(['MONTH', ...cols, 'TOTAL VALUE', 'TOTAL COUNT']);
+            
             window._wosgMonthlyData.forEach(grp => {
-                const rows = grp.rows.length > 0 ? grp.rows : [{ status: 'No records', count: 0, value: 0 }];
-                rows.forEach((st, si) => aoa.push([si === 0 ? grp.date : '', st.status, st.value > 0 ? Math.round(st.value) : 0, st.count]));
-                aoa.push(['', 'SUBTOTAL', Math.round(grp.totalValue), grp.totalCount]);
+                let counts = {};
+                grp.rows.forEach(r => counts[r.status] = r.count);
+                
+                let row = [grp.date];
+                cols.forEach(c => {
+                    row.push(counts[c] || 0);
+                    colTotals[c] += (counts[c] || 0);
+                });
+                row.push(Math.round(grp.totalValue));
+                row.push(grp.totalCount);
+                aoa.push(row);
+                
                 grandCount += grp.totalCount; grandValue += grp.totalValue;
             });
         }
 
-        aoa.push(['GRAND TOTAL', '', Math.round(grandValue), grandCount]);
+        let gtRow = ['GRAND TOTAL'];
+        cols.forEach(c => gtRow.push(colTotals[c]));
+        gtRow.push(Math.round(grandValue));
+        gtRow.push(grandCount);
+        aoa.push(gtRow);
 
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.aoa_to_sheet(aoa);
-        ws['!cols'] = [{ wch: 18 }, { wch: 30 }, { wch: 16 }, { wch: 12 }];
-        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }];
+        
+        // Col widths based on pivot structure
+        let wscols = [{ wch: 18 }]; // Caller/Date/Month
+        cols.forEach(() => wscols.push({ wch: 14 }));
+        wscols.push({ wch: 16 }); // Total Val
+        wscols.push({ wch: 12 }); // Total Cnt
+        ws['!cols'] = wscols;
+        
+        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: cols.length + 2 } }];
 
-        for (let r = 2; r < aoa.length; r++) {
-            const cellRef = XLSX.utils.encode_cell({ r: r, c: 2 });
-            if (ws[cellRef]) ws[cellRef].t = 'n';
-            const cellRef2 = XLSX.utils.encode_cell({ r: r, c: 3 });
-            if (ws[cellRef2]) ws[cellRef2].t = 'n';
-        }
-
-        XLSX.utils.book_append_sheet(wb, ws, tab === 'caller' ? 'Caller Report' : (tab === 'daily' ? 'Daily Report' : 'Monthly Report'));
+        XLSX.utils.book_append_sheet(wb, ws, tab === 'caller' ? 'Caller Report' : (tab === 'daily' ? 'Daily Report' : (tab === 'main' ? 'Main Report' : 'Monthly Report')));
         XLSX.writeFile(wb, fileName);
     };
+
 
     // ---- CUSTOMERS WITHOUT OSG PAGE ----
     $('btnCORefresh').addEventListener('click', renderCustomersOSGPage);
