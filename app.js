@@ -734,7 +734,7 @@
         // Warn about critical unmapped columns
         const critical = ['soldPrice', 'qty', 'branch', 'product'];
         critical.forEach(k => {
-            if (!mapping[k]) console.warn(`[âš  Column NOT FOUND] '${k}' ” no matching header. Available headers:`, headers.join(', '));
+            if (!mapping[k]) console.warn(`[⚠ Column NOT FOUND] '${k}' ” no matching header. Available headers:`, headers.join(', '));
         });
 
         console.log('[Column Mapping]', JSON.stringify(mapping));
@@ -1009,7 +1009,7 @@
         if (OSG_NATIVE_FIELDS.has(key)) {
             oGrouped = groupBy(filteredOSG, key);
         } else {
-            // Build invoice â†’ key value lookup from filtered product data
+            // Build invoice → key value lookup from filtered product data
             const invoiceToKey = {};
             filteredProduct.forEach(r => {
                 if (r.invoice && r[key]) invoiceToKey[r.invoice] = r[key];
@@ -1210,7 +1210,7 @@
         destroyChart('qtyConvRBM');
         const pG = groupBy(filteredProduct, 'rbm');
 
-        // Map OSG â†’ RBM via invoice lookup (same as renderConvTable)
+        // Map OSG → RBM via invoice lookup (same as renderConvTable)
         const invoiceToRBM = {};
         filteredProduct.forEach(r => { if (r.invoice && r.rbm) invoiceToRBM[r.invoice] = r.rbm; });
         const osgByRBM = {};
@@ -1405,7 +1405,7 @@
 
     // ---- LOW CONV STAFF LOGIC ----
     function buildStaffStats() {
-        // Build invoice â†’ staff lookup from ALL product data (unfiltered)
+        // Build invoice → staff lookup from ALL product data (unfiltered)
         const invoiceStaff = {};
         productData.forEach(r => { if (r.invoice && r.staff) invoiceStaff[r.invoice] = r.staff; });
 
@@ -1497,7 +1497,7 @@
         `;
 
         if (filtered.length === 0) {
-            $('lcTableWrapper').innerHTML = noDataHTML(`No staff found with â‰¥${minQty} product qty and â‰¤${maxConv}% qty conversion.`);
+            $('lcTableWrapper').innerHTML = noDataHTML(`No staff found with ≥${minQty} product qty and ≤${maxConv}% qty conversion.`);
             return;
         }
 
@@ -1756,7 +1756,7 @@
         let html = '';
 
         // ---- Card 1: Overall Summary ----
-        html += insightCard('Ã°Å¸“Å ', 'Overall Performance Summary', 'info', `
+        html += insightCard('📊', 'Overall Performance Summary', 'info', `
             <div class="insight-metrics">
                 <div class="insight-metric"><span class="metric-val">${formatNumber(productData.length)}</span><span class="metric-label">Total Transactions</span></div>
                 <div class="insight-metric"><span class="metric-val">${totalStaff}</span><span class="metric-label">Active Staff</span></div>
@@ -1807,7 +1807,7 @@
         // ---- Card 4: Underperforming Branches ----
         const weakBranches = branchStats.filter(b => b.pQty >= 10 && b.qtyConv < 2).sort((a, b) => a.qtyConv - b.qtyConv).slice(0, 5);
         if (weakBranches.length > 0) {
-            html += insightCard('Ã°Å¸“â€°', 'Underperforming Branches', 'warning', `
+            html += insightCard('📉', 'Underperforming Branches', 'warning', `
                 <p>These branches have significant product sales but very low OSG conversion:</p>
                 <table class="data-table insight-table"><thead><tr>
                     <th>Branch</th><th>Prod Qty</th><th>OSG Qty</th><th>Qty Conv%</th>
@@ -1826,7 +1826,7 @@
             const best = rbmSorted[0];
             const worst = rbmSorted[rbmSorted.length - 1];
             const gap = best.qtyConv - worst.qtyConv;
-            html += insightCard('Ã°Å¸â€˜Â¥', 'RBM Performance Gap', gap > 5 ? 'warning' : 'info', `
+            html += insightCard('👥', 'RBM Performance Gap', gap > 5 ? 'warning' : 'info', `
                 <div class="insight-compare">
                     <div class="compare-box success-bg">
                         <span class="compare-label">Best RBM</span>
@@ -1852,7 +1852,7 @@
         const weakProds = prodSorted.slice(0, 3);
         const strongProds = prodSorted.slice(-3).reverse();
         if (prodSorted.length > 0) {
-            html += insightCard('Ã°Å¸“Â¦', 'Product Category Analysis', 'info', `
+            html += insightCard('📋', 'Product Category Analysis', 'info', `
                 <div class="insight-compare">
                     <div class="compare-box success-bg" style="flex:1;">
                         <span class="compare-label">Strong Categories</span>
@@ -1872,12 +1872,12 @@
         // ---- Card 7: Revenue Concentration Risk ----
         if (branchRevShare.length >= 3) {
             const top3Share = branchRevShare.slice(0, 3).reduce((s, b) => s + b.share, 0);
-            html += insightCard('âš–ï¸', 'Revenue Concentration', top3Share > 50 ? 'warning' : 'info', `
+            html += insightCard('⚖️', 'Revenue Concentration', top3Share > 50 ? 'warning' : 'info', `
                 <p>Top 3 branches contribute <strong>${top3Share.toFixed(1)}%</strong> of total product revenue:</p>
                 <div class="insight-tag-row">
                     ${branchRevShare.slice(0, 5).map(b => `<span class="insight-tag info">${b.name}: ${b.share.toFixed(1)}%</span>`).join('')}
                 </div>
-                ${top3Share > 50 ? '<p class="text-warning"> High concentration risk ” underperformance in these branches would significantly impact overall numbers.</p>' : '<p class="text-success">âœ… Revenue is fairly distributed ” good diversification.</p>'}
+                ${top3Share > 50 ? '<p class="text-warning"> High concentration risk ” underperformance in these branches would significantly impact overall numbers.</p>' : '<p class="text-success">✅ Revenue is fairly distributed ” good diversification.</p>'}
                 <div class="insight-solution">
                     <strong> Recommendation:</strong> ${top3Share > 50 ? 'Invest in growing smaller branches. Reduce dependency on top branches by improving performance of bottom 50%.' : 'Maintain balanced growth across all branches.'}
                 </div>
@@ -1942,7 +1942,7 @@
         }
         deepAnalysisHtml += `</ul>`;
 
-        html += insightCard('Ã°Å¸”Â', 'Deep Root Cause Analysis', 'danger', `
+        html += insightCard('🔍', 'Deep Root Cause Analysis', 'danger', `
             <p style="margin-bottom:1rem; color:var(--text-primary); font-weight:500;">Based on combinatorial data analysis, the primary drivers of lost conversion are:</p>
             ${deepAnalysisHtml}
         `);
@@ -2153,7 +2153,7 @@
         `;
 
         if (filtered.length === 0) {
-            $('lcTableWrapper').innerHTML = noDataHTML(`No staff found with â‰¥${minQty} product qty and â‰¤${maxConv}% qty conversion.`);
+            $('lcTableWrapper').innerHTML = noDataHTML(`No staff found with ≥${minQty} product qty and ≤${maxConv}% qty conversion.`);
             return;
         }
 
@@ -2412,7 +2412,7 @@
         let html = '';
 
         // ---- Card 1: Overall Summary ----
-        html += insightCard('Ã°Å¸“Å ', 'Overall Performance Summary', 'info', `
+        html += insightCard('📊', 'Overall Performance Summary', 'info', `
             <div class="insight-metrics">
                 <div class="insight-metric"><span class="metric-val">${formatNumber(productData.length)}</span><span class="metric-label">Total Transactions</span></div>
                 <div class="insight-metric"><span class="metric-val">${totalStaff}</span><span class="metric-label">Active Staff</span></div>
@@ -2463,7 +2463,7 @@
         // ---- Card 4: Underperforming Branches ----
         const weakBranches = branchStats.filter(b => b.pQty >= 10 && b.qtyConv < 2).sort((a, b) => a.qtyConv - b.qtyConv).slice(0, 5);
         if (weakBranches.length > 0) {
-            html += insightCard('Ã°Å¸“â€°', 'Underperforming Branches', 'warning', `
+            html += insightCard('📉', 'Underperforming Branches', 'warning', `
                 <p>These branches have significant product sales but very low OSG conversion:</p>
                 <table class="data-table insight-table"><thead><tr>
                     <th>Branch</th><th>Prod Qty</th><th>OSG Qty</th><th>Qty Conv%</th>
@@ -2482,7 +2482,7 @@
             const best = rbmSorted[0];
             const worst = rbmSorted[rbmSorted.length - 1];
             const gap = best.qtyConv - worst.qtyConv;
-            html += insightCard('Ã°Å¸â€˜Â¥', 'RBM Performance Gap', gap > 5 ? 'warning' : 'info', `
+            html += insightCard('👥', 'RBM Performance Gap', gap > 5 ? 'warning' : 'info', `
                 <div class="insight-compare">
                     <div class="compare-box success-bg">
                         <span class="compare-label">Best RBM</span>
@@ -2508,7 +2508,7 @@
         const weakProds = prodSorted.slice(0, 3);
         const strongProds = prodSorted.slice(-3).reverse();
         if (prodSorted.length > 0) {
-            html += insightCard('Ã°Å¸“Â¦', 'Product Category Analysis', 'info', `
+            html += insightCard('📋', 'Product Category Analysis', 'info', `
                 <div class="insight-compare">
                     <div class="compare-box success-bg" style="flex:1;">
                         <span class="compare-label">Strong Categories</span>
@@ -2528,12 +2528,12 @@
         // ---- Card 7: Revenue Concentration Risk ----
         if (branchRevShare.length >= 3) {
             const top3Share = branchRevShare.slice(0, 3).reduce((s, b) => s + b.share, 0);
-            html += insightCard('âš–ï¸', 'Revenue Concentration', top3Share > 50 ? 'warning' : 'info', `
+            html += insightCard('⚖️', 'Revenue Concentration', top3Share > 50 ? 'warning' : 'info', `
                 <p>Top 3 branches contribute <strong>${top3Share.toFixed(1)}%</strong> of total product revenue:</p>
                 <div class="insight-tag-row">
                     ${branchRevShare.slice(0, 5).map(b => `<span class="insight-tag info">${b.name}: ${b.share.toFixed(1)}%</span>`).join('')}
                 </div>
-                ${top3Share > 50 ? '<p class="text-warning"> High concentration risk ” underperformance in these branches would significantly impact overall numbers.</p>' : '<p class="text-success">âœ… Revenue is fairly distributed ” good diversification.</p>'}
+                ${top3Share > 50 ? '<p class="text-warning"> High concentration risk ” underperformance in these branches would significantly impact overall numbers.</p>' : '<p class="text-success">✅ Revenue is fairly distributed ” good diversification.</p>'}
                 <div class="insight-solution">
                     <strong> Recommendation:</strong> ${top3Share > 50 ? 'Invest in growing smaller branches. Reduce dependency on top branches by improving performance of bottom 50%.' : 'Maintain balanced growth across all branches.'}
                 </div>
@@ -2598,7 +2598,7 @@
         }
         deepAnalysisHtml += `</ul>`;
 
-        html += insightCard('Ã°Å¸”Â', 'Deep Root Cause Analysis', 'danger', `
+        html += insightCard('🔍', 'Deep Root Cause Analysis', 'danger', `
             <p style="margin-bottom:1rem; color:var(--text-primary); font-weight:500;">Based on combinatorial data analysis, the primary drivers of lost conversion are:</p>
             ${deepAnalysisHtml}
         `);
@@ -4151,7 +4151,7 @@
                 sel('coSF_product', 'Product',     products, sf.product) +
                 sel('coSF_call',    'Call Status', ['connected','disconnected'], sf.callStatus) +
                 sel('coSF_int',     'Interest',    ['interested','not-interested'], sf.interest) +
-                `<button onclick="window.coSharedFilterReset()" style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-family:inherit;cursor:pointer;font-size:0.82rem;white-space:nowrap;">âœ– Clear</button>`;
+                `<button onclick="window.coSharedFilterReset()" style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-family:inherit;cursor:pointer;font-size:0.82rem;white-space:nowrap;">✕ Clear</button>`;
 
             window.coSharedFilterChange = (id, val) => {
                 const map = { coSF_branch: 'branch', coSF_staff: 'staff', coSF_product: 'product', coSF_call: 'callStatus', coSF_int: 'interest' };
@@ -4358,7 +4358,7 @@
                 ">
                     <span style="width:24px;height:24px;border-radius:50%;background:${c.color};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;">${c.name[0]}</span>
                     ${c.name}
-                    ${currentCaller===c.name ? '<span style="font-size:0.7rem;opacity:0.8;">âœ“ Active</span>' : ''}
+                    ${currentCaller===c.name ? '<span style="font-size:0.7rem;opacity:0.8;">— Active</span>' : ''}
                 </button>`).join('')}
             </div>
             ${currentCaller
@@ -4392,7 +4392,7 @@
                     padding:10px 28px;border-radius:20px;border:1.5px solid var(--accent);
                     background:transparent;color:var(--accent);font-family:inherit;
                     font-size:0.88rem;font-weight:600;cursor:pointer;transition:all 0.2s;
-                ">â¬‡ Load ${Math.min(remaining, 100)} more (${remaining} remaining)</button>
+                ">⬇ Load ${Math.min(remaining, 100)} more (${remaining} remaining)</button>
                </div>` : '';
 
         $('coMissedTable').innerHTML = statsBar + callerSelector + tableHeader + rowsHTML + '</tbody></table></div>' + loadMoreBtn;
@@ -4438,7 +4438,7 @@
                     wrap.innerHTML = `<button onclick="window.coLoadMore()" style="
                         padding:10px 28px;border-radius:20px;border:1.5px solid var(--accent);
                         background:transparent;color:var(--accent);font-family:inherit;
-                        font-size:0.88rem;font-weight:600;cursor:pointer;">â¬‡ Load ${Math.min(remaining2,100)} more (${remaining2} remaining)</button>`;
+                        font-size:0.88rem;font-weight:600;cursor:pointer;">⬇ Load ${Math.min(remaining2,100)} more (${remaining2} remaining)</button>`;
                 } else {
                     wrap.remove();
                 }
@@ -4618,8 +4618,8 @@
         // Added 'follow-up' and 'bought' options to Interest
         const interestBtnOptions = `
             <option value="" ${!st.interest ? 'selected' : ''}>- Select -</option>
-            <option value="interested" ${st.interest === 'interested' ? 'selected' : ''}>âœ… Interested</option>
-            <option value="not-interested" ${st.interest === 'not-interested' ? 'selected' : ''}>âŒ Not Interested</option>
+            <option value="interested" ${st.interest === 'interested' ? 'selected' : ''}>✅ Interested</option>
+            <option value="not-interested" ${st.interest === 'not-interested' ? 'selected' : ''}>❌ Not Interested</option>
             <option value="follow-up" ${st.interest === 'follow-up' ? 'selected' : ''}>Follow-up</option>
             <option value="bought" ${st.interest === 'bought' ? 'selected' : ''}>Closed</option>
         `;
@@ -4658,7 +4658,7 @@
                     <option value="" ${!st.callStatus ? 'selected' : ''}>- Status -</option>
                     <option value="connected" ${st.callStatus === 'connected' ? 'selected' : ''}>Connected</option>
                     <option value="not-connected" ${st.callStatus === 'not-connected' ? 'selected' : ''}>🔴 Not Connected</option>
-                    <option value="disconnected" ${st.callStatus === 'disconnected' ? 'selected' : ''}>Ã°Å¸“Âµ Disconnected</option>
+                    <option value="disconnected" ${st.callStatus === 'disconnected' ? 'selected' : ''}>📵 Disconnected</option>
                 </select>
                 ${callerInfo}
             </div>` : '';
@@ -4692,11 +4692,11 @@
         return `<tr id="co-row-${inv}" style="border-bottom:1px solid var(--border);background:${rowBg};transition:background 0.2s;">
             <td style="padding:12px 10px;color:var(--text-muted);font-size:0.8rem;">${i+1}</td>
             <td style="padding:12px 10px;font-family:monospace;font-size:0.82rem;color:var(--text-secondary); width:120px;">${dStr}</td>
-            <td style="padding:12px 10px;"><strong style="color:var(--text-primary);font-size:0.9rem;">${r.customerName||'”'}</strong><div style="font-size:0.75rem;color:var(--text-muted)">${r.invoice}</div></td>
+            <td style="padding:12px 10px;"><strong style="color:var(--text-primary);font-size:0.9rem;">${r.customerName||'-'}</strong><div style="font-size:0.75rem;color:var(--text-muted)">${r.invoice}</div></td>
             <td style="padding:12px 10px; width:150px;">${interestBtn}</td>
             <td style="padding:12px 10px; width:160px;">
                 <div style="display:flex;align-items:center;gap:6px;">
-                    <span style="font-weight:600;color:var(--text-primary);font-size:0.88rem;">${r.customerNo||'”'}</span>
+                    <span style="font-weight:600;color:var(--text-primary);font-size:0.88rem;">${r.customerNo||'-'}</span>
                     ${r.customerNo?`<a href="tel:${r.customerNo}" title="Call" style="color:var(--primary);display:flex;padding:5px;border-radius:50%;background:rgba(59,130,246,0.12);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>`:''}
                     ${r.customerNo ? `<a href="${(function(){
                         const phone  = '91' + r.customerNo.replace(/\D/g, '');
@@ -4704,7 +4704,7 @@
                         const prod   = r.product || 'your product';
                         const inv    = r.invoice || '';
                         const val    = r.soldPrice && r.soldPrice > 0 ? ' (worth ₹' + r.soldPrice.toLocaleString('en-IN') + ')' : '';
-                        const msg = 'Dear ' + name + ',\n\nGreetings from myG ˜Š\n\nThank you for your recent purchase of *' + prod + '*' + val + ' (Invoice: ' + inv + ').\n\n We noticed your purchase does not yet include an *OSG Extended Warranty* plan. OSG covers:\n\nâœ… Extended protection beyond manufacturer warranty\nâœ… Free doorstep repair service\nâœ… Zero hidden charges\nâœ… Instant claim processing\n\nSecuring your device takes just a minute ” and gives you complete peace of mind! \n\nWould you be interested? Reply *YES* and we will take care of everything.\n\nWarm regards,\nmyG Team';
+                        const msg = 'Dear ' + name + ',\n\nGreetings from myG 😊\n\nThank you for your recent purchase of *' + prod + '*' + val + ' (Invoice: ' + inv + ').\n\n We noticed your purchase does not yet include an *OSG Extended Warranty* plan. OSG covers:\n\n✅ Extended protection beyond manufacturer warranty\n✅ Free doorstep repair service\n✅ Zero hidden charges\n✅ Instant claim processing\n\nSecuring your device takes just a minute — and gives you complete peace of mind! \n\nWould you be interested? Reply *YES* and we will take care of everything.\n\nWarm regards,\nmyG Team';
                         return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
                     })()}" target="_blank" title="WhatsApp (English)" style="color:#25D366;display:flex;padding:5px;border-radius:50%;background:rgba(37,211,102,0.12);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>` : ''}
                     ${r.customerNo ? `<a href="${(function(){
@@ -4713,15 +4713,15 @@
                         const prod   = r.product || 'your product';
                         const inv    = r.invoice || '';
                         const valML  = r.soldPrice && r.soldPrice > 0 ? ' (₹' + r.soldPrice.toLocaleString('en-IN') + ')' : '';
-                        const msgML = 'à´ªàµà´°à´¿à´¯ ' + name + ',\n\nmyG-àµ½ à´¨à´¿à´¨àµà´¨àµà´³àµà´³ à´†à´¶à´‚à´¸à´•àµ¾ ˜Š\n\nà´¨à´¿à´™àµà´™àµ¾ à´…à´Ÿàµà´¤àµà´¤à´¿à´Ÿàµ† à´µà´¾à´™àµà´™à´¿à´¯ *' + prod + '*' + valML + ' à´¨àµ à´¨à´¨àµà´¦à´¿. (à´‡àµ»à´µàµ‹à´¯àµà´¸àµ: ' + inv + ').\n\n à´¨à´¿à´™àµà´™à´³àµà´Ÿàµ† à´ªàµ¼à´šàµà´šàµ‡à´¸à´¿àµ½ à´‡à´¤àµà´µà´°àµ† *OSG à´Žà´•àµà´¸àµà´±àµà´±àµ»à´¡à´¡àµ à´µà´¾à´±àµ»àµà´±à´¿* à´ªàµà´²à´¾àµ» à´‰àµ¾à´ªàµà´ªàµ†à´Ÿàµà´¤àµà´¤à´¿à´¯à´¿à´Ÿàµà´Ÿà´¿à´²àµà´² à´Žà´¨àµà´¨àµ à´žà´™àµà´™àµ¾ à´¶àµà´°à´¦àµà´§à´¿à´šàµà´šàµ. OSG à´µà´´à´¿ à´¨à´¿à´™àµà´™àµ¾à´•àµà´•àµ à´²à´­à´¿à´•àµà´•àµà´¨àµà´¨à´¤àµ:\n\nâœ… à´•à´®àµà´ªà´¨à´¿ à´µà´¾à´±àµ»àµà´±à´¿à´•àµà´•àµ à´¶àµ‡à´·à´µàµà´‚ à´ªà´°à´¿à´°à´•àµà´·\nâœ… à´¸àµ—à´œà´¨àµà´¯ à´¡àµ‹àµ¼à´¸àµà´±àµà´±àµ†à´ªàµà´ªàµ à´±à´¿à´ªàµà´ªà´¯àµ¼ à´¸àµ‡à´µà´¨à´‚\nâœ… à´¹à´¿à´¡àµ» à´šà´¾àµ¼à´œàµà´•àµ¾ à´‡à´²àµà´²\nâœ… à´µàµ‡à´—à´¤àµà´¤à´¿à´²àµà´³àµà´³ à´•àµà´²àµ†à´¯à´¿à´‚ à´ªàµà´°àµ‹à´¸à´¸àµà´¸à´¿à´‚à´—àµ\n\nà´¨à´¿à´™àµà´™à´³àµà´Ÿàµ† à´¡à´¿à´µàµˆà´¸àµ à´¸àµà´°à´•àµà´·à´¿à´¤à´®à´¾à´•àµà´•à´¾àµ» à´µàµ†à´±àµà´‚ à´’à´°àµ à´®à´¿à´¨à´¿à´±àµà´±àµ à´®à´¤à´¿ ” à´’à´ªàµà´ªà´‚ à´¨à´¿à´™àµà´™àµ¾à´•àµà´•àµ à´ªàµ‚àµ¼à´£àµà´£ à´¸à´®à´¾à´§à´¾à´¨à´µàµà´‚ à´²à´­à´¿à´•àµà´•àµà´‚! \n\nà´¨à´¿à´™àµà´™àµ¾à´•àµà´•àµ à´¤à´¾à´²àµà´ªà´°àµà´¯à´®àµà´£àµà´Ÿàµ‹? *YES* à´Žà´¨àµà´¨àµ à´®à´±àµà´ªà´Ÿà´¿ à´¨àµ½à´•àµà´•, à´¬à´¾à´•àµà´•à´¿ à´•à´¾à´°àµà´¯à´™àµà´™àµ¾ à´žà´™àµà´™àµ¾ à´šàµ†à´¯àµà´¤àµ à´¤à´°à´¾à´‚.\n\nà´¸àµà´¨àµ‡à´¹à´¤àµà´¤àµ‹à´Ÿàµ†,\nmyG à´Ÿàµ€à´‚';
+                        const msgML = 'പ്രിയ ' + name + ',\n\nmyG-ൽ നിന്നുള്ള ആശംസകൾ 😊\n\nനിങ്ങൾ അടുത്തിടെ വാങ്ങിയ *' + prod + '*' + valML + ' ന് നന്ദി. (ഇൻവോയ്സ്: ' + inv + ').\n\n നിങ്ങളുടെ പർച്ചേസിൽ ഇതുവരെ *OSG എക്സ്റ്റൻഡഡ് വാറൻ്റി* പ്ലാൻ ഉൾപ്പെടുത്തിയിട്ടില്ല എന്ന് ഞങ്ങൾ ശ്രദ്ധിച്ചു. OSG വഴി നിങ്ങൾക്ക് ലഭിക്കുന്നത്:\n\n✅ കമ്പനി വാറൻ്റിക്ക് ശേഷവും പരിരക്ഷ\n✅ സൗജന്യ ഡോർസ്റ്റെപ്പ് റിപ്പയർ സേവനം\n✅ ഹിഡൻ ചാർജുകൾ ഇല്ല\n✅ വേഗത്തിലുള്ള ക്ലെയിം പ്രോസസ്സിംഗ്\n\nനിങ്ങളുടെ ഡിവൈസ് സുരക്ഷിതമാക്കാൻ വെറും ഒരു മിനിറ്റ് മതി — ഒപ്പം നിങ്ങൾക്ക് പൂർണ്ണ സമാധാനവും ലഭിക്കും! \n\nനിങ്ങൾക്ക് താല്പര്യമുണ്ടോ? *YES* എന്ന് മറുപടി നൽകുക, ബാക്കി കാര്യങ്ങൾ ഞങ്ങൾ ചെയ്തു തരാം.\n\nസ്നേഹത്തോടെ,\nmyG ടീം';
                         return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msgML);
                     })()}" target="_blank" title="WhatsApp (Malayalam)" style="color:#25D366;display:flex;padding:3px 6px;border-radius:12px;background:rgba(37,211,102,0.12);font-size:0.75rem;font-weight:700;text-decoration:none;align-items:center;">ML</a>` : ''}
                 </div>
                 ${callBtns}
             </td>
             <td style="padding:12px 10px;">${remarksInput}</td>
-            <td style="padding:12px 10px;color:var(--text-secondary);font-size:0.85rem;">${r.branch||'”'}</td>
-            <td style="padding:12px 10px;color:var(--text-secondary);font-size:0.85rem;">${r.product||'”'}</td>
+            <td style="padding:12px 10px;color:var(--text-secondary);font-size:0.85rem;">${r.branch||'-'}</td>
+            <td style="padding:12px 10px;color:var(--text-secondary);font-size:0.85rem;">${r.product||'-'}</td>
             <td style="padding:12px 10px;text-align:right;font-weight:600;color:var(--text-primary);font-size:0.88rem;white-space:nowrap;">${fmtShort(Math.abs(r.soldPrice || 0))}</td>
         </tr>`;
     }
@@ -4916,12 +4916,12 @@ function exportCustomersOSGExcel() {
         else html += '<li>No significantly underperforming branches detected.</li>';
         html += '</ul></div>';
 
-        html += '<div style="margin-bottom: 16px;"><strong>Ã°Å¸’Å½ Missed Premium Device Attachments:</strong><ul style="margin:8px 0 0 20px; color:var(--text-muted); line-height: 1.6;">';
+        html += '<div style="margin-bottom: 16px;"><strong>💎 Missed Premium Device Attachments:</strong><ul style="margin:8px 0 0 20px; color:var(--text-muted); line-height: 1.6;">';
         if (premiumMisses.length) premiumMisses.forEach(m => html += `<li><strong>${m.staff} (${m.branch})</strong> sold a ${m.product} for ${fmtShort(m.soldPrice)} without OSG (Inv: ${m.invoice}).</li>`);
         else html += '<li>Great job! High-value premium products seem to be attached correctly.</li>';
         html += '</ul></div>';
 
-        html += '<div><strong>Ã°Å¸â€˜Â¤ Highest Opportunity Staff:</strong><ul style="margin:8px 0 0 20px; color:var(--text-muted); line-height: 1.6;">';
+        html += '<div><strong>👤 Highest Opportunity Staff:</strong><ul style="margin:8px 0 0 20px; color:var(--text-muted); line-height: 1.6;">';
         if (worstStaff.length) worstStaff.forEach(s => html += `<li><strong>${s.staff} (${s.branch})</strong>: Delivered ${s.pQ} units physically but achieved only ${s.conv.toFixed(1)}% conversion.</li>`);
         else html += '<li>Staff metrics look solid across the board (or volume threshold not met).</li>';
         html += '</ul></div>';
