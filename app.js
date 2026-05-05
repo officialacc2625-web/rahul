@@ -505,7 +505,7 @@
         // Strip to only display fields, sort by value high-to-low, cap at 2000 top-priority customers
         const payload = fullMissedUnique
             .sort((a, b) => (b.soldPrice || 0) - (a.soldPrice || 0))
-            .slice(0, 2000)
+            
             .map(r => ({
                 invoice:      r.invoice      || '',
                 customerName: r.customerName || '',
