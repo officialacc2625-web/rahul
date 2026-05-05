@@ -442,7 +442,7 @@
                     // Remove returned products (negative qty) and their matching positive invoice pair
                       const cancelledInv = new Set();
                       const pR = [], nR = [];
-                      productData.forEach(r => { if ((r.soldPrice || 0) < 0) nR.push(r); else pR.push(r); });
+                      productData.forEach(r => { if ((r.qty || 0) < 0 || (r.soldPrice || 0) < 0) nR.push(r); else pR.push(r); });
                       nR.forEach(nr => {
                           const mIdx = pR.findIndex(pr => !cancelledInv.has(pr.invoice) &&
                               (pr.customerNo === nr.customerNo || pr.customerName === nr.customerName) &&
