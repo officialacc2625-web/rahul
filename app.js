@@ -1779,7 +1779,7 @@
                     ${zeroConvStaff.length > 5 ? `<span class="insight-tag muted">+${zeroConvStaff.length - 5} more</span>` : ''}
                 </div>
                 <div class="insight-solution">
-                    <strong>Ã°Å¸’Â¡ Solution:</strong> Conduct targeted training for these staff members on OSG selling techniques. Pair them with top converters for mentorship. Set 1-week conversion targets with incentives.
+                    <strong> Solution:</strong> Conduct targeted training for these staff members on OSG selling techniques. Pair them with top converters for mentorship. Set 1-week conversion targets with incentives.
                 </div>
             `);
         }
@@ -1799,7 +1799,7 @@
                     `).join('')}
                 </div>
                 <div class="insight-solution">
-                    <strong>Ã°Å¸’Â¡ Recommendation:</strong> Recognize these staff publicly. Study their techniques and replicate across other branches. Consider a reward/incentive program to sustain performance.
+                    <strong> Recommendation:</strong> Recognize these staff publicly. Study their techniques and replicate across other branches. Consider a reward/incentive program to sustain performance.
                 </div>
             `);
         }
@@ -1815,7 +1815,7 @@
                     ${weakBranches.map(b => `<tr><td>${b.name}</td><td class="number-cell">${b.pQty}</td><td class="number-cell">${b.oQty}</td><td class="number-cell loss-val">${b.qtyConv.toFixed(2)}%</td></tr>`).join('')}
                 </tbody></table>
                 <div class="insight-solution">
-                    <strong>Ã°Å¸’Â¡ Solution:</strong> Schedule branch visits and OSG training workshops. Review branch-level OSG targets. Investigate if product mix or customer demographics contribute to low conversion.
+                    <strong> Solution:</strong> Schedule branch visits and OSG training workshops. Review branch-level OSG targets. Investigate if product mix or customer demographics contribute to low conversion.
                 </div>
             `);
         }
@@ -1842,7 +1842,7 @@
                 </div>
                 <p>Performance gap: <strong>${gap.toFixed(2)}%</strong>. ${gap > 5 ? 'This is a significant gap that needs attention.' : 'Relatively close performance.'}</p>
                 <div class="insight-solution">
-                    <strong>Ã°Å¸’Â¡ Recommendation:</strong> ${gap > 5 ? 'Organize knowledge-sharing sessions between top and bottom RBMs. Assign mentors and set improvement timelines.' : 'Performance is fairly balanced. Focus on pushing overall numbers higher.'}
+                    <strong> Recommendation:</strong> ${gap > 5 ? 'Organize knowledge-sharing sessions between top and bottom RBMs. Assign mentors and set improvement timelines.' : 'Performance is fairly balanced. Focus on pushing overall numbers higher.'}
                 </div>
             `);
         }
@@ -1864,7 +1864,7 @@
                     </div>
                 </div>
                 <div class="insight-solution">
-                    <strong>Ã°Å¸’Â¡ Solution:</strong> Focus OSG push on weak categories. Create category-specific sales scripts. Consider bundled OSG offers for low-converting product types.
+                    <strong> Solution:</strong> Focus OSG push on weak categories. Create category-specific sales scripts. Consider bundled OSG offers for low-converting product types.
                 </div>
             `);
         }
@@ -1879,7 +1879,7 @@
                 </div>
                 ${top3Share > 50 ? '<p class="text-warning"> High concentration risk ” underperformance in these branches would significantly impact overall numbers.</p>' : '<p class="text-success">âœ… Revenue is fairly distributed ” good diversification.</p>'}
                 <div class="insight-solution">
-                    <strong>Ã°Å¸’Â¡ Recommendation:</strong> ${top3Share > 50 ? 'Invest in growing smaller branches. Reduce dependency on top branches by improving performance of bottom 50%.' : 'Maintain balanced growth across all branches.'}
+                    <strong> Recommendation:</strong> ${top3Share > 50 ? 'Invest in growing smaller branches. Reduce dependency on top branches by improving performance of bottom 50%.' : 'Maintain balanced growth across all branches.'}
                 </div>
             `);
         }
@@ -2435,7 +2435,7 @@
                     ${zeroConvStaff.length > 5 ? `<span class="insight-tag muted">+${zeroConvStaff.length - 5} more</span>` : ''}
                 </div>
                 <div class="insight-solution">
-                    <strong>Ã°Å¸’Â¡ Solution:</strong> Conduct targeted training for these staff members on OSG selling techniques. Pair them with top converters for mentorship. Set 1-week conversion targets with incentives.
+                    <strong> Solution:</strong> Conduct targeted training for these staff members on OSG selling techniques. Pair them with top converters for mentorship. Set 1-week conversion targets with incentives.
                 </div>
             `);
         }
@@ -2455,7 +2455,7 @@
                     `).join('')}
                 </div>
                 <div class="insight-solution">
-                    <strong>Ã°Å¸’Â¡ Recommendation:</strong> Recognize these staff publicly. Study their techniques and replicate across other branches. Consider a reward/incentive program to sustain performance.
+                    <strong> Recommendation:</strong> Recognize these staff publicly. Study their techniques and replicate across other branches. Consider a reward/incentive program to sustain performance.
                 </div>
             `);
         }
@@ -2471,7 +2471,7 @@
                     ${weakBranches.map(b => `<tr><td>${b.name}</td><td class="number-cell">${b.pQty}</td><td class="number-cell">${b.oQty}</td><td class="number-cell loss-val">${b.qtyConv.toFixed(2)}%</td></tr>`).join('')}
                 </tbody></table>
                 <div class="insight-solution">
-                    <strong>Ã°Å¸’Â¡ Solution:</strong> Schedule branch visits and OSG training workshops. Review branch-level OSG targets. Investigate if product mix or customer demographics contribute to low conversion.
+                    <strong> Solution:</strong> Schedule branch visits and OSG training workshops. Review branch-level OSG targets. Investigate if product mix or customer demographics contribute to low conversion.
                 </div>
             `);
         }
@@ -2498,7 +2498,7 @@
                 </div>
                 <p>Performance gap: <strong>${gap.toFixed(2)}%</strong>. ${gap > 5 ? 'This is a significant gap that needs attention.' : 'Relatively close performance.'}</p>
                 <div class="insight-solution">
-                    <strong>Ã°Å¸’Â¡ Recommendation:</strong> ${gap > 5 ? 'Organize knowledge-sharing sessions between top and bottom RBMs. Assign mentors and set improvement timelines.' : 'Performance is fairly balanced. Focus on pushing overall numbers higher.'}
+                    <strong> Recommendation:</strong> ${gap > 5 ? 'Organize knowledge-sharing sessions between top and bottom RBMs. Assign mentors and set improvement timelines.' : 'Performance is fairly balanced. Focus on pushing overall numbers higher.'}
                 </div>
             `);
         }
@@ -2520,7 +2520,7 @@
                     </div>
                 </div>
                 <div class="insight-solution">
-                    <strong>Ã°Å¸’Â¡ Solution:</strong> Focus OSG push on weak categories. Create category-specific sales scripts. Consider bundled OSG offers for low-converting product types.
+                    <strong> Solution:</strong> Focus OSG push on weak categories. Create category-specific sales scripts. Consider bundled OSG offers for low-converting product types.
                 </div>
             `);
         }
@@ -2535,7 +2535,7 @@
                 </div>
                 ${top3Share > 50 ? '<p class="text-warning"> High concentration risk ” underperformance in these branches would significantly impact overall numbers.</p>' : '<p class="text-success">âœ… Revenue is fairly distributed ” good diversification.</p>'}
                 <div class="insight-solution">
-                    <strong>Ã°Å¸’Â¡ Recommendation:</strong> ${top3Share > 50 ? 'Invest in growing smaller branches. Reduce dependency on top branches by improving performance of bottom 50%.' : 'Maintain balanced growth across all branches.'}
+                    <strong> Recommendation:</strong> ${top3Share > 50 ? 'Invest in growing smaller branches. Reduce dependency on top branches by improving performance of bottom 50%.' : 'Maintain balanced growth across all branches.'}
                 </div>
             `);
         }
@@ -4344,7 +4344,7 @@
         // ---- Caller Selector ----
         const callerSelector = `
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;">
-            <span style="font-size:0.85rem;font-weight:600;color:var(--text-muted);white-space:nowrap;">Ã°Å¸â€˜Â¤ You are:</span>
+            <span style="display:inline-flex;align-items:center;gap:6px;font-size:0.85rem;font-weight:600;color:var(--text-muted);white-space:nowrap;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> You are:</span>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
                 ${CO_CALLERS.map(c => `
                 <button onclick="window.selectCoCaller('${c.name}')" style="
