@@ -890,7 +890,7 @@
 
     // ---- DASHBOARD ----
     function renderDashboard() {
-        const data = filteredAll;
+        const data = filteredProduct;
         const totalQty = data.reduce((s, r) => s + r.qty, 0);
 
         const conv = calcConversion(filteredProduct, filteredOSG);
