@@ -523,7 +523,7 @@
             shareRef.set({ missedUnique: payload, timestamp: Date.now() })
                 .then(() => {
                     showLoading(false);
-                    const base = window.location.protocol === 'file:' ? 'http://myg-analytics-2026.surge.sh/' : window.location.origin + window.location.pathname;
+                    const base = window.location.protocol === 'file:' ? 'https://officialacc2625-web.github.io/rahul/' : window.location.origin + window.location.pathname;
                     const shareUrl = base + '?share=' + shareRef.key;
                     if (navigator.clipboard) {
                         navigator.clipboard.writeText(shareUrl).then(() => {
