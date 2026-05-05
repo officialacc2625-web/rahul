@@ -2052,15 +2052,19 @@
             });
 
             const amcProdCounts = {};
+            const amcProdRev = {};
             amcRows.forEach(r => {
                 const p = r.product || 'Unknown';
                 amcProdCounts[p] = (amcProdCounts[p] || 0) + (r.qty || 0);
+                amcProdRev[p] = (amcProdRev[p] || 0) + (r.soldPrice || 0);
             });
 
             const samProdCounts = {};
+            const samProdRev = {};
             samRows.forEach(r => {
                 const p = r.product || 'Unknown';
                 samProdCounts[p] = (samProdCounts[p] || 0) + (r.qty || 0);
+                samProdRev[p] = (samProdRev[p] || 0) + (r.soldPrice || 0);
             });
 
             const allProds = new Set([...Object.keys(prodCounts), ...Object.keys(oProdCounts), ...Object.keys(amcProdCounts), ...Object.keys(samProdCounts)]);
@@ -2071,14 +2075,23 @@
                 const sQ = samProdCounts[p] || 0;
                 const r = prodRev[p] || 0;
                 const oR = oProdRev[p] || 0;
+                const aR = amcProdRev[p] || 0;
+                const sR = samProdRev[p] || 0;
                 return {
                     name: p,
                     qty: q,
                     osgQty: oQ,
                     amcQty: aQ,
                     samQty: sQ,
+                    amcRev: aR,
+                    samRev: sR,
+                    productRev: r,
                     qtyConv: q > 0 ? (oQ / q) * 100 : 0,
-                    valConv: r > 0 ? (oR / r) * 100 : 0
+                    valConv: r > 0 ? (oR / r) * 100 : 0,
+                    amcQtyConv: q > 0 ? (aQ / q) * 100 : 0,
+                    amcValConv: r > 0 ? (aR / r) * 100 : 0,
+                    samQtyConv: q > 0 ? (sQ / q) * 100 : 0,
+                    samValConv: r > 0 ? (sR / r) * 100 : 0
                 };
             }).sort((a,b) => b.qty - a.qty);
 
@@ -2954,9 +2967,56 @@
         ws1['!merges'] = finalMerges1;
         ws1['!cols'] = [{wch:15}, {wch:22}, {wch:20}, {wch:12}, {wch:10}, {wch:12}, {wch:14}, {wch:14}, {wch:14}, {wch:24}, {wch:24}, {wch:28}, {wch:28}, {wch:28}, {wch:28}];
         
+        // --------------------------------------------------------------------------------
+        // DATA PROCESSING FOR SHEET 3 & 4: LG-AMC & SAMSUNG
+        // --------------------------------------------------------------------------------
+        const hdr3 = ['BRANCH', 'BDM', 'Staff', 'Product', 'Product Qty', 'AMC Qty', 'AMC Qty Conv%', 'AMC Val Conv%'];
+        const aoa3 = [hdr3];
+        
+        const hdr4 = ['BRANCH', 'BDM', 'Staff', 'Product', 'Product Qty', 'SAMSUNG Qty', 'SAM Qty Conv%', 'SAM Val Conv%'];
+        const aoa4 = [hdr4];
+
+        filteredStats.forEach(e => {
+            if (e.products && e.products.length > 0) {
+                e.products.forEach(prod => {
+                    // Sheet 3: LG-AMC (Only include rows where Product Qty > 0 and AMC Qty > 0, or maybe just all products for staff who have AMC? Let's include if there's any AMC qty or if it's LG products, actually it's best to show all products but users can filter. Wait, "ONLY THE DATA OF LG-AMC WARRANTY CONVERSION" - let's show rows where amcQty > 0 or productQty > 0 and it's relevant to AMC. Better to just show products where AMC Qty > 0 or product qty > 0 so they can see conversion.)
+                    // Actually, let's include all rows so they see the conversion against total products, just like Sheet 2 but specific to AMC.
+                    aoa3.push([
+                        e.branch || 'Unknown',
+                        e.bdm || 'Unknown',
+                        e.name || 'Unknown',
+                        prod.name || 'Unknown',
+                        prod.qty,
+                        prod.amcQty,
+                        parseFloat(prod.amcQtyConv.toFixed(2)),
+                        parseFloat(prod.amcValConv.toFixed(2))
+                    ]);
+                    
+                    aoa4.push([
+                        e.branch || 'Unknown',
+                        e.bdm || 'Unknown',
+                        e.name || 'Unknown',
+                        prod.name || 'Unknown',
+                        prod.qty,
+                        prod.samQty,
+                        parseFloat(prod.samQtyConv.toFixed(2)),
+                        parseFloat(prod.samValConv.toFixed(2))
+                    ]);
+                });
+            }
+        });
+
         // Add Sheet 2
         const ws2 = XLSX.utils.aoa_to_sheet(aoa2);
         ws2['!cols'] = [{wch:22}, {wch:15}, {wch:20}, {wch:25}, {wch:12}, {wch:10}, {wch:10}, {wch:14}, {wch:16}, {wch:16}];
+
+        // Add Sheet 3
+        const ws3 = XLSX.utils.aoa_to_sheet(aoa3);
+        ws3['!cols'] = [{wch:22}, {wch:15}, {wch:20}, {wch:25}, {wch:12}, {wch:10}, {wch:16}, {wch:16}];
+
+        // Add Sheet 4
+        const ws4 = XLSX.utils.aoa_to_sheet(aoa4);
+        ws4['!cols'] = [{wch:22}, {wch:15}, {wch:20}, {wch:25}, {wch:12}, {wch:12}, {wch:16}, {wch:16}];
 
         // Force numeric types for calculations
         for (let r = 2; r < aoa1.length; r++) {
@@ -2974,6 +3034,8 @@
 
         XLSX.utils.book_append_sheet(wb, ws1, 'Future_Stores_Overview');
         XLSX.utils.book_append_sheet(wb, ws2, 'Future_Staff_Overview');
+        XLSX.utils.book_append_sheet(wb, ws3, 'LG-AMC');
+        XLSX.utils.book_append_sheet(wb, ws4, 'SAMSUNG');
 
 
         // Apply beautiful styles using xlsx-js-style
@@ -2995,9 +3057,9 @@
         };
         const numStyle = { alignment: { horizontal: "center", vertical: "center" } };
 
-        [ws1, ws2].forEach(ws => {
+        [ws1, ws2, ws3, ws4].forEach(ws => {
             const range = XLSX.utils.decode_range(ws['!ref']);
-            const keyCol = (ws === ws1) ? 1 : 2; // Toggle color by Branch for ws1, by Staff for ws2
+            const keyCol = (ws === ws1) ? 1 : 2; // Toggle color by Branch for ws1, by Staff for others
             let isAlt = false;
             let lastKey = null;
 
