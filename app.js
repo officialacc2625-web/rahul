@@ -3582,6 +3582,11 @@
             }
         });
 
+        // Store filtered data for export
+        window._wosgCallerData = callerData;
+        window._wosgCallers = callers;
+        window._wosgCallerFilter_active = selectedCaller;
+
         // Expose global handler so the inline onchange can call back in
         window.filterCallerReport = function(val) {
             window._wosgCallerFilter = val;
@@ -3779,11 +3784,181 @@
         const tab = window._wosgActiveTab || 'main';
         const today = new Date();
         const dateStr = String(today.getDate()).padStart(2,'0') + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + today.getFullYear();
-        
-        let aoa = [];
-        let title = '';
-        let fileName = '';
 
+        // ---- CALLER TAB: Full styled export ----
+        if (tab === 'caller') {
+            if (!window._wosgCallerData || !window._wosgCallers) return;
+
+            const selectedCaller = window._wosgCallerFilter_active || '';
+            const callers = window._wosgCallers;
+            const callerData = window._wosgCallerData;
+            const cols = ['Connected', 'Disconnected', 'Not Connected', 'Interested', 'Not Interested', 'Follow-up', 'Closed'];
+            const fileName = selectedCaller
+                ? `Caller_Report_${selectedCaller}_${dateStr}.xlsx`
+                : `Caller_Report_All_${dateStr}.xlsx`;
+            const sheetTitle = selectedCaller
+                ? `WITHOUT OSG CALLER REPORT — ${dateStr} — ${selectedCaller.toUpperCase()}`
+                : `WITHOUT OSG CALLER REPORT — ${dateStr}`;
+
+            // Build AOA
+            const aoa = [];
+            aoa.push([sheetTitle, ...Array(cols.length + 2).fill('')]);
+            aoa.push(['CALLER', ...cols, 'TOTAL VAL', 'TOTAL CNT']);
+
+            let grandCount = 0, grandValue = 0;
+            const colTotals = {};
+            cols.forEach(c => colTotals[c] = 0);
+
+            callers.forEach(callerName => {
+                const cd = callerData[callerName];
+                if (!cd) return;
+                let counts = {};
+                cd.rows.forEach(r => counts[r.status] = r.count);
+                let row = [callerName];
+                cols.forEach(c => {
+                    const v = counts[c] || 0;
+                    colTotals[c] += v;
+                    row.push(v > 0 ? v : '-');
+                });
+                row.push(Math.round(cd.totalValue));
+                row.push(cd.totalCount);
+                aoa.push(row);
+                grandCount += cd.totalCount;
+                grandValue += cd.totalValue;
+            });
+
+            // Grand Total row
+            let gtRow = ['GRAND TOTAL'];
+            cols.forEach(c => gtRow.push(colTotals[c] > 0 ? colTotals[c] : '-'));
+            gtRow.push(Math.round(grandValue));
+            gtRow.push(grandCount);
+            aoa.push(gtRow);
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+            // Column widths
+            ws['!cols'] = [{ wch: 20 }, ...cols.map(() => ({ wch: 15 })), { wch: 16 }, { wch: 12 }];
+            // Merge title row
+            ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: cols.length + 2 } }];
+            // Row heights
+            ws['!rows'] = [{ hpt: 30 }, { hpt: 24 }, ...callers.map(() => ({ hpt: 22 })), { hpt: 24 }];
+
+            // ---- STYLES ----
+            const titleStyle = {
+                fill: { patternType: 'solid', fgColor: { rgb: 'EA580C' } },
+                font: { color: { rgb: 'FFFFFF' }, bold: true, sz: 13, name: 'Calibri' },
+                alignment: { horizontal: 'center', vertical: 'center' },
+                border: { bottom: { style: 'medium', color: { rgb: 'C2410C' } } }
+            };
+            const headerStyle = {
+                fill: { patternType: 'solid', fgColor: { rgb: '0F172A' } },
+                font: { color: { rgb: 'F97316' }, bold: true, sz: 10, name: 'Calibri' },
+                alignment: { horizontal: 'center', vertical: 'center' },
+                border: {
+                    top: { style: 'thin', color: { rgb: '334155' } },
+                    bottom: { style: 'thin', color: { rgb: '334155' } },
+                    left: { style: 'thin', color: { rgb: '334155' } },
+                    right: { style: 'thin', color: { rgb: '334155' } }
+                }
+            };
+            const grandTotalStyle = {
+                fill: { patternType: 'solid', fgColor: { rgb: 'DC2626' } },
+                font: { color: { rgb: 'FFFFFF' }, bold: true, sz: 11, name: 'Calibri' },
+                alignment: { horizontal: 'center', vertical: 'center' },
+                border: {
+                    top: { style: 'thin', color: { rgb: 'FFFFFF' } },
+                    bottom: { style: 'thin', color: { rgb: 'FFFFFF' } },
+                    left: { style: 'thin', color: { rgb: 'FFFFFF' } },
+                    right: { style: 'thin', color: { rgb: 'FFFFFF' } }
+                }
+            };
+
+            // Caller color map from CO_CALLERS config
+            const callerColors = {};
+            if (typeof CO_CALLERS !== 'undefined') {
+                CO_CALLERS.forEach(c => { callerColors[c.name] = c.color || '#F97316'; });
+            }
+            const hexToRGB = (hex) => hex.replace('#','').toUpperCase().padStart(6,'0');
+
+            const totalRows = aoa.length;
+            const totalCols = cols.length + 3;
+
+            for (let R = 0; R < totalRows; R++) {
+                for (let C = 0; C < totalCols; C++) {
+                    const addr = XLSX.utils.encode_cell({ r: R, c: C });
+                    if (!ws[addr]) ws[addr] = { t: 's', v: '' };
+
+                    if (R === 0) {
+                        // Title row
+                        ws[addr].s = titleStyle;
+                    } else if (R === 1) {
+                        // Header row
+                        ws[addr].s = headerStyle;
+                    } else if (R === totalRows - 1) {
+                        // Grand Total row
+                        ws[addr].s = grandTotalStyle;
+                        if (C === 0) {
+                            ws[addr].s = { ...grandTotalStyle, alignment: { horizontal: 'left', vertical: 'center' } };
+                        }
+                    } else {
+                        // Data rows
+                        const callerIdx = R - 2;
+                        const callerName = callers[callerIdx] || '';
+                        const callerHex = hexToRGB(callerColors[callerName] || '#F97316');
+                        const rowBg = callerIdx % 2 === 0 ? '0F172A' : '1E293B';
+
+                        if (C === 0) {
+                            // Caller name cell — colored left border + avatar-style bg
+                            ws[addr].s = {
+                                fill: { patternType: 'solid', fgColor: { rgb: rowBg } },
+                                font: { color: { rgb: callerHex }, bold: true, sz: 10, name: 'Calibri' },
+                                alignment: { horizontal: 'left', vertical: 'center' },
+                                border: {
+                                    left: { style: 'medium', color: { rgb: callerHex } },
+                                    right: { style: 'thin', color: { rgb: '334155' } },
+                                    top: { style: 'thin', color: { rgb: '334155' } },
+                                    bottom: { style: 'thin', color: { rgb: '334155' } }
+                                }
+                            };
+                        } else if (C === totalCols - 2) {
+                            // Total Value cell
+                            ws[addr].s = {
+                                fill: { patternType: 'solid', fgColor: { rgb: rowBg } },
+                                font: { color: { rgb: callerHex }, bold: true, sz: 10, name: 'Calibri' },
+                                alignment: { horizontal: 'right', vertical: 'center' },
+                                border: { top: { style: 'thin', color: { rgb: '334155' } }, bottom: { style: 'thin', color: { rgb: '334155' } }, left: { style: 'thin', color: { rgb: '334155' } }, right: { style: 'thin', color: { rgb: '334155' } } }
+                            };
+                        } else if (C === totalCols - 1) {
+                            // Total Count cell
+                            ws[addr].s = {
+                                fill: { patternType: 'solid', fgColor: { rgb: rowBg } },
+                                font: { color: { rgb: callerHex }, bold: true, sz: 11, name: 'Calibri' },
+                                alignment: { horizontal: 'center', vertical: 'center' },
+                                border: { top: { style: 'thin', color: { rgb: '334155' } }, bottom: { style: 'thin', color: { rgb: '334155' } }, left: { style: 'thin', color: { rgb: '334155' } }, right: { style: 'thin', color: { rgb: '334155' } } }
+                            };
+                        } else {
+                            // Status count cells
+                            const val = ws[addr].v;
+                            const hasData = val && val !== '-' && val !== 0;
+                            ws[addr].s = {
+                                fill: { patternType: 'solid', fgColor: { rgb: rowBg } },
+                                font: { color: { rgb: hasData ? 'E2E8F0' : '475569' }, bold: hasData, sz: 10, name: 'Calibri' },
+                                alignment: { horizontal: 'center', vertical: 'center' },
+                                border: { top: { style: 'thin', color: { rgb: '334155' } }, bottom: { style: 'thin', color: { rgb: '334155' } }, left: { style: 'thin', color: { rgb: '334155' } }, right: { style: 'thin', color: { rgb: '334155' } } }
+                            };
+                        }
+                    }
+                }
+            }
+
+            XLSX.utils.book_append_sheet(wb, ws, 'Caller Report');
+            XLSX.writeFile(wb, fileName);
+            return;
+        }
+
+        // ---- OTHER TABS: Simple export ----
+        let aoa = [], title = '', fileName = '';
         const cols = ['Connected', 'Disconnected', 'Not Connected', 'Interested', 'Not Interested', 'Follow-up', 'Closed', 'Not Called'];
         let grandCount = 0, grandValue = 0;
         let colTotals = {};
