@@ -2461,7 +2461,7 @@
             if (interest === 'interested') statusLabel = 'Interested';
             else if (interest === 'not-interested') statusLabel = 'Not Interested';
             else if (interest === 'follow-up') statusLabel = 'Follow-up';
-            else if (interest === 'bought') statusLabel = 'Bought';
+            else if (interest === 'bought') statusLabel = 'Closed';
             else if (cs === 'connected') statusLabel = 'Connected';
             else if (cs === 'disconnected') statusLabel = 'Disconnected';
             else if (cs === 'not-connected') statusLabel = 'Not Connected';
@@ -2546,7 +2546,7 @@
             if (interest === 'interested') statusLabel = 'Interested';
             else if (interest === 'not-interested') statusLabel = 'Not Interested';
             else if (interest === 'follow-up') statusLabel = 'Follow-up';
-            else if (interest === 'bought') statusLabel = 'Bought';
+            else if (interest === 'bought') statusLabel = 'Closed';
             else if (cs === 'connected') statusLabel = 'Connected';
             else if (cs === 'disconnected') statusLabel = 'Disconnected';
             else if (cs === 'not-connected') statusLabel = 'Not Connected';
@@ -2563,7 +2563,7 @@
         });
 
         // Sort rows within each caller for consistency
-        const statusOrder = ['Connected', 'Disconnected', 'Not Connected', 'Interested', 'Not Interested', 'Follow-up', 'Bought', 'Called'];
+        const statusOrder = ['Connected', 'Disconnected', 'Not Connected', 'Interested', 'Not Interested', 'Follow-up', 'Closed', 'Called'];
         callers.forEach(name => {
             callerData[name].rows.sort((a, b) => statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status));
         });
@@ -2585,7 +2585,7 @@
             'Interested':     { bg: '#dcfce7', color: '#166534', border: '#86efac' },
             'Not Interested': { bg: '#fee2e2', color: '#991b1b', border: '#fca5a5' },
             'Follow-up':      { bg: '#fef3c7', color: '#92400e', border: '#fcd34d' },
-            'Bought':         { bg: '#d1fae5', color: '#065f46', border: '#6ee7b7' },
+            'Closed':         { bg: '#d1fae5', color: '#065f46', border: '#6ee7b7' },
             'Called':         { bg: '#e0e7ff', color: '#3730a3', border: '#a5b4fc' },
         };
 
@@ -2593,7 +2593,7 @@
         const cellBorder = '1px solid #334155';
         let grandCount = 0, grandValue = 0;
         
-        const cols = ['Connected', 'Disconnected', 'Not Connected', 'Interested', 'Not Interested', 'Follow-up', 'Bought'];
+        const cols = ['Connected', 'Disconnected', 'Not Connected', 'Interested', 'Not Interested', 'Follow-up', 'Closed'];
 
         let html = `
         <div style="overflow-x:auto; border-radius:12px; border:2px solid #334155; box-shadow:0 4px 24px rgba(0,0,0,0.3);">
@@ -2736,7 +2736,7 @@
             if (interest === 'interested') statusLabel = 'Interested';
             else if (interest === 'not-interested') statusLabel = 'Not Interested';
             else if (interest === 'follow-up') statusLabel = 'Follow-up';
-            else if (interest === 'bought') statusLabel = 'Bought';
+            else if (interest === 'bought') statusLabel = 'Closed';
             else if (cs === 'connected') statusLabel = 'Connected';
             else if (cs === 'disconnected') statusLabel = 'Disconnected';
             else if (cs === 'not-connected') statusLabel = 'Not Connected';
@@ -2830,7 +2830,7 @@
             if (interest === 'interested') statusLabel = 'Interested';
             else if (interest === 'not-interested') statusLabel = 'Not Interested';
             else if (interest === 'follow-up') statusLabel = 'Follow-up';
-            else if (interest === 'bought') statusLabel = 'Bought';
+            else if (interest === 'bought') statusLabel = 'Closed';
             else if (cs === 'connected') statusLabel = 'Connected';
             else if (cs === 'disconnected') statusLabel = 'Disconnected';
             else if (cs === 'not-connected') statusLabel = 'Not Connected';
@@ -2857,7 +2857,7 @@
         const today = new Date();
         const dateStr = String(today.getDate()).padStart(2,'0') + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + today.getFullYear();
 
-        const cols = ['Connected', 'Disconnected', 'Not Connected', 'Interested', 'Not Interested', 'Follow-up', 'Bought', 'Not Called'];
+        const cols = ['Connected', 'Disconnected', 'Not Connected', 'Interested', 'Not Interested', 'Follow-up', 'Closed', 'Not Called'];
 
         const cellBorder = '1px solid #334155';
         let grandCount = 0, grandValue = 0;
@@ -2947,7 +2947,7 @@
         let title = '';
         let fileName = '';
 
-        const cols = ['Connected', 'Disconnected', 'Not Connected', 'Interested', 'Not Interested', 'Follow-up', 'Bought', 'Not Called'];
+        const cols = ['Connected', 'Disconnected', 'Not Connected', 'Interested', 'Not Interested', 'Follow-up', 'Closed', 'Not Called'];
         let grandCount = 0, grandValue = 0;
         let colTotals = {};
         cols.forEach(c => colTotals[c] = 0);
@@ -3609,7 +3609,7 @@
             <option value="interested" ${st.interest === 'interested' ? 'selected' : ''}>âœ… Interested</option>
             <option value="not-interested" ${st.interest === 'not-interested' ? 'selected' : ''}>âŒ Not Interested</option>
             <option value="follow-up" ${st.interest === 'follow-up' ? 'selected' : ''}>Follow-up</option>
-            <option value="bought" ${st.interest === 'bought' ? 'selected' : ''}>Bought</option>
+            <option value="bought" ${st.interest === 'bought' ? 'selected' : ''}>Closed</option>
         `;
 
         let setDateBtn = '';
