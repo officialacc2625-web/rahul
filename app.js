@@ -1971,6 +1971,649 @@
     });
 
     function buildFutureStaffStats() {
+        const futureProduct = productData.filter(r => r.branch && r.branch.toUpperCase().includes('FUTURE'));
+
+        const invoiceStaff = {};
+        futureProduct.forEach(r => { if (r.invoice && r.staff) invoiceStaff[r.invoice] = r.staff; });
+
+        const pByStaff = {};
+        futureProduct.forEach(r => {
+            const s = r.staff || 'Unknown';
+            if (!pByStaff[s]) pByStaff[s] = { branch: r.branch, rbm: r.rbm, bdm: r.bdm, rows: [] };
+            pByStaff[s].rows.push(r);
+        });
+
+        const oByStaff = {};
+        osgData.forEach(r => {
+            const s = r.invoice ? (invoiceStaff[r.invoice] || null) : null;
+            if (!s) return;
+            if (!oByStaff[s]) oByStaff[s] = [];
+            oByStaff[s].push(r);
+        });
+
+        const amcByStaff = {};
+        amcData.forEach(r => {
+            const s = r.invoice ? (invoiceStaff[r.invoice] || null) : null;
+            if (!s) return;
+            if (!amcByStaff[s]) amcByStaff[s] = [];
+            amcByStaff[s].push(r);
+        });
+
+        const samByStaff = {};
+        samsungData.forEach(r => {
+            const s = r.invoice ? (invoiceStaff[r.invoice] || null) : null;
+            if (!s) return;
+            if (!samByStaff[s]) samByStaff[s] = [];
+            samByStaff[s].push(r);
+        });
+
+        const allStaff = new Set([...Object.keys(pByStaff), ...Object.keys(oByStaff), ...Object.keys(amcByStaff), ...Object.keys(samByStaff)]);
+        allStaff.delete('Unknown');
+
+        return Array.from(allStaff).map(name => {
+            const pInfo = pByStaff[name] || { branch: '', rbm: '', bdm: '', rows: [] };
+            const oRows = oByStaff[name] || [];
+            const amcRows = amcByStaff[name] || [];
+            const samRows = samByStaff[name] || [];
+
+            const pQty = pInfo.rows.reduce((s, r) => s + r.qty, 0);
+            const oQty = oRows.reduce((s, r) => s + r.qty, 0);
+            const pRev = pInfo.rows.reduce((s, r) => s + r.soldPrice, 0);
+            const oRev = oRows.reduce((s, r) => s + r.soldPrice, 0);
+            const qtyConv = pQty > 0 ? (oQty / pQty) * 100 : 0;
+            const valConv = pRev > 0 ? (oRev / pRev) * 100 : 0;
+            
+            const prodCounts = {};
+            const prodRev = {};
+            pInfo.rows.forEach(r => {
+                const p = r.product || 'Unknown';
+                prodCounts[p] = (prodCounts[p] || 0) + (r.qty || 0);
+                prodRev[p]    = (prodRev[p] || 0) + (r.soldPrice || 0);
+            });
+
+            const oProdCounts = {};
+            const oProdRev = {};
+            oRows.forEach(r => {
+                const p = r.product || 'Unknown';
+                oProdCounts[p] = (oProdCounts[p] || 0) + (r.qty || 0);
+                oProdRev[p]    = (oProdRev[p] || 0) + (r.soldPrice || 0);
+            });
+
+            const amcProdCounts = {};
+            amcRows.forEach(r => {
+                const p = r.product || 'Unknown';
+                amcProdCounts[p] = (amcProdCounts[p] || 0) + (r.qty || 0);
+            });
+
+            const samProdCounts = {};
+            samRows.forEach(r => {
+                const p = r.product || 'Unknown';
+                samProdCounts[p] = (samProdCounts[p] || 0) + (r.qty || 0);
+            });
+
+            const allProds = new Set([...Object.keys(prodCounts), ...Object.keys(oProdCounts), ...Object.keys(amcProdCounts), ...Object.keys(samProdCounts)]);
+            const products = Array.from(allProds).map(p => {
+                const q = prodCounts[p] || 0;
+                const oQ = oProdCounts[p] || 0;
+                const aQ = amcProdCounts[p] || 0;
+                const sQ = samProdCounts[p] || 0;
+                const r = prodRev[p] || 0;
+                const oR = oProdRev[p] || 0;
+                return {
+                    name: p,
+                    qty: q,
+                    osgQty: oQ,
+                    amcQty: aQ,
+                    samQty: sQ,
+                    qtyConv: q > 0 ? (oQ / q) * 100 : 0,
+                    valConv: r > 0 ? (oR / r) * 100 : 0
+                };
+            }).sort((a,b) => b.qty - a.qty);
+
+            return { name, branch: pInfo.branch, rbm: pInfo.rbm, bdm: pInfo.bdm, pQty, oQty, pRev, oRev, qtyConv, valConv, products };
+        });
+    }
+    function renderLowConvPage() {
+        if (productData.length === 0) {
+            $('lcTableWrapper').innerHTML = noDataHTML('Upload data and generate reports first.');
+            $('lcKpiRow').innerHTML = '';
+            $('lcCount').textContent = '0 staff';
+            return;
+        }
+
+        const minQty = parseFloat($('lcMinQty').value) || 0;
+        const maxConv = parseFloat($('lcMaxConv').value);
+        const selRBM = $('lcRBM').value;
+        const selBDM = $('lcBDM').value;
+
+        const allStats = buildStaffStats();
+
+        // Populate RBM dropdown (preserve selection)
+        const rbmSet = [...new Set(allStats.map(s => s.rbm).filter(Boolean))].sort();
+        const bdmSet = [...new Set(allStats.map(s => s.bdm).filter(Boolean))].sort();
+
+        const rbmEl = $('lcRBM');
+        const bdmEl = $('lcBDM');
+        const prevRBM = selRBM;
+        const prevBDM = selBDM;
+
+        rbmEl.innerHTML = '<option value="">All RBMs</option>' +
+            rbmSet.map(r => `<option value="${r}" ${r === prevRBM ? 'selected' : ''}>${r}</option>`).join('');
+        bdmEl.innerHTML = '<option value="">All BDMs</option>' +
+            bdmSet.map(b => `<option value="${b}" ${b === prevBDM ? 'selected' : ''}>${b}</option>`).join('');
+
+        // Filter: minQty, maxConv, optional RBM, optional BDM
+        const filtered = allStats
+            .filter(s => s.pQty >= minQty && s.qtyConv <= maxConv)
+            .filter(s => !selRBM || s.rbm === selRBM)
+            .filter(s => !selBDM || s.bdm === selBDM)
+            .sort((a, b) => {
+                if (a.qtyConv !== b.qtyConv) return a.qtyConv - b.qtyConv;
+                return b.pQty - a.pQty;
+            });
+
+        $('lcCount').textContent = `${filtered.length} staff`;
+
+        // KPI summary
+        const totalPQty = filtered.reduce((s, r) => s + r.pQty, 0);
+        const totalOQty = filtered.reduce((s, r) => s + r.oQty, 0);
+        const totalPRev = filtered.reduce((s, r) => s + r.pRev, 0);
+        const zeroConvCount = filtered.filter(r => r.qtyConv === 0).length;
+        $('lcKpiRow').innerHTML = `
+            <div class="lc-kpi"><span class="lc-kpi-label">Zero Conv Staff</span><span class="lc-kpi-val loss-text">${zeroConvCount}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Total Product Qty</span><span class="lc-kpi-val">${formatNumber(totalPQty)}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Total OSG Qty (Sold)</span><span class="lc-kpi-val">${formatNumber(totalOQty)}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Opportunity Missed (Qty)</span><span class="lc-kpi-val loss-text">${formatNumber(totalPQty - totalOQty)}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Total Product Revenue</span><span class="lc-kpi-val">${fmtShort(totalPRev)}</span></div>
+        `;
+
+        if (filtered.length === 0) {
+            $('lcTableWrapper').innerHTML = noDataHTML(`No staff found with â‰¥${minQty} product qty and â‰¤${maxConv}% qty conversion.`);
+            return;
+        }
+
+        let html = `<table class="data-table">
+            <thead><tr>
+                <th>#</th><th>Staff</th><th>Branch</th><th>RBM</th><th>BDM</th>
+                <th>Prod Qty</th><th>OSG Qty</th><th>Qty Conv%</th><th>Val Conv%</th><th>Prod Rev</th>
+            </tr></thead><tbody>`;
+
+        filtered.forEach((e, i) => {
+            const convCls = e.qtyConv === 0 ? 'loss-val' : (e.qtyConv < 0.5 ? 'conv-warn' : 'conv-val');
+            const rank = i + 1;
+            const rankBadge = rank <= 3 ? `<span class="rank-badge rank-${rank}">${rank}</span>` : `<span class="rank-num">${rank}</span>`;
+            const dlIcon = `<button onclick="window.downloadStaffDetails('${e.name}', '${e.branch}')" title="Download Staff Details" style="background:none;border:none;cursor:pointer;color:var(--primary);padding:0;margin-left:8px;vertical-align:middle;display:inline-flex;align-items:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>`;
+            html += `<tr>
+                <td class="number-cell">${rankBadge}</td>
+                <td style="white-space:nowrap;"><strong>${e.name}</strong>${dlIcon}</td>
+                <td>${e.branch}</td>
+                <td>${e.rbm}</td>
+                <td>${e.bdm}</td>
+                <td class="number-cell"><strong>${e.pQty}</strong></td>
+                <td class="number-cell">${e.oQty}</td>
+                <td class="number-cell ${convCls}">${e.qtyConv.toFixed(2)}%</td>
+                <td class="number-cell conv-val">${e.valConv.toFixed(2)}%</td>
+                <td class="number-cell">${fmtShort(e.pRev)}</td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+        $('lcTableWrapper').innerHTML = html;
+    }
+
+    function exportLowConvCSV() {
+        if (productData.length === 0) return;
+        const minQty = parseFloat($('lcMinQty').value) || 0;
+        const maxConv = parseFloat($('lcMaxConv').value);
+        const selRBM = $('lcRBM').value;
+        const selBDM = $('lcBDM').value;
+        const allStats = buildStaffStats();
+        const filtered = allStats
+            .filter(s => s.pQty >= minQty && s.qtyConv <= maxConv)
+            .filter(s => !selRBM || s.rbm === selRBM)
+            .filter(s => !selBDM || s.bdm === selBDM)
+            .sort((a, b) => a.qtyConv - b.qtyConv || b.pQty - a.pQty);
+        if (filtered.length === 0) return;
+        const hdr = ['Rank', 'Staff', 'Branch', 'RBM', 'BDM', 'Prod Qty', 'OSG Qty', 'Qty Conv%', 'Val Conv%', 'Prod Revenue'];
+        const data = filtered.map((e, i) => [
+            i + 1, e.name, e.branch, e.rbm, e.bdm, e.pQty, e.oQty,
+            parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2)), Math.round(e.pRev)
+        ]);
+        exportToStyledExcel(data, hdr, 'low_conv_staff.xlsx', 'Low Conversion Staff');
+    }
+
+
+    // ---- TOP CONV STAFF PAGE ----
+    $('btnTCRefresh').addEventListener('click', renderTopConvPage);
+    $('btnTCExport').addEventListener('click', exportTopConvCSV);
+    document.querySelector('[data-section="topconv-section"]').addEventListener('click', () => {
+        setTimeout(renderTopConvPage, 50);
+    });
+
+    function renderTopConvPage() {
+        if (productData.length === 0) {
+            $('tcTableWrapper').innerHTML = noDataHTML('Upload data and generate reports first.');
+            $('tcKpiRow').innerHTML = '';
+            $('tcCount').textContent = '0 staff';
+            return;
+        }
+
+        const minQty = parseFloat($('tcMinQty').value) || 0;
+        const sortBy = $('tcSortBy').value; // 'qtyConv' or 'valConv'
+        const topN = parseInt($('tcTopN').value) || 50;
+        const selRBM = $('tcRBM').value;
+        const selBDM = $('tcBDM').value;
+
+        const allStats = buildStaffStats();
+
+        // Populate RBM and BDM dropdowns (preserve selection)
+        const rbmSet = [...new Set(allStats.map(s => s.rbm).filter(Boolean))].sort();
+        const bdmSet = [...new Set(allStats.map(s => s.bdm).filter(Boolean))].sort();
+        $('tcRBM').innerHTML = '<option value="">All RBMs</option>' +
+            rbmSet.map(r => `<option value="${r}" ${r === selRBM ? 'selected' : ''}>${r}</option>`).join('');
+        $('tcBDM').innerHTML = '<option value="">All BDMs</option>' +
+            bdmSet.map(b => `<option value="${b}" ${b === selBDM ? 'selected' : ''}>${b}</option>`).join('');
+
+        // Filter: must have >= minQty product qty AND conversion > 0, plus RBM/BDM filters
+        const eligible = allStats
+            .filter(s => s.pQty >= minQty && s[sortBy] > 0)
+            .filter(s => !selRBM || s.rbm === selRBM)
+            .filter(s => !selBDM || s.bdm === selBDM);
+
+        // Sort: primarily by absolute OSG volume (OSG Qty or OSG Revenue)
+        // This ensures staff with the highest actual number of conversions are at the top,
+        // which naturally requires both high Product Qty and high Conversion %.
+        const filtered = eligible
+            .sort((a, b) => {
+                const volA = sortBy === 'qtyConv' ? a.oQty : a.oRev;
+                const volB = sortBy === 'qtyConv' ? b.oQty : b.oRev;
+                if (volB !== volA) return volB - volA; // Highest OSG volume first
+                return b[sortBy] - a[sortBy];          // Tie-breaker: highest conversion %
+            })
+            .slice(0, topN);
+
+        $('tcCount').textContent = `${filtered.length} staff`;
+
+        // KPI summary
+        const avgQtyConv = filtered.length > 0 ? filtered.reduce((s, r) => s + r.qtyConv, 0) / filtered.length : 0;
+        const avgValConv = filtered.length > 0 ? filtered.reduce((s, r) => s + r.valConv, 0) / filtered.length : 0;
+        const totalOQty = filtered.reduce((s, r) => s + r.oQty, 0);
+        const totalORev = filtered.reduce((s, r) => s + r.oRev, 0);
+        const totalPRev = filtered.reduce((s, r) => s + r.pRev, 0);
+        $('tcKpiRow').innerHTML = `
+            <div class="lc-kpi"><span class="lc-kpi-label">Avg Qty Conv</span><span class="lc-kpi-val profit-text">${avgQtyConv.toFixed(2)}%</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Avg Val Conv</span><span class="lc-kpi-val profit-text">${avgValConv.toFixed(2)}%</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Total OSG Qty</span><span class="lc-kpi-val">${formatNumber(totalOQty)}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Total OSG Revenue</span><span class="lc-kpi-val">${fmtShort(totalORev)}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Total Prod Revenue</span><span class="lc-kpi-val">${fmtShort(totalPRev)}</span></div>
+        `;
+
+        if (filtered.length === 0) {
+            $('tcTableWrapper').innerHTML = noDataHTML('No staff found matching criteria.');
+            return;
+        }
+
+        const sortLabel = sortBy === 'qtyConv' ? 'Qty Conv%' : 'Val Conv%';
+        let html = `<table class="data-table">
+            <thead><tr>
+                <th>#</th><th>Staff</th><th>Branch</th><th>RBM</th><th>BDM</th>
+                <th>Prod Qty</th><th>OSG Qty</th><th>Qty Conv%</th><th>Val Conv%</th><th>Prod Rev</th><th>OSG Rev</th>
+            </tr></thead><tbody>`;
+
+        filtered.forEach((e, i) => {
+            const rank = i + 1;
+            const rankBadge = rank <= 3 ? `<span class="rank-badge rank-${rank}">${rank}</span>` : `<span class="rank-num">${rank}</span>`;
+            const dlIcon = `<button onclick="window.downloadStaffDetails('${e.name}', '${e.branch}')" title="Download Staff Details" style="background:none;border:none;cursor:pointer;color:var(--primary);padding:0;margin-left:8px;vertical-align:middle;display:inline-flex;align-items:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>`;
+            html += `<tr>
+                <td class="number-cell">${rankBadge}</td>
+                <td style="white-space:nowrap;"><strong>${e.name}</strong>${dlIcon}</td>
+                <td>${e.branch}</td>
+                <td>${e.rbm}</td>
+                <td>${e.bdm}</td>
+                <td class="number-cell">${e.pQty}</td>
+                <td class="number-cell"><strong>${e.oQty}</strong></td>
+                <td class="number-cell profit-val">${e.qtyConv.toFixed(2)}%</td>
+                <td class="number-cell profit-val">${e.valConv.toFixed(2)}%</td>
+                <td class="number-cell">${fmtShort(e.pRev)}</td>
+                <td class="number-cell">${fmtShort(e.oRev)}</td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+        $('tcTableWrapper').innerHTML = html;
+    }
+
+    function exportTopConvCSV() {
+        if (productData.length === 0) return;
+        const minQty = parseFloat($('tcMinQty').value) || 0;
+        const sortBy = $('tcSortBy').value;
+        const topN = parseInt($('tcTopN').value) || 50;
+        const selRBM = $('tcRBM').value;
+        const selBDM = $('tcBDM').value;
+        const allStats = buildStaffStats();
+        const filtered = allStats
+            .filter(s => s.pQty >= minQty && s[sortBy] > 0)
+            .filter(s => !selRBM || s.rbm === selRBM)
+            .filter(s => !selBDM || s.bdm === selBDM)
+            .sort((a, b) => {
+                const volA = sortBy === 'qtyConv' ? a.oQty : a.oRev;
+                const volB = sortBy === 'qtyConv' ? b.oQty : b.oRev;
+                if (volB !== volA) return volB - volA; // Highest OSG volume first
+                return b[sortBy] - a[sortBy];          // Tie-breaker: highest conversion %
+            })
+            .slice(0, topN);
+        if (filtered.length === 0) return;
+        const hdr = ['Rank', 'Staff', 'Branch', 'RBM', 'BDM', 'Prod Qty', 'OSG Qty', 'Qty Conv%', 'Val Conv%', 'Prod Revenue', 'OSG Revenue'];
+        const data = filtered.map((e, i) => [
+            i + 1, e.name, e.branch, e.rbm, e.bdm, e.pQty, e.oQty,
+            parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2)), Math.round(e.pRev), Math.round(e.oRev)
+        ]);
+        exportToStyledExcel(data, hdr, 'top_conv_staff.xlsx', 'Top Conversion Staff');
+    }
+
+    // ---- DEEP INSIGHTS PAGE ----
+    $('btnInsightsRefresh').addEventListener('click', renderInsightsPage);
+    document.querySelector('[data-section="insights-section"]').addEventListener('click', () => {
+        setTimeout(renderInsightsPage, 50);
+    });
+
+    function renderInsightsPage() {
+        if (productData.length === 0) {
+            $('insightsContent').innerHTML = noDataHTML('Upload data and generate reports to see insights.');
+            return;
+        }
+
+        const staffStats = buildStaffStats();
+        const conv = calcConversion(productData, osgData);
+        const totalStaff = staffStats.length;
+        const zeroConvStaff = staffStats.filter(s => s.qtyConv === 0 && s.pQty > 0);
+        const topQty = [...staffStats].filter(s => s.pQty >= 3).sort((a, b) => b.qtyConv - a.qtyConv).slice(0, 5);
+        const topVal = [...staffStats].filter(s => s.pQty >= 3).sort((a, b) => b.valConv - a.valConv).slice(0, 5);
+
+        // Branch stats
+        const pByBranch = groupBy(productData, 'branch');
+        const invoiceBranch = {};
+        productData.forEach(r => { if (r.invoice && r.branch) invoiceBranch[r.invoice] = r.branch; });
+        const oByBranch = {};
+        osgData.forEach(r => {
+            const b = r.branch || (r.invoice ? invoiceBranch[r.invoice] : null) || 'Unknown';
+            if (!oByBranch[b]) oByBranch[b] = [];
+            oByBranch[b].push(r);
+        });
+        const branchStats = Object.keys(pByBranch).map(b => {
+            const pRows = pByBranch[b] || [];
+            const oRows = oByBranch[b] || [];
+            const pQty = pRows.reduce((s, r) => s + r.qty, 0);
+            const oQty = oRows.reduce((s, r) => s + r.qty, 0);
+            const pRev = pRows.reduce((s, r) => s + r.soldPrice, 0);
+            const oRev = oRows.reduce((s, r) => s + r.soldPrice, 0);
+            return { name: b, pQty, oQty, pRev, oRev, qtyConv: pQty > 0 ? (oQty / pQty) * 100 : 0, valConv: pRev > 0 ? (oRev / pRev) * 100 : 0 };
+        });
+
+        // RBM stats
+        const pByRBM = groupBy(productData, 'rbm');
+        const invoiceRBM = {};
+        productData.forEach(r => { if (r.invoice && r.rbm) invoiceRBM[r.invoice] = r.rbm; });
+        const oByRBM = {};
+        osgData.forEach(r => {
+            const rbm = r.invoice ? (invoiceRBM[r.invoice] || null) : null;
+            if (rbm) { if (!oByRBM[rbm]) oByRBM[rbm] = []; oByRBM[rbm].push(r); }
+        });
+        const rbmStats = Object.keys(pByRBM).filter(k => k !== 'Unknown').map(name => {
+            const pRows = pByRBM[name] || [];
+            const oRows = oByRBM[name] || [];
+            const pQty = pRows.reduce((s, r) => s + r.qty, 0);
+            const oQty = oRows.reduce((s, r) => s + r.qty, 0);
+            const pRev = pRows.reduce((s, r) => s + r.soldPrice, 0);
+            return { name, pQty, oQty, pRev, qtyConv: pQty > 0 ? (oQty / pQty) * 100 : 0 };
+        });
+
+        // Product stats
+        const pByProd = groupBy(productData, 'product');
+        const oByProd = groupBy(osgData, 'product');
+        const prodStats = Object.keys(pByProd).map(name => {
+            const pRows = pByProd[name] || [];
+            const oRows = oByProd[name] || [];
+            const pQty = pRows.reduce((s, r) => s + r.qty, 0);
+            const oQty = oRows.reduce((s, r) => s + r.qty, 0);
+            const pRev = pRows.reduce((s, r) => s + r.soldPrice, 0);
+            return { name, pQty, oQty, pRev, qtyConv: pQty > 0 ? (oQty / pQty) * 100 : 0 };
+        });
+
+        // Revenue concentration
+        const totalPRev = productData.reduce((s, r) => s + r.soldPrice, 0);
+        const branchRevShare = branchStats.map(b => ({ name: b.name, share: totalPRev > 0 ? (b.pRev / totalPRev) * 100 : 0 })).sort((a, b) => b.share - a.share);
+
+        let html = '';
+
+        // ---- Card 1: Overall Summary ----
+        html += insightCard('Ã°Å¸“Å ', 'Overall Performance Summary', 'info', `
+            <div class="insight-metrics">
+                <div class="insight-metric"><span class="metric-val">${formatNumber(productData.length)}</span><span class="metric-label">Total Transactions</span></div>
+                <div class="insight-metric"><span class="metric-val">${totalStaff}</span><span class="metric-label">Active Staff</span></div>
+                <div class="insight-metric"><span class="metric-val">${conv.valueConv.toFixed(2)}%</span><span class="metric-label">Value Conversion</span></div>
+                <div class="insight-metric"><span class="metric-val">${conv.qtyConv.toFixed(2)}%</span><span class="metric-label">Qty Conversion</span></div>
+                <div class="insight-metric"><span class="metric-val">${fmtShort(totalPRev)}</span><span class="metric-label">Total Prod Revenue</span></div>
+                <div class="insight-metric"><span class="metric-val">${Object.keys(pByBranch).length}</span><span class="metric-label">Active Branches</span></div>
+            </div>
+        `);
+
+        // ---- Card 2: Zero Conversion Alert ----
+        if (zeroConvStaff.length > 0) {
+            const zeroTotalQty = zeroConvStaff.reduce((s, r) => s + r.pQty, 0);
+            const zeroTotalRev = zeroConvStaff.reduce((s, r) => s + r.pRev, 0);
+            const topZero = zeroConvStaff.sort((a, b) => b.pQty - a.pQty).slice(0, 5);
+            html += insightCard('', `Zero Conversion Alert ” ${zeroConvStaff.length} Staff`, 'danger', `
+                <p><strong>${zeroConvStaff.length} staff</strong> have sold <strong>${formatNumber(zeroTotalQty)} products</strong> (${fmtShort(zeroTotalRev)} revenue) but <strong>zero OSG/warranty conversion</strong>.</p>
+                <div class="insight-tag-row">
+                    ${topZero.map(s => `<span class="insight-tag danger">${s.name} (${s.pQty} qty)</span>`).join('')}
+                    ${zeroConvStaff.length > 5 ? `<span class="insight-tag muted">+${zeroConvStaff.length - 5} more</span>` : ''}
+                </div>
+                <div class="insight-solution">
+                    <strong>Ã°Å¸’Â¡ Solution:</strong> Conduct targeted training for these staff members on OSG selling techniques. Pair them with top converters for mentorship. Set 1-week conversion targets with incentives.
+                </div>
+            `);
+        }
+
+        // ---- Card 3: Top Performers ----
+        if (topQty.length > 0) {
+            html += insightCard(' ', 'Top Performers ” Best Qty Conversion', 'success', `
+                <div class="insight-list">
+                    ${topQty.map((s, i) => `
+                        <div class="insight-list-item">
+                            <span class="rank-badge rank-${i < 3 ? i + 1 : 'n'}">${i + 1}</span>
+                            <strong>${s.name}</strong>
+                            <span class="insight-pill success">${s.qtyConv.toFixed(1)}% qty conv</span>
+                            <span class="insight-pill info">${s.pQty} products</span>
+                            <span class="text-muted">${s.branch}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="insight-solution">
+                    <strong>Ã°Å¸’Â¡ Recommendation:</strong> Recognize these staff publicly. Study their techniques and replicate across other branches. Consider a reward/incentive program to sustain performance.
+                </div>
+            `);
+        }
+
+        // ---- Card 4: Underperforming Branches ----
+        const weakBranches = branchStats.filter(b => b.pQty >= 10 && b.qtyConv < 2).sort((a, b) => a.qtyConv - b.qtyConv).slice(0, 5);
+        if (weakBranches.length > 0) {
+            html += insightCard('Ã°Å¸“â€°', 'Underperforming Branches', 'warning', `
+                <p>These branches have significant product sales but very low OSG conversion:</p>
+                <table class="data-table insight-table"><thead><tr>
+                    <th>Branch</th><th>Prod Qty</th><th>OSG Qty</th><th>Qty Conv%</th>
+                </tr></thead><tbody>
+                    ${weakBranches.map(b => `<tr><td>${b.name}</td><td class="number-cell">${b.pQty}</td><td class="number-cell">${b.oQty}</td><td class="number-cell loss-val">${b.qtyConv.toFixed(2)}%</td></tr>`).join('')}
+                </tbody></table>
+                <div class="insight-solution">
+                    <strong>Ã°Å¸’Â¡ Solution:</strong> Schedule branch visits and OSG training workshops. Review branch-level OSG targets. Investigate if product mix or customer demographics contribute to low conversion.
+                </div>
+            `);
+        }
+
+        // ---- Card 5: RBM Performance Gap ----
+        if (rbmStats.length >= 2) {
+            const rbmSorted = [...rbmStats].sort((a, b) => b.qtyConv - a.qtyConv);
+            const best = rbmSorted[0];
+            const worst = rbmSorted[rbmSorted.length - 1];
+            const gap = best.qtyConv - worst.qtyConv;
+            html += insightCard('Ã°Å¸â€˜Â¥', 'RBM Performance Gap', gap > 5 ? 'warning' : 'info', `
+                <div class="insight-compare">
+                    <div class="compare-box success-bg">
+                        <span class="compare-label">Best RBM</span>
+                        <strong>${best.name}</strong>
+                        <span class="insight-pill success">${best.qtyConv.toFixed(2)}% qty conv</span>
+                    </div>
+                    <div class="compare-divider">vs</div>
+                    <div class="compare-box danger-bg">
+                        <span class="compare-label">Needs Improvement</span>
+                        <strong>${worst.name}</strong>
+                        <span class="insight-pill danger">${worst.qtyConv.toFixed(2)}% qty conv</span>
+                    </div>
+                </div>
+                <p>Performance gap: <strong>${gap.toFixed(2)}%</strong>. ${gap > 5 ? 'This is a significant gap that needs attention.' : 'Relatively close performance.'}</p>
+                <div class="insight-solution">
+                    <strong>Ã°Å¸’Â¡ Recommendation:</strong> ${gap > 5 ? 'Organize knowledge-sharing sessions between top and bottom RBMs. Assign mentors and set improvement timelines.' : 'Performance is fairly balanced. Focus on pushing overall numbers higher.'}
+                </div>
+            `);
+        }
+
+        // ---- Card 6: Product Category Analysis ----
+        const prodSorted = [...prodStats].filter(p => p.pQty >= 5).sort((a, b) => a.qtyConv - b.qtyConv);
+        const weakProds = prodSorted.slice(0, 3);
+        const strongProds = prodSorted.slice(-3).reverse();
+        if (prodSorted.length > 0) {
+            html += insightCard('Ã°Å¸“Â¦', 'Product Category Analysis', 'info', `
+                <div class="insight-compare">
+                    <div class="compare-box success-bg" style="flex:1;">
+                        <span class="compare-label">Strong Categories</span>
+                        ${strongProds.map(p => `<div class="mini-row"><strong>${p.name}</strong> <span class="insight-pill success">${p.qtyConv.toFixed(1)}%</span></div>`).join('')}
+                    </div>
+                    <div class="compare-box danger-bg" style="flex:1;">
+                        <span class="compare-label">Weak Categories</span>
+                        ${weakProds.map(p => `<div class="mini-row"><strong>${p.name}</strong> <span class="insight-pill danger">${p.qtyConv.toFixed(1)}%</span></div>`).join('')}
+                    </div>
+                </div>
+                <div class="insight-solution">
+                    <strong>Ã°Å¸’Â¡ Solution:</strong> Focus OSG push on weak categories. Create category-specific sales scripts. Consider bundled OSG offers for low-converting product types.
+                </div>
+            `);
+        }
+
+        // ---- Card 7: Revenue Concentration Risk ----
+        if (branchRevShare.length >= 3) {
+            const top3Share = branchRevShare.slice(0, 3).reduce((s, b) => s + b.share, 0);
+            html += insightCard('âš–ï¸', 'Revenue Concentration', top3Share > 50 ? 'warning' : 'info', `
+                <p>Top 3 branches contribute <strong>${top3Share.toFixed(1)}%</strong> of total product revenue:</p>
+                <div class="insight-tag-row">
+                    ${branchRevShare.slice(0, 5).map(b => `<span class="insight-tag info">${b.name}: ${b.share.toFixed(1)}%</span>`).join('')}
+                </div>
+                ${top3Share > 50 ? '<p class="text-warning"> High concentration risk ” underperformance in these branches would significantly impact overall numbers.</p>' : '<p class="text-success">âœ… Revenue is fairly distributed ” good diversification.</p>'}
+                <div class="insight-solution">
+                    <strong>Ã°Å¸’Â¡ Recommendation:</strong> ${top3Share > 50 ? 'Invest in growing smaller branches. Reduce dependency on top branches by improving performance of bottom 50%.' : 'Maintain balanced growth across all branches.'}
+                </div>
+            `);
+        }
+
+        // ---- Card X: Deep Root Cause Analysis ----
+        let deepAnalysisHtml = `<ul style="padding-left:1.5rem; margin-bottom:1rem; color:var(--text-secondary);">`;
+
+        // 1. Product factor
+        const lowConvProds = prodStats
+            .filter(p => p.pQty >= 5) // At least 5 units sold
+            .sort((a, b) => a.qtyConv - b.qtyConv);
+
+        if (lowConvProds.length > 0) {
+            const worstProd = lowConvProds[0];
+            deepAnalysisHtml += `
+                <li style="margin-bottom:12px;">
+                    <strong>Product Factor (<span style="color:var(--loss);">${worstProd.name}</span>):</strong> 
+                    Only converting at <span style="color:var(--loss); font-weight:600;">${worstProd.qtyConv.toFixed(1)}%</span>.
+                    <div style="margin-top:4px; font-size:0.9rem;">
+                        <em>Reason:</em> Highly competitive market segment or low perceived value of OSG for this specific product tier. Customers might view the base product as disposable or already adequately warrantied by the manufacturer.
+                    </div>
+                    <div style="margin-top:4px; font-size:0.9rem;">
+                        <em>Recommendation:</em> Bundle OSG directly into the financing plan for this product, or introduce a "lite" OSG tier tailored to its price point.
+                    </div>
+                </li>`;
+        }
+
+        // 2. Staff factor
+        const weakStaff = staffStats.filter(s => s.pQty >= 5 && s.qtyConv > 0 && s.qtyConv < 5);
+        if (zeroConvStaff.length > 0 || weakStaff.length > 0) {
+            const problemStaffCount = zeroConvStaff.length + weakStaff.length;
+            const pctStaff = ((problemStaffCount / staffStats.length) * 100).toFixed(0);
+            deepAnalysisHtml += `
+                <li style="margin-bottom:12px;">
+                    <strong>Staff Effectiveness:</strong> 
+                    <span style="color:var(--loss); font-weight:600;">${pctStaff}%</span> of staff (${problemStaffCount} members) are significantly underperforming (&lt;5% conversion).
+                    <div style="margin-top:4px; font-size:0.9rem;">
+                        <em>Reason:</em> Lack of pitch confidence, skipping the OSG conversation entirely to close the primary sale faster, or failing to overcome initial customer objections ("it's too expensive").
+                    </div>
+                    <div style="margin-top:4px; font-size:0.9rem;">
+                        <em>Recommendation:</em> Implement a mandatory "3-strike objection handling" framework. Pair bottom quartile staff with Top 3 converters (${topQty.slice(0, 3).map(s => s.name).join(', ')}) for mandatory shadowing sessions this week.
+                    </div>
+                </li>`;
+        }
+
+        // 3. Branch/Footprint factor
+        if (weakBranches.length > 0) {
+            const worstBranch = weakBranches.sort((a, b) => a.qtyConv - b.qtyConv)[0];
+            deepAnalysisHtml += `
+                <li style="margin-bottom:12px;">
+                    <strong>Location Impact (<span style="color:var(--loss);">${worstBranch.name}</span>):</strong> 
+                    Converting at just <span style="color:var(--loss); font-weight:600;">${worstBranch.qtyConv.toFixed(1)}%</span>.
+                    <div style="margin-top:4px; font-size:0.9rem;">
+                        <em>Reason:</em> Demographic price sensitivity in this catchment area, or systemic store-leadership de-prioritization of accessory/OSG targets in favor of raw hardware volume.
+                    </div>
+                    <div style="margin-top:4px; font-size:0.9rem;">
+                        <em>Recommendation:</em> Run a weekend "Free Protection Demo" in-store. RBM needs to reset expectations with the Store Manager that hardware quotas include an absolute minimum 15% OSG attach.
+                    </div>
+                </li>`;
+        }
+        deepAnalysisHtml += `</ul>`;
+
+        html += insightCard('Ã°Å¸”Â', 'Deep Root Cause Analysis', 'danger', `
+            <p style="margin-bottom:1rem; color:var(--text-primary); font-weight:500;">Based on combinatorial data analysis, the primary drivers of lost conversion are:</p>
+            ${deepAnalysisHtml}
+        `);
+
+        // ---- Card 8: Action Plan ----
+        const urgentActions = [];
+        if (zeroConvStaff.length > 5) urgentActions.push(`Train ${zeroConvStaff.length} zero-conversion staff on OSG selling immediately`);
+        if (weakBranches.length > 0) urgentActions.push(`Conduct branch visits to ${weakBranches.map(b => b.name).join(', ')}`);
+        if (conv.qtyConv < 5) urgentActions.push(`Overall qty conversion (${conv.qtyConv.toFixed(1)}%) is below target ” launch org-wide OSG campaign`);
+        urgentActions.push('Review and update staff-wise weekly conversion targets');
+        urgentActions.push('Share top performer success stories in team meetings');
+        if (topQty.length > 0) urgentActions.push(`Reward top converters: ${topQty.slice(0, 3).map(s => s.name).join(', ')}`);
+
+        html += insightCard('', 'Action Plan ” Next Steps', 'action', `
+            <ol class="insight-actions">
+                ${urgentActions.map(a => `<li>${a}</li>`).join('')}
+            </ol>
+        `);
+
+        $('insightsContent').innerHTML = html;
+    }
+
+    function insightCard(icon, title, severity, body) {
+        return `<div class="insight-card insight-${severity}">
+            <div class="insight-card-header">
+                <span class="insight-icon">${icon}</span>
+                <h3>${title}</h3>
+            </div>
+            <div class="insight-card-body">${body}</div>
+        </div>`;
+    }
+
+    // ---- FUTURE STORES PAGE ----
+    $('btnFSRefresh').addEventListener('click', renderFutureStoresPage);
+    $('btnFSExport').addEventListener('click', exportFutureStoresCSV);
+    document.querySelector('[data-section="future-section"]').addEventListener('click', () => {
+        setTimeout(renderFutureStoresPage, 50);
+    });
+
+    function buildFutureStaffStats() {
         // Only include product rows whose branch contains "FUTURE" (case-insensitive)
         const futureProduct = productData.filter(r => r.branch && r.branch.toUpperCase().includes('FUTURE'));
 
@@ -2136,132 +2779,98 @@
         const selBDM = $('fsBDM').value;
         const selBranch = $('fsBranch').value;
         const allStats = buildFutureStaffStats();
+        
+        // Sort by Branch -> BDM -> Staff
         const filtered = allStats
             .filter(s => !selRBM || s.rbm === selRBM)
             .filter(s => !selBDM || s.bdm === selBDM)
             .filter(s => !selBranch || s.branch === selBranch)
-            .sort((a, b) => b.pQty - a.pQty);
+            .sort((a, b) => (a.branch||'').localeCompare(b.branch||'') || (a.bdm||'').localeCompare(b.bdm||'') || (a.name||'').localeCompare(b.name||''));
         
         if (filtered.length === 0) return;
 
-        const hdr = ['Rank', 'Staff', 'Product', 'Product Qty', 'OSG Qty', 'Qty Conv%', 'Val Conv%', 'OVERALL Qty Conv%', 'OVERALL Val Conv%', 'BDM'];
-        const wb = XLSX.utils.book_new();
+        const hdr = ['BRANCH', 'BDM', 'Staff', 'Product', 'Product Qty', 'OSG Qty', 'AMC Qty', 'SAMSUNG Qty', 'Osg Qty Conv%', 'Osg Val Conv%'];
+        const aoa = [hdr];
 
-        function addSheet(statsList, sheetName) {
-            const data = [hdr];
-            const mergeRanges = [];
-            // Merge columns: Rank(0), Staff(1), OVERALL Qty Conv%(7), OVERALL Val Conv%(8), BDM(9)
-            const mergeCols = [0, 1, 7, 8, 9];
-
-            statsList.forEach((e, i) => {
-                const rank = i + 1;
-                const startRow = data.length;
-
-                if (e.products && e.products.length > 0) {
-                    e.products.forEach((prod, pIdx) => {
-                        if (pIdx === 0) {
-                            data.push([
-                                rank, 
-                                e.name, 
-                                prod.name, 
-                                prod.qty, 
-                                prod.osgQty, 
-                                parseFloat(prod.qtyConv.toFixed(2)), 
-                                parseFloat(prod.valConv.toFixed(2)), 
-                                parseFloat(e.qtyConv.toFixed(2)), 
-                                parseFloat(e.valConv.toFixed(2)), 
-                                e.bdm || '”'
-                            ]);
-                        } else {
-                            data.push([
-                                '', 
-                                '', 
-                                prod.name, 
-                                prod.qty, 
-                                prod.osgQty, 
-                                parseFloat(prod.qtyConv.toFixed(2)), 
-                                parseFloat(prod.valConv.toFixed(2)), 
-                                '', 
-                                '', 
-                                ''
-                            ]);
-                        }
-                    });
-                    const endRow = data.length - 1;
-                    if (e.products.length > 1) {
-                        mergeCols.forEach(c => mergeRanges.push({ s: { r: startRow, c }, e: { r: endRow, c } }));
-                    }
-                } else {
-                    data.push([rank, e.name, '', 0, 0, 0, 0, parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2)), e.bdm || '”']);
-                }
-            });
-
-            const ws = XLSX.utils.aoa_to_sheet(data);
-            if (mergeRanges.length > 0) ws['!merges'] = mergeRanges;
-
-            // Header Style: Navy blue bg, white text
-            const headerStyle = {
-                font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: 'FFFFFF' } },
-                fill: { fgColor: { rgb: '1f2e4d' } },
-                alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
-                border: {
-                    top: { style: 'thin', color: { rgb: '000000' } }, bottom: { style: 'thin', color: { rgb: '000000' } },
-                    left: { style: 'thin', color: { rgb: '000000' } }, right: { style: 'thin', color: { rgb: '000000' } }
-                }
-            };
-
-            const cellBorder = {
-                top: { style: 'thin', color: { rgb: 'FFFFFF' } }, bottom: { style: 'thin', color: { rgb: 'FFFFFF' } },
-                left: { style: 'thin', color: { rgb: 'FFFFFF' } }, right: { style: 'thin', color: { rgb: 'FFFFFF' } }
-            };
-
-            const orangeStyle = { font: { name: 'Calibri', sz: 11, color: { rgb: '000000' } }, border: cellBorder, fill: { fgColor: { rgb: 'F4B084' } } };
-            const blueStyle = { font: { name: 'Calibri', sz: 11, color: { rgb: '000000' } }, border: cellBorder, fill: { fgColor: { rgb: '9BC2E6' } } };
-
-            let currentRank = 0;
-            for (let R = 0; R < data.length; ++R) {
-                // Determine block color based on rank parsed from col 0
-                if (R > 0 && data[R][0] !== '') currentRank = data[R][0];
-                const bgStyle = currentRank % 2 === 0 ? blueStyle : orangeStyle;
-
-                for (let C = 0; C < hdr.length; ++C) {
-                    const cell_ref = XLSX.utils.encode_cell({ c: C, r: R });
-                    if (!ws[cell_ref]) ws[cell_ref] = { t: 's', v: '' };
-                    
-                    if (R === 0) {
-                        ws[cell_ref].s = headerStyle;
-                    } else {
-                        ws[cell_ref].s = { 
-                            ...bgStyle, 
-                            alignment: { horizontal: 'center', vertical: 'center' }
-                        };
-                    }
-                }
+        filtered.forEach(e => {
+            if (e.products && e.products.length > 0) {
+                e.products.forEach(prod => {
+                    aoa.push([
+                        e.branch || 'Unknown',
+                        e.bdm || 'Unknown',
+                        e.name || 'Unknown',
+                        prod.name || 'Unknown',
+                        prod.qty,
+                        prod.osgQty,
+                        prod.amcQty,
+                        prod.samQty,
+                        parseFloat(prod.qtyConv.toFixed(2)),
+                        parseFloat(prod.valConv.toFixed(2))
+                    ]);
+                });
             }
-
-            ws['!cols'] = [{wch:6},{wch:20},{wch:24},{wch:12},{wch:10},{wch:12},{wch:12},{wch:18},{wch:18},{wch:18}];
-
-            let safeName = sheetName.substring(0, 31).replace(/[\\\/?*[\]]/g, '');
-            if (!safeName) safeName = 'Sheet';
-            let finalName = safeName;
-            let counter = 1;
-            while (wb.SheetNames.includes(finalName)) {
-                finalName = safeName.substring(0, 27) + ' ' + counter;
-                counter++;
-            }
-            XLSX.utils.book_append_sheet(wb, ws, finalName);
-        }
-
-        // First sheet: Overview
-        addSheet(filtered, 'Branch Overview');
-
-        // Branch sheets
-        const branches = [...new Set(filtered.map(s => s.branch).filter(Boolean))].sort();
-        branches.forEach(branch => {
-            addSheet(filtered.filter(s => s.branch === branch), branch);
         });
 
-        XLSX.writeFile(wb, 'Future_Stores_Staff_Report.xlsx');
+        const wb = XLSX.utils.book_new();
+
+        // --- SHEET 1: Merged UI (Like Photo 1) ---
+        const aoaMerged = [];
+        const merges1 = [];
+        let bStart = 1, bdmStart = 1, sStart = 1;
+
+        aoa.forEach((row, i) => {
+            if (i === 0) { aoaMerged.push([...row]); return; }
+            const prevRow = aoa[i-1];
+            const isLast = i === aoa.length - 1;
+            
+            let r0 = row[0], r1 = row[1], r2 = row[2];
+            
+            // Check boundaries to create merges
+            // Branch (Col 0)
+            if (isLast || (i < aoa.length - 1 && aoa[i+1][0] !== row[0])) {
+                if (i > bStart) merges1.push({ s: { r: bStart, c: 0 }, e: { r: i, c: 0 } });
+                bStart = i + 1;
+            }
+            if (i > 1 && row[0] === prevRow[0]) r0 = '';
+            
+            // BDM (Col 1)
+            if (isLast || (i < aoa.length - 1 && (aoa[i+1][0] !== row[0] || aoa[i+1][1] !== row[1]))) {
+                if (i > bdmStart) merges1.push({ s: { r: bdmStart, c: 1 }, e: { r: i, c: 1 } });
+                bdmStart = i + 1;
+            }
+            if (i > 1 && row[0] === prevRow[0] && row[1] === prevRow[1]) r1 = '';
+            
+            // Staff (Col 2)
+            if (isLast || (i < aoa.length - 1 && (aoa[i+1][0] !== row[0] || aoa[i+1][1] !== row[1] || aoa[i+1][2] !== row[2]))) {
+                if (i > sStart) merges1.push({ s: { r: sStart, c: 2 }, e: { r: i, c: 2 } });
+                sStart = i + 1;
+            }
+            if (i > 1 && row[0] === prevRow[0] && row[1] === prevRow[1] && row[2] === prevRow[2]) r2 = '';
+
+            aoaMerged.push([r0, r1, r2, row[3], row[4], row[5], row[6], row[7], row[8], row[9]]);
+        });
+
+        const ws1 = XLSX.utils.aoa_to_sheet(aoaMerged);
+        ws1['!merges'] = merges1;
+        ws1['!cols'] = [{ wch: 22 }, { wch: 15 }, { wch: 20 }, { wch: 25 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 14 }, { wch: 16 }, { wch: 16 }];
+        XLSX.utils.book_append_sheet(wb, ws1, 'Merged View');
+
+        // --- SHEET 2: Unmerged UI (Like Photo 2) ---
+        const ws2 = XLSX.utils.aoa_to_sheet(aoa);
+        ws2['!cols'] = [{ wch: 22 }, { wch: 15 }, { wch: 20 }, { wch: 25 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 14 }, { wch: 16 }, { wch: 16 }];
+        XLSX.utils.book_append_sheet(wb, ws2, 'Flat View');
+
+        // Force numeric types for export columns (Cols 4 to 9)
+        for (let r = 1; r < aoa.length; r++) {
+            for (let c = 4; c <= 9; c++) {
+                [ws1, ws2].forEach(ws => {
+                    const cell = ws[XLSX.utils.encode_cell({ r, c })];
+                    if (cell) cell.t = 'n';
+                });
+            }
+        }
+
+        XLSX.writeFile(wb, 'Future_Stores_Report.xlsx');
     }
 
     // ---- PRODUCT DETAILS PAGE ----
