@@ -2037,10 +2037,29 @@
             
             const prodCounts = {};
             const prodRev = {};
+            const lgProdCounts = {};
+            const samProdCounts = {};
+            const lgProdRev = {};
+            const samProdRev = {};
+            const samsungAllowedCats = ['AC', 'MICROWAVE OVEN', 'REFRIGERATOR', 'WASHING MACHINE'];
+
             pInfo.rows.forEach(r => {
-                const p = r.product || 'Unknown';
-                prodCounts[p] = (prodCounts[p] || 0) + (r.qty || 0);
-                prodRev[p]    = (prodRev[p] || 0) + (r.soldPrice || 0);
+                const originalP = r.product || 'Unknown';
+                const p = r.product ? r.product.toUpperCase().trim() : 'UNKNOWN';
+                const b = r.brand ? r.brand.toUpperCase() : '';
+
+                prodCounts[originalP] = (prodCounts[originalP] || 0) + (r.qty || 0);
+                prodRev[originalP]    = (prodRev[originalP] || 0) + (r.soldPrice || 0);
+
+                if (b.includes('LG')) {
+                    lgProdCounts[originalP] = (lgProdCounts[originalP] || 0) + (r.qty || 0);
+                    lgProdRev[originalP] = (lgProdRev[originalP] || 0) + (r.soldPrice || 0);
+                }
+
+                if (b.includes('SAMSUNG') && samsungAllowedCats.includes(p)) {
+                    samProdCounts[originalP] = (samProdCounts[originalP] || 0) + (r.qty || 0);
+                    samProdRev[originalP] = (samProdRev[originalP] || 0) + (r.soldPrice || 0);
+                }
             });
 
             const oProdCounts = {};
@@ -2070,28 +2089,40 @@
             const allProds = new Set([...Object.keys(prodCounts), ...Object.keys(oProdCounts), ...Object.keys(amcProdCounts), ...Object.keys(samProdCounts)]);
             const products = Array.from(allProds).map(p => {
                 const q = prodCounts[p] || 0;
+                const lgQ = lgProdCounts[p] || 0;
+                const samPQ = samProdCounts[p] || 0;
+                
                 const oQ = oProdCounts[p] || 0;
                 const aQ = amcProdCounts[p] || 0;
                 const sQ = samProdCounts[p] || 0;
+                
                 const r = prodRev[p] || 0;
+                const lgR = lgProdRev[p] || 0;
+                const samPR = samProdRev[p] || 0;
+                
                 const oR = oProdRev[p] || 0;
                 const aR = amcProdRev[p] || 0;
                 const sR = samProdRev[p] || 0;
+                
                 return {
                     name: p,
                     qty: q,
+                    lgProdQty: lgQ,
+                    samProdQty: samPQ,
                     osgQty: oQ,
                     amcQty: aQ,
                     samQty: sQ,
                     amcRev: aR,
                     samRev: sR,
                     productRev: r,
+                    lgProdRev: lgR,
+                    samProdRev: samPR,
                     qtyConv: q > 0 ? (oQ / q) * 100 : 0,
                     valConv: r > 0 ? (oR / r) * 100 : 0,
-                    amcQtyConv: q > 0 ? (aQ / q) * 100 : 0,
-                    amcValConv: r > 0 ? (aR / r) * 100 : 0,
-                    samQtyConv: q > 0 ? (sQ / q) * 100 : 0,
-                    samValConv: r > 0 ? (sR / r) * 100 : 0
+                    amcQtyConv: lgQ > 0 ? (aQ / lgQ) * 100 : 0,
+                    amcValConv: lgR > 0 ? (aR / lgR) * 100 : 0,
+                    samQtyConv: samPQ > 0 ? (sQ / samPQ) * 100 : 0,
+                    samValConv: samPR > 0 ? (sR / samPR) * 100 : 0
                 };
             }).sort((a,b) => b.qty - a.qty);
 
@@ -2979,29 +3010,31 @@
         filteredStats.forEach(e => {
             if (e.products && e.products.length > 0) {
                 e.products.forEach(prod => {
-                    // Sheet 3: LG-AMC (Only include rows where Product Qty > 0 and AMC Qty > 0, or maybe just all products for staff who have AMC? Let's include if there's any AMC qty or if it's LG products, actually it's best to show all products but users can filter. Wait, "ONLY THE DATA OF LG-AMC WARRANTY CONVERSION" - let's show rows where amcQty > 0 or productQty > 0 and it's relevant to AMC. Better to just show products where AMC Qty > 0 or product qty > 0 so they can see conversion.)
-                    // Actually, let's include all rows so they see the conversion against total products, just like Sheet 2 but specific to AMC.
-                    aoa3.push([
-                        e.branch || 'Unknown',
-                        e.bdm || 'Unknown',
-                        e.name || 'Unknown',
-                        prod.name || 'Unknown',
-                        prod.qty,
-                        prod.amcQty,
-                        parseFloat(prod.amcQtyConv.toFixed(2)),
-                        parseFloat(prod.amcValConv.toFixed(2))
-                    ]);
+                    if (prod.lgProdQty > 0 || prod.amcQty > 0) {
+                        aoa3.push([
+                            e.branch || 'Unknown',
+                            e.bdm || 'Unknown',
+                            e.name || 'Unknown',
+                            prod.name || 'Unknown',
+                            prod.lgProdQty,
+                            prod.amcQty,
+                            parseFloat(prod.amcQtyConv.toFixed(2)),
+                            parseFloat(prod.amcValConv.toFixed(2))
+                        ]);
+                    }
                     
-                    aoa4.push([
-                        e.branch || 'Unknown',
-                        e.bdm || 'Unknown',
-                        e.name || 'Unknown',
-                        prod.name || 'Unknown',
-                        prod.qty,
-                        prod.samQty,
-                        parseFloat(prod.samQtyConv.toFixed(2)),
-                        parseFloat(prod.samValConv.toFixed(2))
-                    ]);
+                    if (prod.samProdQty > 0 || prod.samQty > 0) {
+                        aoa4.push([
+                            e.branch || 'Unknown',
+                            e.bdm || 'Unknown',
+                            e.name || 'Unknown',
+                            prod.name || 'Unknown',
+                            prod.samProdQty,
+                            prod.samQty,
+                            parseFloat(prod.samQtyConv.toFixed(2)),
+                            parseFloat(prod.samValConv.toFixed(2))
+                        ]);
+                    }
                 });
             }
         });
