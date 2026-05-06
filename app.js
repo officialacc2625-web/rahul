@@ -464,13 +464,11 @@
         });
         input.addEventListener('change', async () => {
             if (input.files.length > 0) {
-                showLoading(true);
                 try {
                     await onFiles(Array.from(input.files));
                 } catch (err) {
                     console.error(err);
                 } finally {
-                    showLoading(false);
                     input.value = '';
                 }
             }
