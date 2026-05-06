@@ -359,7 +359,7 @@
 
         if (zoneSmart && inputSmart) {
             setupUploadZone(zoneSmart, inputSmart, async (files) => {
-                alert('[DEBUG] onFiles called with ' + files.length + ' files');
+                document.getElementById('debugText').textContent = '[DEBUG] onFiles called with ' + files.length + ' files';
                 console.log('[UPLOAD DEBUG] onFiles called with', files.length, 'files:', files.map(f=>f.name));
                 for (let file of files) {
                     let fname = file.name.toLowerCase();
@@ -468,7 +468,7 @@
             }
         });
         input.addEventListener('change', async () => {
-            alert('[DEBUG] Change event fired! Files selected: ' + input.files.length);
+            document.getElementById('debugText').textContent = '[DEBUG] Change event fired! Files selected: ' + input.files.length;
             console.log('[UPLOAD DEBUG] input change fired! files:', input.files.length);
             if (input.files.length > 0) {
                 try {

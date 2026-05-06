@@ -188,13 +188,14 @@
                     <div class="upload-zone" id="uploadZoneSmart" style="padding: 40px 20px; margin-top: 16px;">
                         <p class="upload-text" style="font-size: 1.1rem; margin-bottom: 12px;">Drag & Drop all your CSV/Excel files here at once</p>
                         <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 16px;">(Product, OSG, AMC, and Samsung reports)</p>
-                        <label for="fileInputSmart" class="browse-btn" onclick="alert('Label clicked!'); event.stopPropagation(); event.preventDefault(); document.getElementById('fileInputSmart').click();" style="background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.3); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; font-family: inherit; display: inline-block; user-select: none;">Browse Files</label>
+                        <label for="fileInputSmart" class="browse-btn" onclick="document.getElementById('debugText').textContent = 'Label clicked!'; event.stopPropagation(); event.preventDefault(); document.getElementById('fileInputSmart').click();" style="background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.3); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; font-family: inherit; display: inline-block; user-select: none;">Browse Files</label>
+                        <p id="debugText" style="color: red; font-weight: bold; font-size: 1.2rem;"></p>
                         <div class="upload-formats" style="margin-top: 16px;">
                             <span class="format-tag">.xlsx</span>
                             <span class="format-tag">.xls</span>
                             <span class="format-tag">.csv</span>
                         </div>
-                        <input type="file" id="fileInputSmart" accept=".xlsx,.xls,.csv" multiple onchange="alert('File input changed! Files: ' + this.files.length);" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0;">
+                        <input type="file" id="fileInputSmart" accept=".xlsx,.xls,.csv" multiple onchange="document.getElementById('debugText').textContent = 'File input changed! Files: ' + this.files.length;" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0;">
                     </div>
                     
                     <div class="smart-status-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 16px;">
@@ -989,7 +990,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
 
-    <script src="app.js?v=75"></script>
+    <script src="app.js?v=76"></script>
 </body>
 
 </html>
