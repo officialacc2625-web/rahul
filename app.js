@@ -437,27 +437,25 @@
     }
 
     function setupUploadZone(zone, input, onFiles) {
+        // Only open the file picker on bare zone clicks (not on label/button/input)
+        // The label's native `for` attribute already opens the input — no manual click needed
         zone.addEventListener('click', (e) => {
-            // Label has its own onclick (stopPropagation + input.click()), so ignore it here
             if (e.target === input) return;
             if (e.target.tagName === 'LABEL' || e.target.closest('label')) return;
-            // Bare zone click (not on any control) — open file picker
+            if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
             input.click();
         });
-        input.addEventListener('click', (e) => e.stopPropagation());
         zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
         zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
         zone.addEventListener('drop', async e => {
             e.preventDefault();
             zone.classList.remove('drag-over');
             if (e.dataTransfer.files.length > 0) {
-                showLoading(true);
                 try {
                     await onFiles(Array.from(e.dataTransfer.files));
                 } catch (err) {
                     console.error(err);
                 } finally {
-                    showLoading(false);
                     input.value = '';
                 }
             }
