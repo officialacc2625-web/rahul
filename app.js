@@ -360,6 +360,8 @@
     // ---- UPLOAD HANDLING ----
         // Always use fresh getElementById to avoid safeProxy issues
     function initUploadZones() {
+        var d = document.getElementById('debugText');
+        if(d) d.textContent = '[DEBUG] initUploadZones called';
         const zoneSmart = document.getElementById('uploadZoneSmart');
         const inputSmart = document.getElementById('fileInputSmart');
         console.log('[UPLOAD DEBUG] initUploadZones called. zone:', zoneSmart, 'input:', inputSmart);
@@ -370,7 +372,7 @@
         const statusSamsung = document.getElementById('samsungStatus');
 
         if (zoneSmart && inputSmart) {
-            setupUploadZone(zoneSmart, inputSmart, async (files) => {
+            const onFilesHandler = async (files) => {
                 document.getElementById('debugText').textContent = '[DEBUG] onFiles called with ' + files.length + ' files';
                 console.log('[UPLOAD DEBUG] onFiles called with', files.length, 'files:', files.map(f=>f.name));
                 for (let file of files) {
@@ -442,7 +444,9 @@
                     }
                 }
                 checkGenerateReady();
-            });
+            };
+            
+            setupUploadZone(zoneSmart, inputSmart, onFilesHandler);
         }
     }
 
