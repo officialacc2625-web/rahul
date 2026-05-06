@@ -349,6 +349,7 @@
     function initUploadZones() {
         const zoneSmart = document.getElementById('uploadZoneSmart');
         const inputSmart = document.getElementById('fileInputSmart');
+        console.log('[UPLOAD DEBUG] initUploadZones called. zone:', zoneSmart, 'input:', inputSmart);
         
         const statusProduct = document.getElementById('productStatus');
         const statusOSG = document.getElementById('osgStatus');
@@ -357,6 +358,7 @@
 
         if (zoneSmart && inputSmart) {
             setupUploadZone(zoneSmart, inputSmart, async (files) => {
+                console.log('[UPLOAD DEBUG] onFiles called with', files.length, 'files:', files.map(f=>f.name));
                 for (let file of files) {
                     let fname = file.name.toLowerCase();
                     let fileType = null;
@@ -437,12 +439,15 @@
     }
 
     function setupUploadZone(zone, input, onFiles) {
+        console.log('[UPLOAD DEBUG] setupUploadZone registered for', input.id);
         // Only open the file picker on bare zone clicks (not on label/button/input)
         // The label's native `for` attribute already opens the input — no manual click needed
         zone.addEventListener('click', (e) => {
+            console.log('[UPLOAD DEBUG] zone click, target:', e.target.tagName, e.target.className);
             if (e.target === input) return;
             if (e.target.tagName === 'LABEL' || e.target.closest('label')) return;
             if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
+            console.log('[UPLOAD DEBUG] zone click triggering input.click()');
             input.click();
         });
         zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
@@ -461,11 +466,12 @@
             }
         });
         input.addEventListener('change', async () => {
+            console.log('[UPLOAD DEBUG] input change fired! files:', input.files.length);
             if (input.files.length > 0) {
                 try {
                     await onFiles(Array.from(input.files));
                 } catch (err) {
-                    console.error(err);
+                    console.error('[UPLOAD DEBUG] onFiles error:', err);
                 } finally {
                     input.value = '';
                 }
