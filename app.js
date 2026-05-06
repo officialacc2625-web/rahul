@@ -255,7 +255,8 @@
             const vConv = st.pRev > 0 ? (st.oRev / st.pRev) * 100 : 0;
             
             // Find the branch for this staff from the filtered rows
-            const sBranch = pRows.find(r => r.staff === s)?.branch || branch || 'Unknown';
+            const sRow = pRows.find(r => r.staff === s);
+            const sBranch = (sRow && sRow.branch) ? sRow.branch : (branch || 'Unknown');
 
             const products = Object.keys(staffProdCounts[s]).sort((a, b) => staffProdCounts[s][b] - staffProdCounts[s][a]);
             products.forEach(p => {
@@ -1416,7 +1417,10 @@
             if (bShr) bShr.style.display = 'none';
             if (bGen) bGen.disabled = true;
             [filterRBM, filterBranch, filterBDM, filterStaff].forEach(sel => {
-                if (sel && sel.innerHTML !== undefined) sel.innerHTML = `<option value="">${sel.options[0]?.textContent || 'All'}</option>`;
+                if (sel && sel.innerHTML !== undefined) {
+                    const textContent = (sel.options && sel.options.length > 0) ? sel.options[0].textContent : 'All';
+                    sel.innerHTML = `<option value="">${textContent || 'All'}</option>`;
+                }
             });
             if (filterProduct) filterProduct.value = '';
             if (filterBrand) filterBrand.innerHTML = '<option value="">All Brands</option>';
