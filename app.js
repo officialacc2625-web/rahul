@@ -394,6 +394,7 @@
     function setupUploadZone(zone, input, onFiles) {
         zone.addEventListener('click', (e) => {
             if (e.target === input) return;
+            if (e.target.classList.contains('browse-btn') || e.target.closest('.browse-btn')) return;
             input.click();
         });
         input.addEventListener('click', (e) => e.stopPropagation());
