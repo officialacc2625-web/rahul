@@ -438,8 +438,9 @@
 
     function setupUploadZone(zone, input, onFiles) {
         zone.addEventListener('click', (e) => {
+            // Skip if label or input clicked — label natively opens the input picker
             if (e.target === input) return;
-            if (e.target.classList.contains('browse-btn') || e.target.closest('.browse-btn')) return;
+            if (e.target.tagName === 'LABEL' || e.target.closest('label')) return;
             input.click();
         });
         input.addEventListener('click', (e) => e.stopPropagation());
