@@ -359,6 +359,7 @@
 
         if (zoneSmart && inputSmart) {
             setupUploadZone(zoneSmart, inputSmart, async (files) => {
+                alert('[DEBUG] onFiles called with ' + files.length + ' files');
                 console.log('[UPLOAD DEBUG] onFiles called with', files.length, 'files:', files.map(f=>f.name));
                 for (let file of files) {
                     let fname = file.name.toLowerCase();
@@ -467,11 +468,13 @@
             }
         });
         input.addEventListener('change', async () => {
+            alert('[DEBUG] Change event fired! Files selected: ' + input.files.length);
             console.log('[UPLOAD DEBUG] input change fired! files:', input.files.length);
             if (input.files.length > 0) {
                 try {
                     await onFiles(Array.from(input.files));
                 } catch (err) {
+                    alert('[DEBUG] onFiles error: ' + err.message);
                     console.error('[UPLOAD DEBUG] onFiles error:', err);
                 } finally {
                     input.value = '';
