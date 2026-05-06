@@ -7,8 +7,20 @@
 
 (function () {
     'use strict';
+    window.onerror = function(msg, url, lineNo, columnNo, error) {
+        var errStr = 'Global Error: ' + msg + ' at ' + lineNo + ':' + columnNo;
+        var el = document.getElementById('debugText');
+        if(el) el.textContent = errStr;
+        else alert(errStr);
+        return false;
+    };
 
     // ---- STATE ----
+    setTimeout(() => { 
+        var d = document.getElementById('debugText');
+        if(d && !d.textContent.includes('Error')) d.textContent = '[DEBUG] app.js loaded successfully';
+    }, 100);
+
     let productData = [];      // Parsed rows from Product file
     let osgData = [];          // Parsed rows from OSG file
     let amcData = [];          // Parsed rows from LG AMC file (optional)
