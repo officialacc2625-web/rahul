@@ -359,25 +359,70 @@
             setupUploadZone(zoneSmart, inputSmart, async (files) => {
                 for (let file of files) {
                     let fname = file.name.toLowerCase();
+                    let fileType = null;
+
                     if (fname.includes('product') || fname.includes('sales')) {
-                        const rows = await parseProductFile(file);
-                        productData = rows;
-                        showFileStatus(statusProduct, file.name, rows.length);
-                    } else if (fname.includes('amc')) {
-                        const rows = await parseProductFile(file);
-                        amcData = rows;
-                        showFileStatus(statusAMC, file.name, rows.length);
-                    } else if (fname.includes('samsung')) {
-                        const rows = await parseOSGFile(file);
-                        samsungData = rows;
-                        showFileStatus(statusSamsung, file.name, rows.length);
+                        fileType = 'product';
+                    } else if (fname.includes('amc') || fname.includes('lgamc')) {
+                        fileType = 'amc';
+                    } else if (fname.includes('samsung') || fname.includes('sam')) {
+                        fileType = 'samsung';
                     } else if (fname.includes('osg') || fname.includes('warranty')) {
-                        const rows = await parseOSGFile(file);
-                        osgData = rows;
-                        showFileStatus(statusOSG, file.name, rows.length);
+                        fileType = 'osg';
                     } else {
-                        console.warn('Could not detect file type for:', file.name);
-                        alert('Could not detect type for file: ' + file.name + '\nPlease include "product", "osg", "amc", or "samsung" in the filename.');
+                        fileType = await new Promise(resolve => {
+                            const old = document.getElementById('_fileTypeModal');
+                            if (old) old.remove();
+                            const modal = document.createElement('div');
+                            modal.id = '_fileTypeModal';
+                            modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;';
+                            modal.innerHTML = '<div style="background:var(--bg-card,#1e2433);border:1px solid var(--border,#374151);border-radius:16px;padding:28px 32px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.5);">'
+                                + '<h3 style="margin:0 0 8px;color:var(--text-primary,#f1f5f9);font-size:1.1rem;">Select File Type</h3>'
+                                + '<p style="margin:0 0 20px;color:var(--text-muted,#94a3b8);font-size:0.85rem;">Could not auto-detect file type for: <strong style="color:var(--text-secondary,#cbd5e1);">' + file.name + '</strong></p>'
+                                + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
+                                + '<button id="_ftm_product" style="padding:12px;border-radius:10px;border:1px solid rgba(59,130,246,0.4);background:rgba(59,130,246,0.1);color:#60a5fa;cursor:pointer;font-weight:600;font-family:inherit;font-size:0.88rem;">Product / Sales</button>'
+                                + '<button id="_ftm_osg" style="padding:12px;border-radius:10px;border:1px solid rgba(16,185,129,0.4);background:rgba(16,185,129,0.1);color:#10b981;cursor:pointer;font-weight:600;font-family:inherit;font-size:0.88rem;">OSG Warranty</button>'
+                                + '<button id="_ftm_amc" style="padding:12px;border-radius:10px;border:1px solid rgba(168,85,247,0.4);background:rgba(168,85,247,0.1);color:#a855f7;cursor:pointer;font-weight:600;font-family:inherit;font-size:0.88rem;">LG-AMC</button>'
+                                + '<button id="_ftm_samsung" style="padding:12px;border-radius:10px;border:1px solid rgba(251,191,36,0.4);background:rgba(251,191,36,0.1);color:#fbbf24;cursor:pointer;font-weight:600;font-family:inherit;font-size:0.88rem;">Samsung</button>'
+                                + '</div>'
+                                + '<button id="_ftm_skip" style="margin-top:14px;width:100%;padding:8px;border-radius:8px;border:1px solid var(--border,#374151);background:transparent;color:var(--text-muted,#94a3b8);cursor:pointer;font-family:inherit;font-size:0.82rem;">Skip this file</button>'
+                                + '</div>';
+                            document.body.appendChild(modal);
+                            const pick = (t) => { modal.remove(); resolve(t); };
+                            document.getElementById('_ftm_product').onclick = () => pick('product');
+                            document.getElementById('_ftm_osg').onclick = () => pick('osg');
+                            document.getElementById('_ftm_amc').onclick = () => pick('amc');
+                            document.getElementById('_ftm_samsung').onclick = () => pick('samsung');
+                            document.getElementById('_ftm_skip').onclick = () => pick(null);
+                        });
+                    }
+
+                    if (!fileType) continue;
+
+                    showLoading(true);
+                    try {
+                        if (fileType === 'product') {
+                            const rows = await parseProductFile(file);
+                            productData = rows;
+                            showFileStatus(statusProduct, file.name, rows.length);
+                        } else if (fileType === 'amc') {
+                            const rows = await parseProductFile(file);
+                            amcData = rows;
+                            showFileStatus(statusAMC, file.name, rows.length);
+                        } else if (fileType === 'samsung') {
+                            const rows = await parseOSGFile(file);
+                            samsungData = rows;
+                            showFileStatus(statusSamsung, file.name, rows.length);
+                        } else if (fileType === 'osg') {
+                            const rows = await parseOSGFile(file);
+                            osgData = rows;
+                            showFileStatus(statusOSG, file.name, rows.length);
+                        }
+                    } catch(err) {
+                        console.error('Error parsing file:', file.name, err);
+                        alert('Error reading file: ' + file.name + '\n' + err.message);
+                    } finally {
+                        showLoading(false);
                     }
                 }
                 checkGenerateReady();
