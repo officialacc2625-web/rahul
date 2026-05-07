@@ -8,18 +8,12 @@
 (function () {
     'use strict';
     window.onerror = function(msg, url, lineNo, columnNo, error) {
-        var errStr = 'Global Error: ' + msg + ' at ' + lineNo + ':' + columnNo;
-        var el = document.getElementById('debugText');
-        if(el) el.textContent = errStr;
-        else alert(errStr);
+        console.error('Global Error: ' + msg + ' at ' + lineNo + ':' + columnNo);
         return false;
     };
 
     // ---- STATE ----
-    setTimeout(() => { 
-        var d = document.getElementById('debugText');
-        if(d && !d.textContent.includes('Error')) d.textContent = '[DEBUG] app.js loaded successfully';
-    }, 100);
+    console.log('[app.js] Loaded successfully');
 
     let productData = [];      // Parsed rows from Product file
     let osgData = [];          // Parsed rows from OSG file
@@ -360,8 +354,7 @@
     // ---- UPLOAD HANDLING ----
         // Always use fresh getElementById to avoid safeProxy issues
     function initUploadZones() {
-        var d = document.getElementById('debugText');
-        if(d) d.textContent = '[DEBUG] initUploadZones called';
+        console.log('[UPLOAD] initUploadZones called');
         const zoneSmart = document.getElementById('uploadZoneSmart');
         const inputSmart = document.getElementById('fileInputSmart');
         console.log('[UPLOAD DEBUG] initUploadZones called. zone:', zoneSmart, 'input:', inputSmart);
@@ -373,8 +366,7 @@
 
         if (zoneSmart && inputSmart) {
             const onFilesHandler = async (files) => {
-                document.getElementById('debugText').textContent = '[DEBUG] onFiles called with ' + files.length + ' files';
-                console.log('[UPLOAD DEBUG] onFiles called with', files.length, 'files:', files.map(f=>f.name));
+                console.log('[UPLOAD] onFiles called with', files.length, 'files:', files.map(f=>f.name));
                 for (let file of files) {
                     let fname = file.name.toLowerCase();
                     let fileType = null;
@@ -457,15 +449,13 @@
     }
 
     function setupUploadZone(zone, input, onFiles) {
-        console.log('[UPLOAD DEBUG] setupUploadZone registered for', input.id);
+        console.log('[UPLOAD] setupUploadZone registered for', input.id);
         // Only open the file picker on bare zone clicks (not on label/button/input)
         // The label's native `for` attribute already opens the input — no manual click needed
         zone.addEventListener('click', (e) => {
-            console.log('[UPLOAD DEBUG] zone click, target:', e.target.tagName, e.target.className);
             if (e.target === input) return;
             if (e.target.tagName === 'LABEL' || e.target.closest('label')) return;
             if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
-            console.log('[UPLOAD DEBUG] zone click triggering input.click()');
             input.click();
         });
         zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
@@ -484,14 +474,13 @@
             }
         });
         input.addEventListener('change', async () => {
-            document.getElementById('debugText').textContent = '[DEBUG] Change event fired! Files selected: ' + input.files.length;
-            console.log('[UPLOAD DEBUG] input change fired! files:', input.files.length);
+            console.log('[UPLOAD] input change fired! files:', input.files.length);
             if (input.files.length > 0) {
                 try {
                     await onFiles(Array.from(input.files));
                 } catch (err) {
-                    alert('[DEBUG] onFiles error: ' + err.message);
-                    console.error('[UPLOAD DEBUG] onFiles error:', err);
+                    alert('Error processing files: ' + err.message);
+                    console.error('[UPLOAD] onFiles error:', err);
                 } finally {
                     input.value = '';
                 }
@@ -559,6 +548,9 @@
                 }
             }, 50);
         });
+
+
+
     })();
 
     // ---- SHARE DASHBOARD LOGIC ----
@@ -605,7 +597,7 @@
             shareRef.set({ compressedData: compressed, timestamp: Date.now() })
                 .then(() => {
                     showLoading(false);
-                    const base = window.location.protocol === 'file:' ? 'https://officialacc2625-web.github.io/rahul/' : window.location.origin + window.location.pathname;
+                    const base = 'https://officialacc2625-web.github.io/rahul/';
                     const shareUrl = base + '?share=' + shareRef.key;
                     if (navigator.clipboard) {
                         navigator.clipboard.writeText(shareUrl).then(() => {
@@ -2051,6 +2043,10 @@
     // ---- FUTURE STORES PAGE ----
     $('btnFSRefresh').addEventListener('click', renderFutureStoresPage);
     $('btnFSExport').addEventListener('click', exportFutureStoresCSV);
+    $('btnFSExportDashboard').addEventListener('click', () => {
+        const modal = document.getElementById('fsExportDashboardModal');
+        if (modal) { modal.style.display = 'flex'; renderFsExportDashboard(true); }
+    });
     document.querySelector('[data-section="future-section"]').addEventListener('click', () => {
         setTimeout(renderFutureStoresPage, 50);
     });
@@ -2151,32 +2147,32 @@
                 amcProdRev[p] = (amcProdRev[p] || 0) + (r.soldPrice || 0);
             });
 
-            const samProdCounts = {};
-            const samProdRev = {};
+            const samOsgCounts = {};
+            const samOsgRev = {};
             samRows.forEach(r => {
                 const p = r.product || 'Unknown';
-                samProdCounts[p] = (samProdCounts[p] || 0) + (r.qty || 0);
-                samProdRev[p] = (samProdRev[p] || 0) + (r.soldPrice || 0);
+                samOsgCounts[p] = (samOsgCounts[p] || 0) + (r.qty || 0);
+                samOsgRev[p] = (samOsgRev[p] || 0) + (r.soldPrice || 0);
             });
 
-            const allProds = new Set([...Object.keys(prodCounts), ...Object.keys(oProdCounts), ...Object.keys(amcProdCounts), ...Object.keys(samProdCounts)]);
+            const allProds = new Set([...Object.keys(prodCounts), ...Object.keys(oProdCounts), ...Object.keys(amcProdCounts), ...Object.keys(samOsgCounts)]);
             const products = Array.from(allProds).map(p => {
                 const q = prodCounts[p] || 0;
                 const lgQ = lgProdCounts[p] || 0;
                 const samPQ = samProdCounts[p] || 0;
-                
+
                 const oQ = oProdCounts[p] || 0;
                 const aQ = amcProdCounts[p] || 0;
-                const sQ = samProdCounts[p] || 0;
-                
+                const sQ = samOsgCounts[p] || 0;
+
                 const r = prodRev[p] || 0;
                 const lgR = lgProdRev[p] || 0;
                 const samPR = samProdRev[p] || 0;
-                
+
                 const oR = oProdRev[p] || 0;
                 const aR = amcProdRev[p] || 0;
-                const sR = samProdRev[p] || 0;
-                
+                const sR = samOsgRev[p] || 0;
+
                 return {
                     name: p,
                     qty: q,
@@ -5068,6 +5064,259 @@ function exportCustomersOSGExcel() {
         html += '</div>'; // End flex wrapper
         return html;
     }
+
+    // ========================================================================
+    // FUTURE STORES EXPORT DASHBOARD LOGIC
+    // ========================================================================
+    const modalFSDash = $('fsExportDashboardModal');
+    const btnCloseFSDash = $('btnCloseFSDashboard');
+    
+    if (modalFSDash && btnCloseFSDash) {
+        // Close modal
+        btnCloseFSDash.addEventListener('click', () => {
+            modalFSDash.style.display = 'none';
+        });
+        
+        // Tab switching
+        const dashTabs = document.querySelectorAll('.dash-tab');
+        dashTabs.forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                dashTabs.forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.dash-tab-content').forEach(c => c.classList.remove('active'));
+                e.currentTarget.classList.add('active');
+                document.getElementById('dashTab-' + e.currentTarget.getAttribute('data-tab')).classList.add('active');
+            });
+        });
+
+        // Filter change → re-render
+        ['fsDashRBM', 'fsDashBDM', 'fsDashBranch', 'fsDashStaff'].forEach(id => {
+            const el = $(id);
+            if (el) el.addEventListener('change', () => renderFsExportDashboard(false));
+        });
+    }
+
+    function renderFsExportDashboard(initFilters = false) {
+        if (!productData || productData.length === 0) return;
+        
+        const selRBM = $('fsDashRBM').value;
+        const selBDM = $('fsDashBDM').value;
+        const selBranch = $('fsDashBranch').value;
+        const selStaff = $('fsDashStaff').value;
+
+        // Base filter for future stores
+        let fProduct = productData.filter(r => r.branch && r.branch.toUpperCase().includes('FUTURE'));
+
+        // Initialize Filters if needed
+        if (initFilters) {
+            const rSet = new Set(), bdmSet = new Set(), brSet = new Set(), stSet = new Set();
+            fProduct.forEach(r => {
+                if (r.rbm) rSet.add(r.rbm);
+                if (r.bdm) bdmSet.add(r.bdm);
+                if (r.branch) brSet.add(r.branch);
+                if (r.staff) stSet.add(r.staff);
+            });
+            const popSel = (id, set, def) => {
+                const el = $(id);
+                if (!el || el.tagName !== 'SELECT') return;
+                const curr = el.value;
+                let h = `<option value="">${def}</option>`;
+                Array.from(set).sort().forEach(v => h += `<option value="${v}">${v}</option>`);
+                el.innerHTML = h;
+                if (Array.from(set).includes(curr)) el.value = curr;
+            };
+            popSel('fsDashRBM', rSet, 'All RBMs');
+            popSel('fsDashBDM', bdmSet, 'All BDMs');
+            popSel('fsDashBranch', brSet, 'All Branches');
+            popSel('fsDashStaff', stSet, 'All Staff');
+        }
+
+        // Apply Current Filters
+        fProduct = fProduct.filter(r => 
+            (!selRBM || r.rbm === selRBM) &&
+            (!selBDM || r.bdm === selBDM) &&
+            (!selBranch || r.branch === selBranch) &&
+            (!selStaff || r.staff === selStaff)
+        );
+
+        // Map invoices to filter attributes to easily assign OSG/AMC/Samsung records
+        const invMeta = {};
+        fProduct.forEach(r => {
+            if (r.invoice) invMeta[r.invoice] = { branch: r.branch, bdm: r.bdm || 'Unknown', staff: r.staff || 'Unknown' };
+        });
+
+        const filterLinkedData = (dataArray) => {
+            return dataArray.filter(r => r.invoice && invMeta[r.invoice]);
+        };
+        const fOSG = filterLinkedData(osgData);
+        const fAMC = filterLinkedData(amcData);
+        const fSamsung = filterLinkedData(samsungData);
+
+        // ====================================================================
+        // TAB 1: BRANCH OVERVIEW (Group by BDM -> Branch)
+        // ====================================================================
+        const brGrp = {}; // key: BDM|Branch
+        fProduct.forEach(r => {
+            const k = (r.bdm || 'Unknown') + '|' + r.branch;
+            if (!brGrp[k]) brGrp[k] = { bdm: r.bdm || 'Unknown', branch: r.branch, p:[], o:[], a:[], s:[] };
+            brGrp[k].p.push(r);
+        });
+        fOSG.forEach(r => { const k = invMeta[r.invoice].bdm + '|' + invMeta[r.invoice].branch; if(brGrp[k]) brGrp[k].o.push(r); });
+        fAMC.forEach(r => { const k = invMeta[r.invoice].bdm + '|' + invMeta[r.invoice].branch; if(brGrp[k]) brGrp[k].a.push(r); });
+        fSamsung.forEach(r => { const k = invMeta[r.invoice].bdm + '|' + invMeta[r.invoice].branch; if(brGrp[k]) brGrp[k].s.push(r); });
+
+        let brHtml = `<tr><th>BDM</th><th>Branch</th><th>Prod Qty</th><th>OSG Qty</th><th>LG-AMC Qty</th><th>Samsung Qty</th><th>OSG Val Conv %</th><th>LG-AMC Val Conv %</th><th>Samsung Val Conv %</th></tr>`;
+        Object.values(brGrp).sort((a,b) => a.bdm.localeCompare(b.bdm) || a.branch.localeCompare(b.branch)).forEach(grp => {
+            const pQ = grp.p.reduce((s, r) => s + r.qty, 0);
+            const oQ = grp.o.reduce((s, r) => s + r.qty, 0);
+            const aQ = grp.a.reduce((s, r) => s + r.qty, 0);
+            const sQ = grp.s.reduce((s, r) => s + r.qty, 0);
+            const pR = grp.p.reduce((s, r) => s + r.soldPrice, 0);
+            const oR = grp.o.reduce((s, r) => s + r.soldPrice, 0);
+            const aR = grp.a.reduce((s, r) => s + r.soldPrice, 0);
+            const sR = grp.s.reduce((s, r) => s + r.soldPrice, 0);
+            
+            const lgPR = grp.p.reduce((s, r) => s + ((r.brand && r.brand.toUpperCase().includes('LG')) ? r.soldPrice : 0), 0);
+            const samsungAllowedCats = ['AC', 'MICROWAVE OVEN', 'REFRIGERATOR', 'WASHING MACHINE'];
+            const samPR = grp.p.reduce((s, r) => s + ((r.brand && r.brand.toUpperCase().includes('SAMSUNG') && r.product && samsungAllowedCats.includes(r.product.toUpperCase().trim())) ? r.soldPrice : 0), 0);
+            
+            const oConv = pR > 0 ? ((oR / pR) * 100).toFixed(2) : '0.00';
+            const aConv = lgPR > 0 ? ((aR / lgPR) * 100).toFixed(2) : '0.00';
+            const sConv = samPR > 0 ? ((sR / samPR) * 100).toFixed(2) : '0.00';
+
+            brHtml += `<tr>
+                <td>${grp.bdm}</td>
+                <td><strong>${grp.branch}</strong></td>
+                <td class="col-num">${pQ}</td>
+                <td class="col-num">${oQ}</td>
+                <td class="col-num">${aQ}</td>
+                <td class="col-num">${sQ}</td>
+                <td class="col-num">${oConv}%</td>
+                <td class="col-num">${aConv}%</td>
+                <td class="col-num">${sConv}%</td>
+            </tr>`;
+        });
+        const tableBr = $('tableFsDashBranch');
+        if (tableBr && tableBr.querySelector('tbody')) tableBr.querySelector('tbody').innerHTML = brHtml;
+
+        // ====================================================================
+        // TAB 2: STAFF OVERVIEW (Group by Branch -> Staff)
+        // ====================================================================
+        const stGrp = {}; // key: Branch|Staff
+        fProduct.forEach(r => {
+            const k = r.branch + '|' + (r.staff || 'Unknown');
+            if (!stGrp[k]) stGrp[k] = { branch: r.branch, staff: r.staff || 'Unknown', p:[], o:[], a:[], s:[] };
+            stGrp[k].p.push(r);
+        });
+        fOSG.forEach(r => { const k = invMeta[r.invoice].branch + '|' + invMeta[r.invoice].staff; if(stGrp[k]) stGrp[k].o.push(r); });
+        fAMC.forEach(r => { const k = invMeta[r.invoice].branch + '|' + invMeta[r.invoice].staff; if(stGrp[k]) stGrp[k].a.push(r); });
+        fSamsung.forEach(r => { const k = invMeta[r.invoice].branch + '|' + invMeta[r.invoice].staff; if(stGrp[k]) stGrp[k].s.push(r); });
+
+        let stHtml = `<tr><th>Branch</th><th>Staff</th><th>Prod Qty</th><th>OSG Qty</th><th>LG-AMC Qty</th><th>Samsung Qty</th><th>OSG Val Conv %</th><th>LG-AMC Val Conv %</th><th>Samsung Val Conv %</th></tr>`;
+        Object.values(stGrp).sort((a,b) => a.branch.localeCompare(b.branch) || a.staff.localeCompare(b.staff)).forEach(grp => {
+            const pQ = grp.p.reduce((s, r) => s + r.qty, 0);
+            const oQ = grp.o.reduce((s, r) => s + r.qty, 0);
+            const aQ = grp.a.reduce((s, r) => s + r.qty, 0);
+            const sQ = grp.s.reduce((s, r) => s + r.qty, 0);
+            const pR = grp.p.reduce((s, r) => s + r.soldPrice, 0);
+            const oR = grp.o.reduce((s, r) => s + r.soldPrice, 0);
+            const aR = grp.a.reduce((s, r) => s + r.soldPrice, 0);
+            const sR = grp.s.reduce((s, r) => s + r.soldPrice, 0);
+            
+            const lgPR = grp.p.reduce((s, r) => s + ((r.brand && r.brand.toUpperCase().includes('LG')) ? r.soldPrice : 0), 0);
+            const samsungAllowedCats = ['AC', 'MICROWAVE OVEN', 'REFRIGERATOR', 'WASHING MACHINE'];
+            const samPR = grp.p.reduce((s, r) => s + ((r.brand && r.brand.toUpperCase().includes('SAMSUNG') && r.product && samsungAllowedCats.includes(r.product.toUpperCase().trim())) ? r.soldPrice : 0), 0);
+            
+            const oConv = pR > 0 ? ((oR / pR) * 100).toFixed(2) : '0.00';
+            const aConv = lgPR > 0 ? ((aR / lgPR) * 100).toFixed(2) : '0.00';
+            const sConv = samPR > 0 ? ((sR / samPR) * 100).toFixed(2) : '0.00';
+
+            stHtml += `<tr>
+                <td>${grp.branch}</td>
+                <td><strong>${grp.staff}</strong></td>
+                <td class="col-num">${pQ}</td>
+                <td class="col-num">${oQ}</td>
+                <td class="col-num">${aQ}</td>
+                <td class="col-num">${sQ}</td>
+                <td class="col-num">${oConv}%</td>
+                <td class="col-num">${aConv}%</td>
+                <td class="col-num">${sConv}%</td>
+            </tr>`;
+        });
+        const tableSt = $('tableFsDashStaff');
+        if (tableSt && tableSt.querySelector('tbody')) tableSt.querySelector('tbody').innerHTML = stHtml;
+
+        // ====================================================================
+        // TAB 3: LG-AMC (Group by Category)
+        // ====================================================================
+        const amcProdGrp = {};
+        const pLG = fProduct.filter(r => r.brand && r.brand.toUpperCase().includes('LG'));
+        pLG.forEach(r => {
+            const k = (r.product || 'Unknown').toUpperCase().trim();
+            if(!amcProdGrp[k]) amcProdGrp[k] = { name: k, pQ:0, pR:0, aQ:0, aR:0 };
+            amcProdGrp[k].pQ += r.qty || 0;
+            amcProdGrp[k].pR += r.soldPrice || 0;
+        });
+        fAMC.forEach(r => {
+            const k = (r.product || 'Unknown').toUpperCase().trim();
+            if(!amcProdGrp[k]) amcProdGrp[k] = { name: k, pQ:0, pR:0, aQ:0, aR:0 };
+            amcProdGrp[k].aQ += r.qty || 0;
+            amcProdGrp[k].aR += r.soldPrice || 0;
+        });
+
+        let amcHtml = `<tr><th>LG Category</th><th>Prod Qty</th><th>AMC Qty</th><th>Prod Rev</th><th>AMC Rev</th><th>Qty Conv %</th><th>Val Conv %</th></tr>`;
+        Object.values(amcProdGrp).sort((a,b) => b.pQ - a.pQ).forEach(grp => {
+            const qConv = grp.pQ > 0 ? ((grp.aQ / grp.pQ)*100).toFixed(2) : '0.00';
+            const vConv = grp.pR > 0 ? ((grp.aR / grp.pR)*100).toFixed(2) : '0.00';
+            amcHtml += `<tr>
+                <td><strong>${grp.name}</strong></td>
+                <td class="col-num">${grp.pQ}</td>
+                <td class="col-num">${grp.aQ}</td>
+                <td class="col-num">${fmtShort(grp.pR)}</td>
+                <td class="col-num">${fmtShort(grp.aR)}</td>
+                <td class="col-num">${qConv}%</td>
+                <td class="col-num">${vConv}%</td>
+            </tr>`;
+        });
+        const tableLg = $('tableFsDashLgAmc');
+        if (tableLg && tableLg.querySelector('tbody')) tableLg.querySelector('tbody').innerHTML = amcHtml;
+
+        // ====================================================================
+        // TAB 4: SAMSUNG (Group by Category)
+        // ====================================================================
+        const samProdGrp = {};
+        const samsungAllowedCats = ['AC', 'MICROWAVE OVEN', 'REFRIGERATOR', 'WASHING MACHINE'];
+        const pSam = fProduct.filter(r => r.brand && r.brand.toUpperCase().includes('SAMSUNG') && r.product && samsungAllowedCats.includes(r.product.toUpperCase().trim()));
+        pSam.forEach(r => {
+            const k = (r.product || 'Unknown').toUpperCase().trim();
+            if(!samProdGrp[k]) samProdGrp[k] = { name: k, pQ:0, pR:0, sQ:0, sR:0 };
+            samProdGrp[k].pQ += r.qty || 0;
+            samProdGrp[k].pR += r.soldPrice || 0;
+        });
+        fSamsung.forEach(r => {
+            const k = (r.product || 'Unknown').toUpperCase().trim();
+            if(!samProdGrp[k]) samProdGrp[k] = { name: k, pQ:0, pR:0, sQ:0, sR:0 };
+            samProdGrp[k].sQ += r.qty || 0;
+            samProdGrp[k].sR += r.soldPrice || 0;
+        });
+
+        let samHtml = `<tr><th>Samsung Category</th><th>Prod Qty</th><th>Samsung Care Qty</th><th>Prod Rev</th><th>Samsung Care Rev</th><th>Qty Conv %</th><th>Val Conv %</th></tr>`;
+        Object.values(samProdGrp).sort((a,b) => b.pQ - a.pQ).forEach(grp => {
+            const qConv = grp.pQ > 0 ? ((grp.sQ / grp.pQ)*100).toFixed(2) : '0.00';
+            const vConv = grp.pR > 0 ? ((grp.sR / grp.pR)*100).toFixed(2) : '0.00';
+            samHtml += `<tr>
+                <td><strong>${grp.name}</strong></td>
+                <td class="col-num">${grp.pQ}</td>
+                <td class="col-num">${grp.sQ}</td>
+                <td class="col-num">${fmtShort(grp.pR)}</td>
+                <td class="col-num">${fmtShort(grp.sR)}</td>
+                <td class="col-num">${qConv}%</td>
+                <td class="col-num">${vConv}%</td>
+            </tr>`;
+        });
+        const tableSam = $('tableFsDashSamsung');
+        if (tableSam && tableSam.querySelector('tbody')) tableSam.querySelector('tbody').innerHTML = samHtml;
+    }
+
 
 })();
 
