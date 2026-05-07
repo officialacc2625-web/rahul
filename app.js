@@ -415,6 +415,23 @@
                         if (fileType === 'product') {
                             const rows = await parseProductFile(file);
                             productData = rows;
+                            // Auto-detect active month from uploaded data
+                            window.coActiveMonth = (function() {
+                                const counts = {};
+                                rows.forEach(r => {
+                                    let dt = r.invoiceDate || r.time;
+                                    if (!dt) return;
+                                    let d = dt instanceof Date ? dt : new Date(dt);
+                                    if (isNaN(d)) return;
+                                    const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+                                    counts[key] = (counts[key]||0) + 1;
+                                });
+                                const best = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
+                                return best ? best[0] : new Date().toISOString().substring(0,7);
+                            })();
+                            console.log('[Month] Active month detected:', window.coActiveMonth);
+                            isCoStatusLive = false; // Force re-subscribe to new month path
+                            if (typeof updateMonthSwitcherUI === 'function') updateMonthSwitcherUI();
                             showFileStatus(statusProduct, file.name, rows.length);
                         } else if (fileType === 'amc') {
                             const rows = await parseProductFile(file);
@@ -4213,31 +4230,39 @@
     });
 
     let isCoStatusLive = false;
+    let coLiveRef = null; // Track the active Firebase listener ref
+
     function loadCoStatuses(callback) {
         if (typeof firebase === 'undefined') { if (callback) callback(); return; }
-        
+        const month = window.coActiveMonth || new Date().toISOString().substring(0,7);
+        const path = 'customerStatus/' + month;
+
         if (!isCoStatusLive) {
             isCoStatusLive = true;
-            firebase.database().ref('customerStatus').on('value', snap => {
+            // Detach previous listener if switching months
+            if (coLiveRef) coLiveRef.off('value');
+            coLiveRef = firebase.database().ref(path);
+            coStatusMap = {}; // Clear old month's data
+
+            coLiveRef.on('value', snap => {
                 const data = snap.val() || {};
                 let changed = false;
-                
+
                 Object.keys(data).forEach(inv => {
                     if (JSON.stringify(coStatusMap[inv]) !== JSON.stringify(data[inv])) {
                         coStatusMap[inv] = data[inv];
                         changed = true;
-                        
                         const rowEl = document.getElementById('co-row-' + inv);
                         if (rowEl && !rowEl.contains(document.activeElement)) {
                             if (typeof updateCoSingleRow === 'function') updateCoSingleRow(inv);
                         }
                     }
                 });
-                
+
                 if (changed && typeof updateCoStatsInPlace === 'function') {
                     updateCoStatsInPlace();
                 }
-                
+
                 if (callback) { callback(); callback = null; }
             });
         } else {
@@ -4245,10 +4270,48 @@
         }
     }
 
+    // Switch to a different month's archive
+    window.switchCoMonth = function(month) {
+        window.coActiveMonth = month;
+        isCoStatusLive = false; // Force re-subscribe
+        loadCoStatuses(() => renderCustomersOSGPage());
+        if (typeof updateMonthSwitcherUI === 'function') updateMonthSwitcherUI();
+    };
+
+    // Build month switcher dropdown from Firebase keys + current month
+    window.buildMonthSwitcher = function() {
+        if (typeof firebase === 'undefined') return;
+        firebase.database().ref('customerStatus').once('value').then(snap => {
+            const keys = Object.keys(snap.val() || {}).filter(k => /^\d{4}-\d{2}$/.test(k)).sort().reverse();
+            const current = window.coActiveMonth || new Date().toISOString().substring(0,7);
+            if (!keys.includes(current)) keys.unshift(current);
+            const el = document.getElementById('coMonthSwitcher');
+            if (!el) return;
+            el.innerHTML = keys.map(k => {
+                const [y, m] = k.split('-');
+                const label = new Date(y, m-1, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+                return `<option value="${k}" ${k === current ? 'selected' : ''}>${label}</option>`;
+            }).join('');
+        });
+    };
+
+    // Update the month switcher UI badge
+    window.updateMonthSwitcherUI = function() {
+        const month = window.coActiveMonth || new Date().toISOString().substring(0,7);
+        const [y, m] = month.split('-');
+        const label = new Date(y, m-1, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+        const badge = document.getElementById('coMonthBadge');
+        if (badge) badge.textContent = label;
+        const el = document.getElementById('coMonthSwitcher');
+        if (el) el.value = month;
+        window.buildMonthSwitcher();
+    };
+
     function saveCoStatus(inv) {
         if (typeof firebase === 'undefined') return;
+        const month = window.coActiveMonth || new Date().toISOString().substring(0,7);
         const status = coStatusMap[inv] || { callStatus: null, interest: null };
-        firebase.database().ref('customerStatus/' + inv).set(status).catch(e => console.warn('[Firebase] Status save failed:', e));
+        firebase.database().ref('customerStatus/' + month + '/' + inv).set(status).catch(e => console.warn('[Firebase] Status save failed:', e));
     }
 
     function renderCustomersOSGPage() {
