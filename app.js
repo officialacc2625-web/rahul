@@ -4288,7 +4288,8 @@
         });
     }
     document.querySelector('[data-section="customers-osg-section"]').addEventListener('click', () => {
-        // Load saved statuses from Firebase first, then render
+        // Build month switcher immediately from Firebase, then load statuses & render
+        if (typeof updateMonthSwitcherUI === 'function') updateMonthSwitcherUI();
         loadCoStatuses(() => setTimeout(renderCustomersOSGPage, 50));
     });
     ['coBrand', 'coRBM', 'coBDM', 'coProduct', 'coBranch', 'coSort', 'coStatusFilter', 'coCallerFilter'].forEach(id => {
@@ -4352,15 +4353,27 @@
         if (typeof firebase === 'undefined') return;
         firebase.database().ref('customerStatus').once('value').then(snap => {
             const keys = Object.keys(snap.val() || {}).filter(k => /^\d{4}-\d{2}$/.test(k)).sort().reverse();
-            const current = window.coActiveMonth || new Date().toISOString().substring(0,7);
-            if (!keys.includes(current)) keys.unshift(current);
+            const current = window.coActiveMonth || '';
+            // Auto-set to the most recent month available in Firebase if not already set
+            if (!window.coActiveMonth && keys.length > 0) {
+                window.coActiveMonth = keys[0];
+            }
+            if (!window.coActiveMonth) {
+                window.coActiveMonth = new Date().toISOString().substring(0,7);
+            }
+            if (!keys.includes(window.coActiveMonth)) keys.unshift(window.coActiveMonth);
             const el = document.getElementById('coMonthSwitcher');
             if (!el) return;
             el.innerHTML = keys.map(k => {
                 const [y, m] = k.split('-');
                 const label = new Date(y, m-1, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
-                return `<option value="${k}" ${k === current ? 'selected' : ''}>${label}</option>`;
+                return `<option value="${k}" ${k === window.coActiveMonth ? 'selected' : ''}>${label}</option>`;
             }).join('');
+            // Update badge after dropdown is built
+            const [y, m] = window.coActiveMonth.split('-');
+            const label = new Date(y, m-1, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+            const badge = document.getElementById('coMonthBadge');
+            if (badge) badge.textContent = label;
         });
     };
 
