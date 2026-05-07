@@ -3443,6 +3443,9 @@
 
 
     function getMissedInvoices() {
+        if (window.sharedMissedUnique && window.sharedMissedUnique.length > 0) {
+            return window.sharedMissedUnique;
+        }
         if (productData.length === 0) return [];
         const osgInv = new Set();
         osgData.forEach(r => { if (r.invoice) osgInv.add(r.invoice); });
@@ -4214,78 +4217,16 @@
 
     function renderCustomersOSGPage() {
         let missedUnique = [];
+        let sourceData = [];
 
         if (window.sharedMissedUnique) {
-            // We are in shared view mode ” apply client-side filters
-            document.querySelectorAll('#customers-osg-section .lowconv-controls').forEach(el => el.style.display = 'none');
+            // Restore original filters for shared view
+            document.querySelectorAll('#customers-osg-section .lowconv-controls').forEach(el => el.style.display = 'flex');
+            // Remove the custom shared filter bar if it exists
+            const bar = document.getElementById('coSharedFilterBar');
+            if (bar) bar.remove();
 
-            // Init shared filter state
-            if (!window.coSharedFilter) window.coSharedFilter = { branch: '', staff: '', product: '', callStatus: '', interest: '' };
-            const sf = window.coSharedFilter;
-
-            // Build unique values for filter dropdowns
-            const allData = window.sharedMissedUnique;
-            const branches = [...new Set(allData.map(r => r.branch).filter(Boolean))].sort();
-            const staffs   = [...new Set(allData.map(r => r.staff).filter(Boolean))].sort();
-            const products = [...new Set(allData.map(r => r.product).filter(Boolean))].sort();
-
-            // Inject shared filter bar into page (only once)
-            let filterBarEl = $('coSharedFilterBar');
-            if (!filterBarEl) {
-                const bar = document.createElement('div');
-                bar.id = 'coSharedFilterBar';
-                bar.style.cssText = 'display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;padding:14px 18px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;align-items:flex-end;';
-                $('coMissedTable').parentElement.insertBefore(bar, $('coMissedTable'));
-                filterBarEl = bar;
-            }
-
-            const sel = (id, label, opts, val) => `
-                <div style="display:flex;flex-direction:column;gap:4px;min-width:130px;flex:1;">
-                    <label style="font-size:0.72rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">${label}</label>
-                    <select id="${id}" onchange="window.coSharedFilterChange('${id}',this.value)" style="padding:8px 10px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-family:inherit;font-size:0.85rem;">
-                        <option value="">All</option>
-                        ${opts.map(o => `<option value="${o}" ${val===o?'selected':''}>${o}</option>`).join('')}
-                    </select>
-                </div>`;
-
-            filterBarEl.innerHTML =
-                sel('coSF_branch',  'Branch',      branches, sf.branch) +
-                sel('coSF_staff',   'Staff',       staffs,   sf.staff) +
-                sel('coSF_product', 'Product',     products, sf.product) +
-                sel('coSF_call',    'Call Status', ['connected','disconnected'], sf.callStatus) +
-                sel('coSF_int',     'Interest',    ['interested','not-interested'], sf.interest) +
-                `<button onclick="window.coSharedFilterReset()" style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-family:inherit;cursor:pointer;font-size:0.82rem;white-space:nowrap;">✕ Clear</button>`;
-
-            window.coSharedFilterChange = (id, val) => {
-                const map = { coSF_branch: 'branch', coSF_staff: 'staff', coSF_product: 'product', coSF_call: 'callStatus', coSF_int: 'interest' };
-                window.coSharedFilter[map[id]] = val;
-                renderCustomersOSGPage();
-            };
-            window.coSharedFilterReset = () => {
-                window.coSharedFilter = { branch: '', staff: '', product: '', callStatus: '', interest: '' };
-                renderCustomersOSGPage();
-            };
-
-            // Apply filters to data
-            missedUnique = allData.filter(r => {
-                if (sf.branch  && r.branch  !== sf.branch)  return false;
-                if (sf.staff   && r.staff   !== sf.staff)   return false;
-                if (sf.product && r.product !== sf.product) return false;
-                if (sf.callStatus) {
-                    const inv = r.invoice || '';
-                    const st = (coStatusMap[inv] || {}).callStatus;
-                    if (st !== sf.callStatus) return false;
-                }
-                if (sf.interest) {
-                    const inv = r.invoice || '';
-                    const st = (coStatusMap[inv] || {}).interest;
-                    if (st !== sf.interest) return false;
-                }
-                return true;
-            });
-
-            $('coMissedCount').textContent = `${missedUnique.length} of ${allData.length} customers (Shared View)`;
-
+            sourceData = window.sharedMissedUnique;
         } else {
             // Standard dynamic processing
             if (productData.length === 0) {
@@ -4294,23 +4235,25 @@
                 $('coMissedCount').style.background = '';
                 return;
             }
+            sourceData = productData;
+        }
 
-            const selBrand = document.getElementById('coBrand') ? document.getElementById('coBrand').value : '';
-            const selRBM = $('coRBM').value;
-            const selBDM = $('coBDM').value;
-            const selProduct = $('coProduct').value;
-            const selBranch = $('coBranch').value;
-            const selDate = document.getElementById('coDateFilter') ? document.getElementById('coDateFilter').value : '';
-            coCurrentSelDate = selDate;
-            const selStatusFilter = document.getElementById('coStatusFilter') ? document.getElementById('coStatusFilter').value : '';
-              const selCallerFilter = document.getElementById('coCallerFilter') ? document.getElementById('coCallerFilter').value : '';
+        const selBrand = document.getElementById('coBrand') ? document.getElementById('coBrand').value : '';
+        const selRBM = $('coRBM').value;
+        const selBDM = $('coBDM').value;
+        const selProduct = $('coProduct').value;
+        const selBranch = $('coBranch').value;
+        const selDate = document.getElementById('coDateFilter') ? document.getElementById('coDateFilter').value : '';
+        coCurrentSelDate = selDate;
+        const selStatusFilter = document.getElementById('coStatusFilter') ? document.getElementById('coStatusFilter').value : '';
+          const selCallerFilter = document.getElementById('coCallerFilter') ? document.getElementById('coCallerFilter').value : '';
 
-            // Populate filter dropdowns (preserve selection)
-            const brandSet = [...new Set(productData.map(r => r.brand).filter(Boolean))].sort();
-            const rbmSet = [...new Set(productData.map(r => r.rbm).filter(Boolean))].sort();
-            const bdmSet = [...new Set(productData.map(r => r.bdm).filter(Boolean))].sort();
-            const prodSet = [...new Set(productData.map(r => r.product).filter(Boolean))].sort();
-            const branchSet = [...new Set(productData.map(r => r.branch).filter(Boolean))].sort();
+        // Populate filter dropdowns (preserve selection)
+        const brandSet = [...new Set(sourceData.map(r => r.brand).filter(Boolean))].sort();
+        const rbmSet = [...new Set(sourceData.map(r => r.rbm).filter(Boolean))].sort();
+        const bdmSet = [...new Set(sourceData.map(r => r.bdm).filter(Boolean))].sort();
+        const prodSet = [...new Set(sourceData.map(r => r.product).filter(Boolean))].sort();
+        const branchSet = [...new Set(sourceData.map(r => r.branch).filter(Boolean))].sort();
 
             if($('coBrand')) $('coBrand').innerHTML = '<option value="">All Brands</option>' + brandSet.map(b => `<option value="${b}" ${b === selBrand ? 'selected' : ''}>${b}</option>`).join('');
             $('coRBM').innerHTML = '<option value="">All RBMs</option>' + rbmSet.map(r => `<option value="${r}" ${r === selRBM ? 'selected' : ''}>${r}</option>`).join('');
@@ -4319,7 +4262,7 @@
             $('coBranch').innerHTML = '<option value="">All Branches</option>' + branchSet.map(b => `<option value="${b}" ${b === selBranch ? 'selected' : ''}>${b}</option>`).join('');
 
             // Filter product rows
-            let filtP = productData;
+            let filtP = sourceData;
             if (selBrand) filtP = filtP.filter(r => r.brand === selBrand);
             if (selRBM) filtP = filtP.filter(r => r.rbm === selRBM);
             if (selBDM) filtP = filtP.filter(r => r.bdm === selBDM);
@@ -4361,14 +4304,16 @@
                 });
             }
 
-            // Build OSG invoice set
+            // Build OSG invoice set (empty if none uploaded, harmless in shared view)
             const osgInvoices = new Set();
-            osgData.forEach(r => { if (r.invoice) osgInvoices.add(r.invoice); });
+            (typeof osgData !== 'undefined' ? osgData : []).forEach(r => { if (r.invoice) osgInvoices.add(r.invoice); });
 
             // Find product rows with no matching OSG invoice, deduplicated by invoice
             const seenInv = new Set();
             filtP.forEach(r => {
-                if (r.invoice && !osgInvoices.has(r.invoice) && !seenInv.has(r.invoice)) {
+                // In shared view, sourceData is already osg-filtered
+                const isMissed = window.sharedMissedUnique ? true : (r.invoice && !osgInvoices.has(r.invoice));
+                if (isMissed && !seenInv.has(r.invoice)) {
                     seenInv.add(r.invoice);
                     missedUnique.push(r);
                 }
