@@ -63,7 +63,8 @@
                     } else {
                         window.sharedMissedUnique = data.missedUnique || [];
                     }
-                    // Do NOT set isAuthenticated=true ” keep all other pages locked
+                    // Allow recipient to navigate freely to CO and WOSG sections
+                    isAuthenticated = true;
                     document.querySelector('[data-section="customers-osg-section"]').click();
                 } else {
                     alert('Share link is invalid or expired.');
@@ -289,7 +290,7 @@
             const section = item.dataset.section;
 
             // Check if page needs auth ” Upload Data and Customers Without OSG are public
-            const isPublicPage = section === 'customers-osg-section' || section === 'upload-section';
+            const isPublicPage = section === 'customers-osg-section' || section === 'upload-section' || section === 'wosg-dashboard-section';
             if (!isPublicPage && !isAuthenticated) {
                 // Intercept navigation and show password modal
                 pendingNavTarget = section;
