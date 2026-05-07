@@ -4329,8 +4329,13 @@
                 filtered.forEach(r => missedUnique.push(r));
             }
 
-            $('coMissedCount').textContent = `${missedUnique.length} customers`;
-        }
+            if (window.sharedMissedUnique) {
+                $('coMissedCount').textContent = `${missedUnique.length} of ${window.sharedMissedUnique.length} customers (Shared View)`;
+                $('coMissedCount').style.background = 'linear-gradient(135deg, #10b981, #059669)';
+            } else {
+                $('coMissedCount').textContent = `${missedUnique.length} customers`;
+                $('coMissedCount').style.background = '';
+            }
 
         // Sort based on user selection
         const sortMode = (typeof window.coSortMode !== 'undefined') ? window.coSortMode : 'value-desc';
