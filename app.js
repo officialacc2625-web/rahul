@@ -81,12 +81,12 @@
     if (crmShareParam) {
         window.isSharedView = true;
         window.isCRMSharedView = true;
+        // Apply caller mode IMMEDIATELY — hides sidebar/topbar before DOM even paints
+        document.documentElement.style.setProperty('--crm-mode', '1');
         document.addEventListener('DOMContentLoaded', () => {
-            const loadingOverlay = document.getElementById('loadingOverlay');
-            if (loadingOverlay) loadingOverlay.style.display = 'flex';
+            document.body.classList.add('crm-caller-mode');
 
             firebase.database().ref('crmShares/' + crmShareParam).once('value').then(snap => {
-                if (loadingOverlay) loadingOverlay.style.display = 'none';
                 const data = snap.val();
                 if (data) {
                     try {
@@ -97,15 +97,33 @@
                         window.sharedMissedUnique = [];
                     }
                     window.coActiveMonth = data.month || new Date().toISOString().substring(0,7);
+
+                    // Update caller header subtitle
+                    const [y, m] = window.coActiveMonth.split('-');
+                    const monthLabel = new Date(y, m-1, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+                    const sub = document.getElementById('crmCallerHeaderSub');
+                    if (sub) sub.textContent = monthLabel + ' \u2022 ' + window.sharedMissedUnique.length + ' customers';
+
                     isAuthenticated = true;
-                    // Navigate directly to the CRM calling tab
                     document.querySelector('[data-section="customers-osg-section"]').click();
+
+                    // Dismiss splash smoothly
+                    const splash = document.getElementById('crmCallerSplash');
+                    if (splash) {
+                        setTimeout(() => {
+                            splash.classList.add('hidden');
+                            setTimeout(() => splash.remove(), 450);
+                        }, 300);
+                    }
                 } else {
                     alert('CRM share link is invalid or expired.');
+                    const splash = document.getElementById('crmCallerSplash');
+                    if (splash) splash.remove();
                 }
             }).catch(() => {
-                if (loadingOverlay) loadingOverlay.style.display = 'none';
-                alert('Failed to load CRM share link.');
+                alert('Failed to load CRM share link. Check your internet connection.');
+                const splash = document.getElementById('crmCallerSplash');
+                if (splash) splash.remove();
             });
         });
     }

@@ -21,6 +21,39 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="style.css?v=21">
+
+    <!-- CRM Caller Mode: hides sidebar/topbar when opened via shared CRM link -->
+    <style>
+        body.crm-caller-mode #sidebar { display: none !important; }
+        body.crm-caller-mode .top-bar { display: none !important; }
+        body.crm-caller-mode .main-content { margin-left: 0 !important; padding-top: 0 !important; }
+        body.crm-caller-mode .content-section:not(#customers-osg-section) { display: none !important; }
+        body.crm-caller-mode #customers-osg-section { display: block !important; padding-top: 0 !important; }
+        body.crm-caller-mode #crmCallerHeader { display: flex !important; }
+        /* Loading splash */
+        #crmCallerSplash {
+            display: none;
+            position: fixed; inset: 0; z-index: 99998;
+            background: #0f1117;
+            flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 20px; font-family: 'Outfit', sans-serif;
+        }
+        body.crm-caller-mode #crmCallerSplash { display: flex; }
+        #crmCallerSplash.hidden { opacity: 0; pointer-events: none; transition: opacity 0.4s; }
+        /* Compact caller header */
+        #crmCallerHeader {
+            display: none;
+            align-items: center; gap: 12px;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #F26522, #e05510);
+            position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 2px 12px rgba(242,101,34,0.4);
+        }
+        #crmCallerHeader img { width: 32px; height: 32px; border-radius: 8px; }
+        #crmCallerHeader .crm-header-title { color: #fff; font-weight: 700; font-size: 1rem; }
+        #crmCallerHeader .crm-header-sub { color: rgba(255,255,255,0.8); font-size: 0.75rem; }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
@@ -28,6 +61,35 @@
 </head>
 
 <body>
+    <!-- CRM Caller Header (shown only in caller mode) -->
+    <div id="crmCallerHeader">
+        <img src="icons/icon-72x72.png" alt="myG">
+        <div>
+            <div class="crm-header-title">myG CRM Calling</div>
+            <div class="crm-header-sub" id="crmCallerHeaderSub">Loading...</div>
+        </div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+            <div id="crmLiveIndicator" style="width:8px;height:8px;border-radius:50%;background:#4ade80;animation:pulse 2s infinite;"></div>
+            <span style="color:rgba(255,255,255,0.8);font-size:0.75rem;font-weight:600;">LIVE</span>
+        </div>
+    </div>
+
+    <!-- CRM Caller Loading Splash -->
+    <div id="crmCallerSplash">
+        <img src="icons/icon-192x192.png" style="width:80px;height:80px;border-radius:20px;box-shadow:0 8px 32px rgba(242,101,34,0.4);animation:pulse 1.5s infinite;">
+        <div style="text-align:center;">
+            <div style="color:#fff;font-size:1.1rem;font-weight:700;margin-bottom:6px;">Loading CRM List...</div>
+            <div style="color:#9ca3af;font-size:0.85rem;">Please wait while we fetch the customer data</div>
+        </div>
+        <div style="width:180px;height:4px;background:rgba(255,255,255,0.1);border-radius:99px;overflow:hidden;">
+            <div style="height:100%;background:linear-gradient(90deg,#F26522,#fbbf24);border-radius:99px;animation:loadBar 1.5s ease-in-out infinite;"></div>
+        </div>
+    </div>
+    <style>
+        @keyframes loadBar { 0%{width:0%;margin-left:0} 50%{width:70%;margin-left:0} 100%{width:0%;margin-left:100%} }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+    </style>
+
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
