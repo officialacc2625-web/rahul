@@ -449,16 +449,33 @@
                         if (fileType === 'product') {
                             const rows = await parseProductFile(file);
                             productData = rows;
-                            // Auto-detect active month from uploaded data
+                            // Auto-detect active month from uploaded data using robust date parsing
                             window.coActiveMonth = (function() {
                                 const counts = {};
                                 rows.forEach(r => {
                                     let dt = r.invoiceDate || r.time;
                                     if (!dt) return;
-                                    let d = dt instanceof Date ? dt : new Date(dt);
-                                    if (isNaN(d)) return;
-                                    const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
-                                    counts[key] = (counts[key]||0) + 1;
+                                    let key = '';
+                                    if (dt instanceof Date && !isNaN(dt)) {
+                                        key = dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0');
+                                    } else if (typeof dt === 'number') {
+                                        // Excel serial number (days since 1900-01-01)
+                                        const dObj = new Date(Math.round((dt - 25569) * 86400 * 1000));
+                                        key = dObj.getUTCFullYear() + '-' + String(dObj.getUTCMonth()+1).padStart(2,'0');
+                                    } else if (typeof dt === 'string') {
+                                        if (dt.match(/^\d{4}-\d{2}-\d{2}/)) {
+                                            // ISO format: YYYY-MM-DD
+                                            key = dt.substring(0, 7);
+                                        } else {
+                                            // DD/MM/YYYY or DD-MM-YYYY (Indian format)
+                                            const match = dt.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+                                            if (match) {
+                                                const yy = match[3].length === 2 ? '20' + match[3] : match[3];
+                                                key = yy + '-' + match[2].padStart(2,'0');
+                                            }
+                                        }
+                                    }
+                                    if (key) counts[key] = (counts[key]||0) + 1;
                                 });
                                 const best = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
                                 return best ? best[0] : new Date().toISOString().substring(0,7);
