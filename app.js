@@ -4187,6 +4187,20 @@
     // ---- CUSTOMERS WITHOUT OSG PAGE ----
     $('btnCORefresh').addEventListener('click', renderCustomersOSGPage);
     $('btnCOExport').addEventListener('click', exportCustomersOSGExcel);
+    const btnDue = document.getElementById('btnCODueToday');
+    if (btnDue) {
+        btnDue.addEventListener('click', () => {
+            window.coDueTodayFilter = !window.coDueTodayFilter;
+            if (window.coDueTodayFilter) {
+                btnDue.style.boxShadow = '0 0 0 3px rgba(239,68,68,0.5)';
+                btnDue.innerHTML = '❌ Clear Due Today';
+            } else {
+                btnDue.style.boxShadow = '0 2px 8px rgba(239,68,68,0.3)';
+                btnDue.innerHTML = '🔥 Due Today';
+            }
+            renderCustomersOSGPage();
+        });
+    }
     document.querySelector('[data-section="customers-osg-section"]').addEventListener('click', () => {
         // Load saved statuses from Firebase first, then render
         loadCoStatuses(() => setTimeout(renderCustomersOSGPage, 50));
@@ -4198,15 +4212,37 @@
         });
     });
 
+    let isCoStatusLive = false;
     function loadCoStatuses(callback) {
         if (typeof firebase === 'undefined') { if (callback) callback(); return; }
-        firebase.database().ref('customerStatus').once('value').then(snap => {
-            const data = snap.val() || {};
-            Object.keys(data).forEach(inv => {
-                coStatusMap[inv] = data[inv];
+        
+        if (!isCoStatusLive) {
+            isCoStatusLive = true;
+            firebase.database().ref('customerStatus').on('value', snap => {
+                const data = snap.val() || {};
+                let changed = false;
+                
+                Object.keys(data).forEach(inv => {
+                    if (JSON.stringify(coStatusMap[inv]) !== JSON.stringify(data[inv])) {
+                        coStatusMap[inv] = data[inv];
+                        changed = true;
+                        
+                        const rowEl = document.getElementById('co-row-' + inv);
+                        if (rowEl && !rowEl.contains(document.activeElement)) {
+                            if (typeof updateCoSingleRow === 'function') updateCoSingleRow(inv);
+                        }
+                    }
+                });
+                
+                if (changed && typeof updateCoStatsInPlace === 'function') {
+                    updateCoStatsInPlace();
+                }
+                
+                if (callback) { callback(); callback = null; }
             });
+        } else {
             if (callback) callback();
-        }).catch(() => { if (callback) callback(); });
+        }
     }
 
     function saveCoStatus(inv) {
@@ -4324,6 +4360,16 @@
                 const filtered = missedUnique.filter(r => {
                     const st = coStatusMap[r.invoice || ''] || {};
                     return st.calledBy === selCallerFilter;
+                });
+                missedUnique.length = 0;
+                filtered.forEach(r => missedUnique.push(r));
+            }
+
+            if (window.coDueTodayFilter) {
+                const today = new Date().toISOString().substring(0, 10);
+                const filtered = missedUnique.filter(r => {
+                    const st = coStatusMap[r.invoice || ''] || {};
+                    return st.interest === 'follow-up' && st.followUpDate && st.followUpDate <= today;
                 });
                 missedUnique.length = 0;
                 filtered.forEach(r => missedUnique.push(r));
@@ -4659,9 +4705,15 @@
         const inv = r.invoice || String(i);
         const st  = coStatusMap[inv] || { callStatus: null, interest: null, calledBy: null, remarks: '' };
 
-        const rowBg = st.interest === 'interested'     ? 'rgba(22,163,74,0.06)'
-                    : st.interest === 'not-interested' ? 'rgba(220,38,38,0.06)'
+        const rowBg = st.interest === 'bought'         ? 'rgba(16, 185, 129, 0.15)'
+                    : st.interest === 'interested'     ? 'rgba(22, 163, 74, 0.08)'
+                    : st.interest === 'not-interested' ? 'rgba(220, 38, 38, 0.08)'
+                    : st.callStatus === 'disconnected' ? 'rgba(147, 51, 234, 0.05)'
+                    : st.callStatus === 'connected'    ? 'rgba(59, 130, 246, 0.05)'
                     : 'transparent';
+                    
+        const isFinalState = ['interested', 'not-interested', 'bought'].includes(st.interest) || st.callStatus === 'disconnected';
+        const rowOpacity = isFinalState ? '0.55' : '1';
                     
         // Locking logic
         const isLocked = st.calledBy && st.calledBy !== currentCaller;
@@ -4742,7 +4794,7 @@
             }
         }
 
-        return `<tr id="co-row-${inv}" style="border-bottom:1px solid var(--border);background:${rowBg};transition:background 0.2s;">
+        return `<tr id="co-row-${inv}" style="border-bottom:1px solid var(--border);background:${rowBg};opacity:${rowOpacity};transition:background 0.2s, opacity 0.2s;">
             <td style="padding:12px 10px;color:var(--text-muted);font-size:0.8rem;">${i+1}</td>
             <td style="padding:12px 10px;font-family:monospace;font-size:0.82rem;color:var(--text-secondary); width:120px;">${dStr}</td>
             <td style="padding:12px 10px;"><strong style="color:var(--text-primary);font-size:0.9rem;">${r.customerName||'-'}</strong><div style="font-size:0.75rem;color:var(--text-muted)">${r.invoice}</div></td>
