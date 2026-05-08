@@ -7,7 +7,7 @@
 
 (function () {
     'use strict';
-    window.onerror = function(msg, url, lineNo, columnNo, error) {
+    window.onerror = function (msg, url, lineNo, columnNo, error) {
         console.error('Global Error: ' + msg + ' at ' + lineNo + ':' + columnNo);
         return false;
     };
@@ -26,6 +26,72 @@
     let filteredSamsung = [];  // After filters (Samsung)
     let filteredAll = [];      // After filters (product+amc)
     let chartInstances = {};
+
+    // ---- INDEXEDDB FOR MONTHLY CACHING ----
+    const DB_NAME = 'myGAnalyticsDB';
+    const DB_VERSION = 1;
+    const STORE_NAME = 'monthlyData';
+
+    function initDB() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+            request.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains(STORE_NAME)) {
+                    db.createObjectStore(STORE_NAME, { keyPath: 'month' });
+                }
+            };
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    async function saveMonthlyDataToDB(month, data) {
+        try {
+            const db = await initDB();
+            const tx = db.transaction(STORE_NAME, 'readwrite');
+            const store = tx.objectStore(STORE_NAME);
+            store.put({ month, ...data });
+            return new Promise((resolve, reject) => {
+                tx.oncomplete = resolve;
+                tx.onerror = () => reject(tx.error);
+            });
+        } catch (e) {
+            console.error('[IndexedDB] Failed to save data', e);
+        }
+    }
+
+    async function loadMonthlyDataFromDB(month) {
+        try {
+            const db = await initDB();
+            const tx = db.transaction(STORE_NAME, 'readonly');
+            const store = tx.objectStore(STORE_NAME);
+            const request = store.get(month);
+            return new Promise((resolve, reject) => {
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        } catch (e) {
+            console.error('[IndexedDB] Failed to load data', e);
+            return null;
+        }
+    }
+
+    async function getAllMonthsFromDB() {
+        try {
+            const db = await initDB();
+            const tx = db.transaction(STORE_NAME, 'readonly');
+            const store = tx.objectStore(STORE_NAME);
+            const request = store.getAllKeys();
+            return new Promise((resolve, reject) => {
+                request.onsuccess = () => resolve(request.result || []);
+                request.onerror = () => reject(request.error);
+            });
+        } catch (e) {
+            console.error('[IndexedDB] Failed to get months', e);
+            return [];
+        }
+    }
 
     // ---- FIREBASE INIT & SHARE LINK ----
     const firebaseConfig = {
@@ -56,7 +122,7 @@
                         try {
                             const decompressed = LZString.decompressFromUTF16(data.compressedData);
                             window.sharedMissedUnique = JSON.parse(decompressed) || [];
-                        } catch(e) {
+                        } catch (e) {
                             console.error("Failed to decompress shared data:", e);
                             window.sharedMissedUnique = [];
                         }
@@ -92,20 +158,33 @@
                     try {
                         const decompressed = LZString.decompressFromUTF16(data.compressedData);
                         window.sharedMissedUnique = JSON.parse(decompressed) || [];
-                    } catch(e) {
+                    } catch (e) {
                         console.error('[CRM Share] Decompress failed:', e);
                         window.sharedMissedUnique = [];
                     }
-                    window.coActiveMonth = data.month || new Date().toISOString().substring(0,7);
+                    window.coActiveMonth = data.month || new Date().toISOString().substring(0, 7);
 
                     // Update caller header subtitle
                     const [y, m] = window.coActiveMonth.split('-');
-                    const monthLabel = new Date(y, m-1, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+                    const monthLabel = new Date(y, m - 1, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
                     const sub = document.getElementById('crmCallerHeaderSub');
                     if (sub) sub.textContent = monthLabel + ' \u2022 ' + window.sharedMissedUnique.length + ' customers';
 
                     isAuthenticated = true;
-                    document.querySelector('[data-section="customers-osg-section"]').click();
+                    
+                    // Directly activate the section and load data (bypass fragile .click())
+                    document.querySelectorAll('.dashboard-section').forEach(sec => sec.classList.remove('active'));
+                    const targetSec = document.getElementById('customers-osg-section');
+                    if (targetSec) targetSec.classList.add('active');
+                    
+                    document.querySelectorAll('.sidebar-nav li').forEach(li => li.classList.remove('active'));
+                    const navLi = document.querySelector('[data-section="customers-osg-section"]');
+                    if (navLi) navLi.classList.add('active');
+
+                    if (typeof updateMonthSwitcherUI === 'function') updateMonthSwitcherUI();
+                    if (typeof loadCoStatuses === 'function') {
+                        loadCoStatuses(() => setTimeout(renderCustomersOSGPage, 50));
+                    }
 
                     // Dismiss splash smoothly
                     const splash = document.getElementById('crmCallerSplash');
@@ -174,34 +253,34 @@
         // Mock element to gracefully handle removed UI sections without throwing runtime errors
         const safeChain = () => safeProxy;
         const safeProxy = new Proxy({}, {
-            get: function(target, prop) {
+            get: function (target, prop) {
                 if (prop === 'then') return undefined;
-                if (prop === 'options') return [{textContent: 'All'}];
+                if (prop === 'options') return [{ textContent: 'All' }];
                 if (prop === 'value' || prop === 'innerHTML' || prop === 'textContent' || prop === 'className') return '';
                 if (prop === 'style' || prop === 'classList' || prop === 'dataset') return safeProxy;
                 if (typeof prop === 'string') return safeChain;
                 return undefined;
             },
-            set: function() { return true; }
+            set: function () { return true; }
         });
         return safeProxy;
     };
 
     const originalQuerySelector = document.querySelector.bind(document);
-    document.querySelector = function(selector) {
+    document.querySelector = function (selector) {
         const el = originalQuerySelector(selector);
         if (el) return el;
         const safeChain = () => safeProxy;
         const safeProxy = new Proxy({}, {
-            get: function(target, prop) {
+            get: function (target, prop) {
                 if (prop === 'then') return undefined;
-                if (prop === 'options') return [{textContent: 'All'}];
+                if (prop === 'options') return [{ textContent: 'All' }];
                 if (prop === 'value' || prop === 'innerHTML' || prop === 'textContent' || prop === 'className') return '';
                 if (prop === 'style' || prop === 'classList' || prop === 'dataset') return safeProxy;
                 if (typeof prop === 'string') return safeChain;
                 return undefined;
             },
-            set: function() { return true; }
+            set: function () { return true; }
         });
         return safeProxy;
     };
@@ -245,10 +324,9 @@
     // ---- CUSTOMER CALL TRACKING STATE ----
     const coStatusMap = {};
     const CO_CALLERS = [
-        { name: 'Harmiya',  color: '#7c3aed', bg: 'rgba(124,58,237,0.15)', pass: '1234' },
-        { name: 'Aswathi',  color: '#0891b2', bg: 'rgba(8,145,178,0.15)', pass: '5678' },
-        { name: 'Shikha',   color: '#d97706', bg: 'rgba(217,119,6,0.15)', pass: '9012'  },
-        { name: 'Sarath',   color: '#10b981', bg: 'rgba(16,185,129,0.15)', pass: '3456' },
+        { name: 'Harmiya', color: '#7c3aed', bg: 'rgba(124,58,237,0.15)', pass: '1234' },
+        { name: 'Aswathi', color: '#0891b2', bg: 'rgba(8,145,178,0.15)', pass: '5678' },
+        { name: 'Shikha', color: '#d97706', bg: 'rgba(217,119,6,0.15)', pass: '9012' }
     ];
     let currentCaller = localStorage.getItem('co_caller') || null;
     let coCurrentRows = [];
@@ -256,13 +334,13 @@
     let coDisplayLimit = 100; // pagination: rows shown so far
 
     // ---- GLOBAL DOWNLOAD STAFF DETAILS ----
-    window.downloadStaffDetails = function(staff, branch) {
+    window.downloadStaffDetails = function (staff, branch) {
         if (!productData || productData.length === 0) return;
-        
+
         let pRows = productData;
         if (staff) pRows = pRows.filter(r => r.staff === staff);
         if (branch) pRows = pRows.filter(r => r.branch === branch);
-        
+
         if (pRows.length === 0) {
             alert('No detailed product data found.');
             return;
@@ -282,7 +360,7 @@
 
             if (!staffInvoices[s]) staffInvoices[s] = new Set();
             if (r.invoice) staffInvoices[s].add(r.invoice);
-            
+
             if (!staffStats[s]) staffStats[s] = { pQty: 0, pRev: 0, oQty: 0, oRev: 0 };
             staffStats[s].pQty += r.qty || 0;
             staffStats[s].pRev += r.soldPrice || 0;
@@ -307,12 +385,12 @@
 
         const hdr = ['Staff', 'Branch', 'Staff Qty Conv%', 'Staff Val Conv%', 'Product', 'Total Sold Qty'];
         lines.push(hdr.join(','));
-        
+
         Object.keys(staffProdCounts).sort().forEach(s => {
             const st = staffStats[s];
             const qConv = st.pQty > 0 ? (st.oQty / st.pQty) * 100 : 0;
             const vConv = st.pRev > 0 ? (st.oRev / st.pRev) * 100 : 0;
-            
+
             // Find the branch for this staff from the filtered rows
             const sRow = pRows.find(r => r.staff === s);
             const sBranch = (sRow && sRow.branch) ? sRow.branch : (branch || 'Unknown');
@@ -320,8 +398,8 @@
             const products = Object.keys(staffProdCounts[s]).sort((a, b) => staffProdCounts[s][b] - staffProdCounts[s][a]);
             products.forEach(p => {
                 lines.push([
-                    q(s), q(sBranch), 
-                    qConv.toFixed(2) + '%', vConv.toFixed(2) + '%', 
+                    q(s), q(sBranch),
+                    qConv.toFixed(2) + '%', vConv.toFixed(2) + '%',
                     q(p), staffProdCounts[s][p]
                 ].join(','));
             });
@@ -331,7 +409,7 @@
         downloadCSV(lines.join('\n'), filename);
     };
 
-    window.downloadBranchDetails = function(branch) {
+    window.downloadBranchDetails = function (branch) {
         window.downloadStaffDetails(null, branch);
     };
 
@@ -405,13 +483,13 @@
     });
 
     // ---- UPLOAD HANDLING ----
-        // Always use fresh getElementById to avoid safeProxy issues
+    // Always use fresh getElementById to avoid safeProxy issues
     function initUploadZones() {
         console.log('[UPLOAD] initUploadZones called');
         const zoneSmart = document.getElementById('uploadZoneSmart');
         const inputSmart = document.getElementById('fileInputSmart');
         console.log('[UPLOAD DEBUG] initUploadZones called. zone:', zoneSmart, 'input:', inputSmart);
-        
+
         const statusProduct = document.getElementById('productStatus');
         const statusOSG = document.getElementById('osgStatus');
         const statusAMC = document.getElementById('amcStatus');
@@ -419,7 +497,7 @@
 
         if (zoneSmart && inputSmart) {
             const onFilesHandler = async (files) => {
-                console.log('[UPLOAD] onFiles called with', files.length, 'files:', files.map(f=>f.name));
+                console.log('[UPLOAD] onFiles called with', files.length, 'files:', files.map(f => f.name));
                 for (let file of files) {
                     let fname = file.name.toLowerCase();
                     let fileType = null;
@@ -468,18 +546,18 @@
                             const rows = await parseProductFile(file);
                             productData = rows;
                             // Auto-detect active month from uploaded data using robust date parsing
-                            window.coActiveMonth = (function() {
+                            window.coActiveMonth = (function () {
                                 const counts = {};
                                 rows.forEach(r => {
                                     let dt = r.invoiceDate || r.time;
                                     if (!dt) return;
                                     let key = '';
                                     if (dt instanceof Date && !isNaN(dt)) {
-                                        key = dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0');
+                                        key = dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0');
                                     } else if (typeof dt === 'number') {
                                         // Excel serial number (days since 1900-01-01)
                                         const dObj = new Date(Math.round((dt - 25569) * 86400 * 1000));
-                                        key = dObj.getUTCFullYear() + '-' + String(dObj.getUTCMonth()+1).padStart(2,'0');
+                                        key = dObj.getUTCFullYear() + '-' + String(dObj.getUTCMonth() + 1).padStart(2, '0');
                                     } else if (typeof dt === 'string') {
                                         if (dt.match(/^\d{4}-\d{2}-\d{2}/)) {
                                             // ISO format: YYYY-MM-DD
@@ -489,14 +567,14 @@
                                             const match = dt.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
                                             if (match) {
                                                 const yy = match[3].length === 2 ? '20' + match[3] : match[3];
-                                                key = yy + '-' + match[2].padStart(2,'0');
+                                                key = yy + '-' + match[2].padStart(2, '0');
                                             }
                                         }
                                     }
-                                    if (key) counts[key] = (counts[key]||0) + 1;
+                                    if (key) counts[key] = (counts[key] || 0) + 1;
                                 });
-                                const best = Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];
-                                return best ? best[0] : new Date().toISOString().substring(0,7);
+                                const best = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+                                return best ? best[0] : new Date().toISOString().substring(0, 7);
                             })();
                             console.log('[Month] Active month detected:', window.coActiveMonth);
                             isCoStatusLive = false; // Force re-subscribe to new month path
@@ -515,7 +593,7 @@
                             osgData = rows;
                             showFileStatus(statusOSG, file.name, rows.length);
                         }
-                    } catch(err) {
+                    } catch (err) {
                         console.error('Error parsing file:', file.name, err);
                         alert('Error reading file: ' + file.name + '\n' + err.message);
                     } finally {
@@ -524,7 +602,7 @@
                 }
                 checkGenerateReady();
             };
-            
+
             setupUploadZone(zoneSmart, inputSmart, onFilesHandler);
         }
     }
@@ -588,31 +666,41 @@
         if (btn) btn.disabled = !(productData.length > 0 && osgData.length > 0);
     }
 
-    (function() {
+    (function () {
         var btnGen = document.getElementById('btnGenerate');
         if (!btnGen) return;
-        btnGen.addEventListener('click', function() {
+        btnGen.addEventListener('click', function () {
             showLoading(true);
-            setTimeout(function() {
+            setTimeout(async function () {
                 try {
                     // Remove returned products (negative qty) and their matching positive invoice pair
-                      const cancelledInv = new Set();
-                      const pR = [], nR = [];
-                      productData.forEach(r => { if ((r.qty || 0) < 0 || (r.soldPrice || 0) < 0) nR.push(r); else pR.push(r); });
-                      nR.forEach(nr => {
-                          const mIdx = pR.findIndex(pr => !cancelledInv.has(pr.invoice) &&
-                              (pr.customerNo === nr.customerNo || pr.customerName === nr.customerName) &&
-                              pr.product === nr.product && Math.abs(pr.soldPrice + nr.soldPrice) < 2);
-                          if (mIdx !== -1) {
-                              cancelledInv.add(pR[mIdx].invoice);
-                              cancelledInv.add(nr.invoice);
-                          } else {
-                              cancelledInv.add(nr.invoice);
-                          }
-                      });
-                      productData = productData.filter(r => !cancelledInv.has(r.invoice) && (r.qty || 0) > 0);
+                    const cancelledInv = new Set();
+                    const pR = [], nR = [];
+                    productData.forEach(r => { if ((r.qty || 0) < 0 || (r.soldPrice || 0) < 0) nR.push(r); else pR.push(r); });
+                    nR.forEach(nr => {
+                        const mIdx = pR.findIndex(pr => !cancelledInv.has(pr.invoice) &&
+                            (pr.customerNo === nr.customerNo || pr.customerName === nr.customerName) &&
+                            pr.product === nr.product && Math.abs(pr.soldPrice + nr.soldPrice) < 2);
+                        if (mIdx !== -1) {
+                            cancelledInv.add(pR[mIdx].invoice);
+                            cancelledInv.add(nr.invoice);
+                        } else {
+                            cancelledInv.add(nr.invoice);
+                        }
+                    });
+                    productData = productData.filter(r => !cancelledInv.has(r.invoice) && (r.qty || 0) > 0);
 
                     allData = [...productData, ...amcData];
+
+                    if (window.coActiveMonth) {
+                        await saveMonthlyDataToDB(window.coActiveMonth, {
+                            productData,
+                            osgData,
+                            amcData,
+                            samsungData
+                        });
+                        console.log('[IndexedDB] Saved data for month:', window.coActiveMonth);
+                    }
 
                     var fcb = document.getElementById('fileCountBadge');
                     var fct = document.getElementById('fileCountText');
@@ -641,67 +729,67 @@
     })();
 
     // ---- SHARE DASHBOARD LOGIC ----
-    (function() {
+    (function () {
         var btnShareEl = document.getElementById('btnShare');
         if (!btnShareEl) return;
-        btnShareEl.addEventListener('click', function() {
-        if (productData.length === 0) return alert('Upload data first via Dashboard.');
+        btnShareEl.addEventListener('click', function () {
+            if (productData.length === 0) return alert('Upload data first via Dashboard.');
 
-        // Find missedUnique for the whole dataset
-        const osgInvoices = new Set();
-        osgData.forEach(r => { if (r.invoice) osgInvoices.add(r.invoice); });
-        amcData.forEach(r => { if (r.invoice) osgInvoices.add(r.invoice); });
-        samsungData.forEach(r => { if (r.invoice) osgInvoices.add(r.invoice); });
-        const seenInv = new Set();
-        const fullMissedUnique = [];
-        productData.forEach(r => {
-            if (r.invoice && !osgInvoices.has(r.invoice) && !seenInv.has(r.invoice)) {
-                seenInv.add(r.invoice);
-                fullMissedUnique.push(r);
+            // Find missedUnique for the whole dataset
+            const osgInvoices = new Set();
+            osgData.forEach(r => { if (r.invoice) osgInvoices.add(r.invoice); });
+            amcData.forEach(r => { if (r.invoice) osgInvoices.add(r.invoice); });
+            samsungData.forEach(r => { if (r.invoice) osgInvoices.add(r.invoice); });
+            const seenInv = new Set();
+            const fullMissedUnique = [];
+            productData.forEach(r => {
+                if (r.invoice && !osgInvoices.has(r.invoice) && !seenInv.has(r.invoice)) {
+                    seenInv.add(r.invoice);
+                    fullMissedUnique.push(r);
+                }
+            });
+
+            // Strip to only display fields, sort by value high-to-low, cap at 2000 top-priority customers
+            const payload = fullMissedUnique
+                .sort((a, b) => (b.soldPrice || 0) - (a.soldPrice || 0))
+
+                .map(r => ({
+                    invoice: r.invoice || '',
+                    customerName: r.customerName || '',
+                    customerNo: r.customerNo || '',
+                    staff: r.staff || '',
+                    branch: r.branch || '',
+                    product: r.product || '',
+                    soldPrice: r.soldPrice || 0,
+                    qty: r.qty || 0,
+                }));
+
+            showLoading(true);
+            try {
+                const shareRef = firebase.database().ref('shares').push();
+                const compressed = LZString.compressToUTF16(JSON.stringify(payload));
+                console.log("Compressed share payload from ~" + JSON.stringify(payload).length + " bytes to " + compressed.length + " bytes");
+                shareRef.set({ compressedData: compressed, timestamp: Date.now() })
+                    .then(() => {
+                        showLoading(false);
+                        const base = 'https://officialacc2625-web.github.io/rahul/';
+                        const shareUrl = base + '?share=' + shareRef.key;
+                        if (navigator.clipboard) {
+                            navigator.clipboard.writeText(shareUrl).then(() => {
+                                alert('Share link copied to clipboard!\n\nLink: ' + shareUrl);
+                            }).catch(() => alert('Share Link generated: \n\n' + shareUrl));
+                        } else {
+                            alert('Share Link generated: \n\n' + shareUrl);
+                        }
+                    }).catch(e => {
+                        showLoading(false);
+                        alert('Failed to generate share link: ' + e.message);
+                    });
+            } catch (err) {
+                showLoading(false);
+                console.error(err);
+                alert('Firebase configuration error (likely missing databaseURL). Cannot share dashboard right now: ' + err.message);
             }
-        });
-
-        // Strip to only display fields, sort by value high-to-low, cap at 2000 top-priority customers
-        const payload = fullMissedUnique
-            .sort((a, b) => (b.soldPrice || 0) - (a.soldPrice || 0))
-            
-            .map(r => ({
-                invoice:      r.invoice      || '',
-                customerName: r.customerName || '',
-                customerNo:   r.customerNo   || '',
-                staff:        r.staff        || '',
-                branch:       r.branch       || '',
-                product:      r.product      || '',
-                soldPrice:    r.soldPrice    || 0,
-                qty:          r.qty          || 0,
-            }));
-
-        showLoading(true);
-        try {
-            const shareRef = firebase.database().ref('shares').push();
-            const compressed = LZString.compressToUTF16(JSON.stringify(payload));
-            console.log("Compressed share payload from ~" + JSON.stringify(payload).length + " bytes to " + compressed.length + " bytes");
-            shareRef.set({ compressedData: compressed, timestamp: Date.now() })
-                .then(() => {
-                    showLoading(false);
-                    const base = 'https://officialacc2625-web.github.io/rahul/';
-                    const shareUrl = base + '?share=' + shareRef.key;
-                    if (navigator.clipboard) {
-                        navigator.clipboard.writeText(shareUrl).then(() => {
-                            alert('Share link copied to clipboard!\n\nLink: ' + shareUrl);
-                        }).catch(() => alert('Share Link generated: \n\n' + shareUrl));
-                    } else {
-                        alert('Share Link generated: \n\n' + shareUrl);
-                    }
-                }).catch(e => {
-                    showLoading(false);
-                    alert('Failed to generate share link: ' + e.message);
-                });
-        } catch (err) {
-            showLoading(false);
-            console.error(err);
-            alert('Firebase configuration error (likely missing databaseURL). Cannot share dashboard right now: ' + err.message);
-        }
         });
     })();
 
@@ -1002,9 +1090,9 @@
         filteredAMC = [];
         if (amcData && amcData.length > 0) {
             filteredAMC = amcData.filter(r => {
-                if (fBranch  && r.branch !== fBranch)  return false;
+                if (fBranch && r.branch !== fBranch) return false;
                 if (fProduct && r.product !== fProduct && r.category !== fProduct) return false;
-                if (fBrand   && r.brand   !== fBrand)   return false;
+                if (fBrand && r.brand !== fBrand) return false;
                 if (hasPersonFilter) {
                     if (r.invoice && productInvoices.has(r.invoice)) return true;
                     if (!r.invoice) return true; // keep care plans without invoices just in case
@@ -1018,9 +1106,9 @@
         filteredSamsung = [];
         if (samsungData && samsungData.length > 0) {
             filteredSamsung = samsungData.filter(r => {
-                if (fBranch  && r.branch !== fBranch)  return false;
+                if (fBranch && r.branch !== fBranch) return false;
                 if (fProduct && r.product !== fProduct && r.category !== fProduct) return false;
-                if (fBrand   && r.brand   !== fBrand)   return false;
+                if (fBrand && r.brand !== fBrand) return false;
                 if (hasPersonFilter) {
                     if (r.invoice && productInvoices.has(r.invoice)) return true;
                     if (!r.invoice) return true;
@@ -1088,22 +1176,22 @@
         const lgAmcKpiRow = document.getElementById('lgAmcKpiRow');
         if (amcData && amcData.length > 0 && lgAmcKpiRow) {
             lgAmcKpiRow.style.display = 'block';
-            
+
             const lgTotalQty = filteredProduct.reduce((s, r) => s + ((r.brand && r.brand.toUpperCase().includes('LG')) ? (r.qty || 0) : 0), 0);
-            const amcTotalQty    = filteredAMC.reduce((s, r) => s + (r.qty || 0), 0);
-            const amcTotalSale   = filteredAMC.reduce((s, r) => s + (r.soldPrice || 0), 0);
-            const withoutAmcQty  = Math.max(0, lgTotalQty - amcTotalQty);
-            const amcConvPct     = lgTotalQty > 0 ? (amcTotalQty / lgTotalQty) * 100 : 0;
-            
-            const kpiAmcTotal   = document.getElementById('kpiAmcTotal');
-            const kpiAmcSale    = document.getElementById('kpiAmcSale');
+            const amcTotalQty = filteredAMC.reduce((s, r) => s + (r.qty || 0), 0);
+            const amcTotalSale = filteredAMC.reduce((s, r) => s + (r.soldPrice || 0), 0);
+            const withoutAmcQty = Math.max(0, lgTotalQty - amcTotalQty);
+            const amcConvPct = lgTotalQty > 0 ? (amcTotalQty / lgTotalQty) * 100 : 0;
+
+            const kpiAmcTotal = document.getElementById('kpiAmcTotal');
+            const kpiAmcSale = document.getElementById('kpiAmcSale');
             const kpiAmcWithout = document.getElementById('kpiAmcWithout');
-            const kpiAmcConv    = document.getElementById('kpiAmcConv');
-            
-            if (kpiAmcTotal)   kpiAmcTotal.textContent   = formatNumber(amcTotalQty);
-            if (kpiAmcSale)    kpiAmcSale.textContent    = '₹' + fmtShort(amcTotalSale);
+            const kpiAmcConv = document.getElementById('kpiAmcConv');
+
+            if (kpiAmcTotal) kpiAmcTotal.textContent = formatNumber(amcTotalQty);
+            if (kpiAmcSale) kpiAmcSale.textContent = '₹' + fmtShort(amcTotalSale);
             if (kpiAmcWithout) kpiAmcWithout.textContent = formatNumber(withoutAmcQty);
-            if (kpiAmcConv)    kpiAmcConv.textContent    = amcConvPct.toFixed(2) + '%';
+            if (kpiAmcConv) kpiAmcConv.textContent = amcConvPct.toFixed(2) + '%';
         } else if (lgAmcKpiRow) {
             lgAmcKpiRow.style.display = 'none';
         }
@@ -1112,15 +1200,15 @@
         const samsungKpiRow = document.getElementById('samsungKpiRow');
         if (samsungData && samsungData.length > 0 && samsungKpiRow) {
             samsungKpiRow.style.display = 'block';
-            
+
             const samsungAllowedCats = ['AC', 'MICROWAVE OVEN', 'REFRIGERATOR', 'WASHING MACHINE'];
-            
+
             const samsungBrandTotalQty = filteredProduct.reduce((s, r) => {
                 const p = r.product ? r.product.toUpperCase().trim() : '';
                 return s + ((r.brand && r.brand.toUpperCase().includes('SAMSUNG') && samsungAllowedCats.includes(p)) ? (r.qty || 0) : 0);
             }, 0);
-            
-            const samsungOsgTotalQty  = filteredSamsung.reduce((s, r) => {
+
+            const samsungOsgTotalQty = filteredSamsung.reduce((s, r) => {
                 const p = r.product ? r.product.toUpperCase().trim() : (r.category ? r.category.toUpperCase().trim() : '');
                 return s + ((samsungAllowedCats.includes(p)) ? (r.qty || 0) : 0);
             }, 0);
@@ -1128,18 +1216,18 @@
                 const p = r.product ? r.product.toUpperCase().trim() : (r.category ? r.category.toUpperCase().trim() : '');
                 return s + ((samsungAllowedCats.includes(p)) ? (r.soldPrice || 0) : 0);
             }, 0);
-            const withoutSamsungQty   = Math.max(0, samsungBrandTotalQty - samsungOsgTotalQty);
-            const samsungConvPct      = samsungBrandTotalQty > 0 ? (samsungOsgTotalQty / samsungBrandTotalQty) * 100 : 0;
-            
-            const kpiSamsungTotal   = document.getElementById('kpiSamsungTotal');
-            const kpiSamsungSale    = document.getElementById('kpiSamsungSale');
+            const withoutSamsungQty = Math.max(0, samsungBrandTotalQty - samsungOsgTotalQty);
+            const samsungConvPct = samsungBrandTotalQty > 0 ? (samsungOsgTotalQty / samsungBrandTotalQty) * 100 : 0;
+
+            const kpiSamsungTotal = document.getElementById('kpiSamsungTotal');
+            const kpiSamsungSale = document.getElementById('kpiSamsungSale');
             const kpiSamsungWithout = document.getElementById('kpiSamsungWithout');
-            const kpiSamsungConv    = document.getElementById('kpiSamsungConv');
-            
-            if (kpiSamsungTotal)   kpiSamsungTotal.textContent   = formatNumber(samsungOsgTotalQty);
-            if (kpiSamsungSale)    kpiSamsungSale.textContent    = '₹' + fmtShort(samsungOsgTotalSale);
+            const kpiSamsungConv = document.getElementById('kpiSamsungConv');
+
+            if (kpiSamsungTotal) kpiSamsungTotal.textContent = formatNumber(samsungOsgTotalQty);
+            if (kpiSamsungSale) kpiSamsungSale.textContent = '₹' + fmtShort(samsungOsgTotalSale);
             if (kpiSamsungWithout) kpiSamsungWithout.textContent = formatNumber(withoutSamsungQty);
-            if (kpiSamsungConv)    kpiSamsungConv.textContent    = samsungConvPct.toFixed(2) + '%';
+            if (kpiSamsungConv) kpiSamsungConv.textContent = samsungConvPct.toFixed(2) + '%';
         } else if (samsungKpiRow) {
             samsungKpiRow.style.display = 'none';
         }
@@ -1493,10 +1581,10 @@
     function q(s) { return '"' + String(s).replace(/"/g, '""') + '"'; }
 
     // ---- RESET ----
-    (function() {
+    (function () {
         var btnResetEl = document.getElementById('btnReset');
         if (!btnResetEl) return;
-        btnResetEl.addEventListener('click', function() {
+        btnResetEl.addEventListener('click', function () {
             productData = []; osgData = []; amcData = []; samsungData = []; allData = [];
             filteredProduct = []; filteredOSG = []; filteredAMC = []; filteredSamsung = []; filteredAll = [];
             const pSt = document.getElementById('productStatus');
@@ -2190,7 +2278,7 @@
             const oRev = oRows.reduce((s, r) => s + r.soldPrice, 0);
             const qtyConv = pQty > 0 ? (oQty / pQty) * 100 : 0;
             const valConv = pRev > 0 ? (oRev / pRev) * 100 : 0;
-            
+
             const prodCounts = {};
             const prodRev = {};
             const lgProdCounts = {};
@@ -2205,7 +2293,7 @@
                 const b = r.brand ? r.brand.toUpperCase() : '';
 
                 prodCounts[originalP] = (prodCounts[originalP] || 0) + (r.qty || 0);
-                prodRev[originalP]    = (prodRev[originalP] || 0) + (r.soldPrice || 0);
+                prodRev[originalP] = (prodRev[originalP] || 0) + (r.soldPrice || 0);
 
                 if (b.includes('LG')) {
                     lgProdCounts[originalP] = (lgProdCounts[originalP] || 0) + (r.qty || 0);
@@ -2223,7 +2311,7 @@
             oRows.forEach(r => {
                 const p = r.product || 'Unknown';
                 oProdCounts[p] = (oProdCounts[p] || 0) + (r.qty || 0);
-                oProdRev[p]    = (oProdRev[p] || 0) + (r.soldPrice || 0);
+                oProdRev[p] = (oProdRev[p] || 0) + (r.soldPrice || 0);
             });
 
             const amcProdCounts = {};
@@ -2280,7 +2368,7 @@
                     samQtyConv: samPQ > 0 ? (sQ / samPQ) * 100 : 0,
                     samValConv: samPR > 0 ? (sR / samPR) * 100 : 0
                 };
-            }).sort((a,b) => b.qty - a.qty);
+            }).sort((a, b) => b.qty - a.qty);
 
             return { name, branch: pInfo.branch, rbm: pInfo.rbm, bdm: pInfo.bdm, pQty, oQty, pRev, oRev, qtyConv, valConv, products };
         });
@@ -2919,11 +3007,11 @@
         const selRBM = $('fsRBM').value;
         const selBDM = $('fsBDM').value;
         const selBranch = $('fsBranch').value;
-        
+
         // --------------------------------------------------------------------------------
         // DATA PROCESSING FOR SHEET 1: FUTURE_STORES_OVERVIEW (Grouped by BDM -> Branch)
         // --------------------------------------------------------------------------------
-        
+
         // Filter Future Product Data
         const fProduct = productData.filter(r => r.branch && r.branch.toUpperCase().includes('FUTURE')
             && (!selRBM || r.rbm === selRBM)
@@ -2965,13 +3053,13 @@
         });
 
         // Convert to array and sort by BDM -> Branch
-        const branchStats = Object.values(branchGroups).sort((a,b) => a.bdm.localeCompare(b.bdm) || a.branch.localeCompare(b.branch));
+        const branchStats = Object.values(branchGroups).sort((a, b) => a.bdm.localeCompare(b.bdm) || a.branch.localeCompare(b.branch));
 
         // Build Sheet 1 AoA
         const hdr1 = ['BDM', 'Branch', 'Product', 'Product Qty', 'OSG Qty', 'LG-AMC Qty', 'SAMSUNG Qty', 'Osg Qty Conv%', 'Osg Val Conv%', 'OVERALL Osg Qty Conv%', 'OVERALL Osg Val Conv%', 'OVERALL LG-AMC Qty Conv%', 'OVERALL LG-AMC Val Conv%', 'OVERALL Samsung Qty Conv%', 'OVERALL Samsung Val Conv%'];
         const aoa1 = [['FUTURE STORES — EXPORT CSV'], hdr1];
         const merges1 = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 14 } }]; // Header merge
-        
+
         let bdmStart = 2, branchStart = 2;
 
         branchStats.forEach((grp, grpIdx) => {
@@ -2980,7 +3068,7 @@
             const tOQty = grp.oRows.reduce((s, r) => s + r.qty, 0);
             const tAQty = grp.aRows.reduce((s, r) => s + r.qty, 0);
             const tSQty = grp.sRows.reduce((s, r) => s + r.qty, 0);
-            
+
             const tPRev = grp.pRows.reduce((s, r) => s + r.soldPrice, 0);
             const tORev = grp.oRows.reduce((s, r) => s + r.soldPrice, 0);
             const tARev = grp.aRows.reduce((s, r) => s + r.soldPrice, 0);
@@ -2989,7 +3077,7 @@
             // Need LG specific totals for AMC conversion
             const lgPQty = grp.pRows.reduce((s, r) => s + ((r.brand && r.brand.toUpperCase().includes('LG')) ? (r.qty || 0) : 0), 0);
             const lgPRev = grp.pRows.reduce((s, r) => s + ((r.brand && r.brand.toUpperCase().includes('LG')) ? (r.soldPrice || 0) : 0), 0);
-            
+
             // Need Samsung specific totals for Samsung conversion
             const samsungAllowedCats = ['AC', 'MICROWAVE OVEN', 'REFRIGERATOR', 'WASHING MACHINE'];
             const samPQty = grp.pRows.reduce((s, r) => {
@@ -3011,7 +3099,7 @@
             // Product level calculations
             const pCounts = {}, oCounts = {}, aCounts = {}, sCounts = {};
             const pRevs = {}, oRevs = {};
-            
+
             grp.pRows.forEach(r => {
                 const p = r.product || 'Unknown';
                 pCounts[p] = (pCounts[p] || 0) + (r.qty || 0);
@@ -3032,7 +3120,7 @@
             });
 
             const allProds = Array.from(new Set([...Object.keys(pCounts), ...Object.keys(oCounts), ...Object.keys(aCounts), ...Object.keys(sCounts)]));
-            allProds.sort((a,b) => (pCounts[b]||0) - (pCounts[a]||0));
+            allProds.sort((a, b) => (pCounts[b] || 0) - (pCounts[a] || 0));
 
             allProds.forEach((prodName, pIdx) => {
                 const pQ = pCounts[prodName] || 0;
@@ -3041,7 +3129,7 @@
                 const sQ = sCounts[prodName] || 0;
                 const pR = pRevs[prodName] || 0;
                 const oR = oRevs[prodName] || 0;
-                
+
                 const pOsgQtyConv = pQ > 0 ? (oQ / pQ) * 100 : 0;
                 const pOsgValConv = pR > 0 ? (oR / pR) * 100 : 0;
 
@@ -3069,7 +3157,7 @@
                 // Determine if BDM should merge (if previous branch had same BDM)
                 const isLastGrp = grpIdx === branchStats.length - 1;
                 const nextGrp = isLastGrp ? null : branchStats[grpIdx + 1];
-                
+
                 if (isLastGrp || nextGrp.bdm !== grp.bdm) {
                     merges1.push({ s: { r: bdmStart, c: 0 }, e: { r: bdmStart + numProds - 1, c: 0 } }); // BDM
                     bdmStart += numProds;
@@ -3084,12 +3172,12 @@
         // Refactored Merge Logic for Sheet 1
         const finalMerges1 = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 14 } }]; // Title merge
         let mBdmStart = 2, mBranchStart = 2;
-        
+
         for (let i = 2; i <= aoa1.length; i++) {
             const isLast = i === aoa1.length;
             const row = isLast ? [] : aoa1[i];
-            const prevRow = aoa1[i-1];
-            
+            const prevRow = aoa1[i - 1];
+
             // Branch & Overall Columns Merge (1, 9, 10, 11, 12, 13, 14)
             if (isLast || (row[1] !== '' && row[1] !== prevRow[1])) {
                 if (i - 1 > mBranchStart) {
@@ -3100,7 +3188,7 @@
                 }
                 mBranchStart = i;
             }
-            
+
             // BDM (0)
             if (isLast || (row[0] !== '' && row[0] !== prevRow[0])) {
                 if (i - 1 > mBdmStart) {
@@ -3113,13 +3201,13 @@
         // --------------------------------------------------------------------------------
         // DATA PROCESSING FOR SHEET 2: FUTURE_STAFF_OVERVIEW (Grouped by BDM -> Branch -> Staff)
         // --------------------------------------------------------------------------------
-        
+
         const allStats = buildFutureStaffStats();
         const filteredStats = allStats
             .filter(s => !selRBM || s.rbm === selRBM)
             .filter(s => !selBDM || s.bdm === selBDM)
             .filter(s => !selBranch || s.branch === selBranch)
-            .sort((a, b) => (a.branch||'').localeCompare(b.branch||'') || (a.bdm||'').localeCompare(b.bdm||'') || (a.name||'').localeCompare(b.name||''));
+            .sort((a, b) => (a.branch || '').localeCompare(b.branch || '') || (a.bdm || '').localeCompare(b.bdm || '') || (a.name || '').localeCompare(b.name || ''));
 
         const hdr2 = ['BRANCH', 'BDM', 'Staff', 'Product', 'Product Qty', 'OSG Qty', 'AMC Qty', 'SAMSUNG Qty', 'Osg Qty Conv%', 'Osg Val Conv%'];
         const aoa2 = [hdr2];
@@ -3146,20 +3234,20 @@
         // --------------------------------------------------------------------------------
         // WRITE TO EXCEL
         // --------------------------------------------------------------------------------
-        
+
         const wb = XLSX.utils.book_new();
 
         // Add Sheet 1
         const ws1 = XLSX.utils.aoa_to_sheet(aoa1);
         ws1['!merges'] = finalMerges1;
-        ws1['!cols'] = [{wch:15}, {wch:22}, {wch:20}, {wch:12}, {wch:10}, {wch:12}, {wch:14}, {wch:14}, {wch:14}, {wch:24}, {wch:24}, {wch:28}, {wch:28}, {wch:28}, {wch:28}];
-        
+        ws1['!cols'] = [{ wch: 15 }, { wch: 22 }, { wch: 20 }, { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 24 }, { wch: 24 }, { wch: 28 }, { wch: 28 }, { wch: 28 }, { wch: 28 }];
+
         // --------------------------------------------------------------------------------
         // DATA PROCESSING FOR SHEET 3 & 4: LG-AMC & SAMSUNG
         // --------------------------------------------------------------------------------
         const hdr3 = ['BRANCH', 'BDM', 'Staff', 'Product', 'Product Qty', 'AMC Qty', 'AMC Qty Conv%', 'AMC Val Conv%'];
         const aoa3 = [hdr3];
-        
+
         const hdr4 = ['BRANCH', 'BDM', 'Staff', 'Product', 'Product Qty', 'SAMSUNG Qty', 'SAM Qty Conv%', 'SAM Val Conv%'];
         const aoa4 = [hdr4];
 
@@ -3178,7 +3266,7 @@
                             parseFloat(prod.amcValConv.toFixed(2))
                         ]);
                     }
-                    
+
                     if (prod.samProdQty > 0 || prod.samQty > 0) {
                         aoa4.push([
                             e.branch || 'Unknown',
@@ -3197,25 +3285,25 @@
 
         // Add Sheet 2
         const ws2 = XLSX.utils.aoa_to_sheet(aoa2);
-        ws2['!cols'] = [{wch:22}, {wch:15}, {wch:20}, {wch:25}, {wch:12}, {wch:10}, {wch:10}, {wch:14}, {wch:16}, {wch:16}];
+        ws2['!cols'] = [{ wch: 22 }, { wch: 15 }, { wch: 20 }, { wch: 25 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 14 }, { wch: 16 }, { wch: 16 }];
 
         // Add Sheet 3
         const ws3 = XLSX.utils.aoa_to_sheet(aoa3);
-        ws3['!cols'] = [{wch:22}, {wch:15}, {wch:20}, {wch:25}, {wch:12}, {wch:10}, {wch:16}, {wch:16}];
+        ws3['!cols'] = [{ wch: 22 }, { wch: 15 }, { wch: 20 }, { wch: 25 }, { wch: 12 }, { wch: 10 }, { wch: 16 }, { wch: 16 }];
 
         // Add Sheet 4
         const ws4 = XLSX.utils.aoa_to_sheet(aoa4);
-        ws4['!cols'] = [{wch:22}, {wch:15}, {wch:20}, {wch:25}, {wch:12}, {wch:12}, {wch:16}, {wch:16}];
+        ws4['!cols'] = [{ wch: 22 }, { wch: 15 }, { wch: 20 }, { wch: 25 }, { wch: 12 }, { wch: 12 }, { wch: 16 }, { wch: 16 }];
 
         // Force numeric types for calculations
         for (let r = 2; r < aoa1.length; r++) {
-            [3,4,5,6,7,8,9,10,11,12,13,14].forEach(c => {
+            [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].forEach(c => {
                 const cell = ws1[XLSX.utils.encode_cell({ r, c })];
                 if (cell && cell.v !== '') cell.t = 'n';
             });
         }
         for (let r = 1; r < aoa2.length; r++) {
-            [4,5,6,7,8,9].forEach(c => {
+            [4, 5, 6, 7, 8, 9].forEach(c => {
                 const cell = ws2[XLSX.utils.encode_cell({ r, c })];
                 if (cell) cell.t = 'n';
             });
@@ -3232,7 +3320,7 @@
             fill: { fgColor: { rgb: "0F243E" } }, // Dark blue
             font: { color: { rgb: "FFFFFF" }, bold: true, sz: 11 },
             alignment: { horizontal: "center", vertical: "center", wrapText: true },
-            border: { top: {style:'thin', color:{rgb:'334155'}}, bottom: {style:'thin', color:{rgb:'334155'}} }
+            border: { top: { style: 'thin', color: { rgb: '334155' } }, bottom: { style: 'thin', color: { rgb: '334155' } } }
         };
         const rowStyleAlt = {
             fill: { fgColor: { rgb: "E2E8F0" } }, // Light blue/gray
@@ -3271,19 +3359,19 @@
                 // Check key column to toggle color
                 const keyCellRef = XLSX.utils.encode_cell({ r: R, c: keyCol });
                 const currentKey = ws[keyCellRef] ? ws[keyCellRef].v : '';
-                
+
                 // Toggle if we hit a new group (ignore empty cells from merges)
                 if (currentKey !== '' && currentKey !== lastKey) {
                     isAlt = !isAlt;
                     lastKey = currentKey;
                 }
-                
+
                 let style = isAlt ? rowStyleAlt : rowStyle;
-                
+
                 for (let C = range.s.c; C <= range.e.c; C++) {
                     const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
                     if (!ws[cellRef]) ws[cellRef] = { t: 's', v: '' };
-                    
+
                     ws[cellRef].s = { ...style };
                     // Center align numbers
                     if (ws[cellRef].t === 'n') {
@@ -3296,7 +3384,7 @@
                 }
             }
         });
-        
+
         XLSX.writeFile(wb, 'Future_Stores_Report.xlsx');
     }
 
@@ -3451,7 +3539,7 @@
 
     // ---- WITHOUT OSG DASHBOARD PAGE ----
     window._wosgActiveTab = 'main';
-    window.switchWosgTab = function(tab) {
+    window.switchWosgTab = function (tab) {
         window._wosgActiveTab = tab;
         document.querySelectorAll('.wosg-tab').forEach(btn => {
             if (btn.dataset.wosgTab === tab) {
@@ -3467,7 +3555,7 @@
         else if (tab === 'daily') renderWosgDaily();
         else if (tab === 'monthly') renderWosgMonthly();
     };
-    
+
     function renderWosgMain() {
         const container = document.getElementById('wosgReportContainer');
         if (!container) return;
@@ -3565,17 +3653,17 @@
             let dt = r.invoiceDate || r.time;
             if (dt) {
                 if (dt instanceof Date && !isNaN(dt)) {
-                    dtStr = String(dt.getDate()).padStart(2,'0') + '-' + String(dt.getMonth()+1).padStart(2,'0') + '-' + dt.getFullYear();
+                    dtStr = String(dt.getDate()).padStart(2, '0') + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + dt.getFullYear();
                 } else if (typeof dt === 'string') {
                     if (dt.match(/^\d{4}-\d{2}-\d{2}/)) {
-                        const parts = dt.substring(0,10).split('-');
+                        const parts = dt.substring(0, 10).split('-');
                         dtStr = parts[2] + '-' + parts[1] + '-' + parts[0];
                     } else {
                         dtStr = dt; // fallback
                     }
                 } else if (typeof dt === 'number') {
                     let dObj = new Date(Math.round((dt - 25569) * 86400 * 1000));
-                    dtStr = String(dObj.getUTCDate()).padStart(2,'0') + '-' + String(dObj.getUTCMonth()+1).padStart(2,'0') + '-' + dObj.getUTCFullYear();
+                    dtStr = String(dObj.getUTCDate()).padStart(2, '0') + '-' + String(dObj.getUTCMonth() + 1).padStart(2, '0') + '-' + dObj.getUTCFullYear();
                 }
             }
             if (!dtStr) dtStr = 'Unknown Date';
@@ -3592,7 +3680,7 @@
 
             const cd = dateData[dtStr];
             const val = Math.abs(r.soldPrice || 0);
-            
+
             const st = coStatusMap[r.invoice || ''] || {};
             const cs = st.callStatus || '';
             const interest = st.interest || '';
@@ -3620,15 +3708,15 @@
         });
 
         // Sort dates descending
-        const sortedDates = Object.values(dateData).sort((a,b) => {
+        const sortedDates = Object.values(dateData).sort((a, b) => {
             if (a.date === 'Unknown Date') return 1;
             if (b.date === 'Unknown Date') return -1;
             // Parse DD-MM-YYYY
             const ap = a.date.split('-');
             const bp = b.date.split('-');
             if (ap.length === 3 && bp.length === 3) {
-                const da = new Date(ap[2], ap[1]-1, ap[0]);
-                const db = new Date(bp[2], bp[1]-1, bp[0]);
+                const da = new Date(ap[2], ap[1] - 1, ap[0]);
+                const db = new Date(bp[2], bp[1] - 1, bp[0]);
                 return db.getTime() - da.getTime();
             }
             return 0;
@@ -3659,17 +3747,17 @@
             if (dt) {
                 if (dt instanceof Date && !isNaN(dt)) {
                     mStr = monthNames[dt.getMonth()] + ' ' + dt.getFullYear();
-                    sKey = dt.getFullYear() + String(dt.getMonth()).padStart(2,'0');
+                    sKey = dt.getFullYear() + String(dt.getMonth()).padStart(2, '0');
                 } else if (typeof dt === 'string') {
                     if (dt.match(/^\d{4}-\d{2}-\d{2}/)) {
-                        const parts = dt.substring(0,10).split('-');
-                        mStr = monthNames[parseInt(parts[1])-1] + ' ' + parts[0];
+                        const parts = dt.substring(0, 10).split('-');
+                        mStr = monthNames[parseInt(parts[1]) - 1] + ' ' + parts[0];
                         sKey = parts[0] + parts[1];
                     }
                 } else if (typeof dt === 'number') {
                     let dObj = new Date(Math.round((dt - 25569) * 86400 * 1000));
                     mStr = monthNames[dObj.getUTCMonth()] + ' ' + dObj.getUTCFullYear();
-                    sKey = dObj.getUTCFullYear() + String(dObj.getUTCMonth()).padStart(2,'0');
+                    sKey = dObj.getUTCFullYear() + String(dObj.getUTCMonth()).padStart(2, '0');
                 }
             }
             if (!mStr) { mStr = 'Unknown Month'; sKey = '000000'; }
@@ -3686,7 +3774,7 @@
 
             const cd = monthData[mStr];
             const val = Math.abs(r.soldPrice || 0);
-            
+
             const st = coStatusMap[r.invoice || ''] || {};
             const cs = st.callStatus || '';
             const interest = st.interest || '';
@@ -3713,7 +3801,7 @@
             }
         });
 
-        const sortedMonths = Object.values(monthData).sort((a,b) => b.sKey.localeCompare(a.sKey));
+        const sortedMonths = Object.values(monthData).sort((a, b) => b.sKey.localeCompare(a.sKey));
 
         // Store for Export
         window._wosgMonthlyData = sortedMonths;
@@ -3731,7 +3819,7 @@
         }
 
         const today = new Date();
-        const dateStr = String(today.getDate()).padStart(2,'0') + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + today.getFullYear();
+        const dateStr = String(today.getDate()).padStart(2, '0') + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + today.getFullYear();
         const selectedCaller = window._wosgCallerFilter || '';
 
         const allCallers = Array.from(new Set(CO_CALLERS.map(c => c.name))).sort();
@@ -3743,7 +3831,7 @@
         allMissed.forEach(r => {
             const st = coStatusMap[r.invoice || ''] || {};
             const callerName = st.calledBy || '';
-            
+
             if (!callerName) return; // skip unassigned
             if (selectedCaller && callerName !== selectedCaller) return;
             if (!callerData[callerName]) callerData[callerName] = { rows: [], totalCount: 0, totalValue: 0 };
@@ -3780,7 +3868,7 @@
         window._wosgCallerFilter_active = selectedCaller;
 
         // Expose global handler so the inline onchange can call back in
-        window.filterCallerReport = function(val) {
+        window.filterCallerReport = function (val) {
             window._wosgCallerFilter = val;
             renderWosgDashboard();
         };
@@ -3831,7 +3919,7 @@
 
         callers.forEach((callerName, ci) => {
             const cd = callerData[callerName];
-            const callerCfg = CO_CALLERS.find(c => c.name === callerName) || { color:'#f97316', bg:'rgba(249,115,22,0.15)' };
+            const callerCfg = CO_CALLERS.find(c => c.name === callerName) || { color: '#f97316', bg: 'rgba(249,115,22,0.15)' };
             const rowBg = ci % 2 === 0 ? '#0f172a' : '#1e293b';
 
             let counts = {};
@@ -3861,7 +3949,7 @@
 
         html += `<tr style="background:linear-gradient(135deg,#ea580c,#dc2626);">
             <td style="padding:14px 14px;font-weight:800;color:#fff;font-size:0.85rem;letter-spacing:1px;text-transform:uppercase;border:1px solid rgba(255,255,255,0.15);text-align:left;">GRAND TOTAL</td>`;
-        
+
         cols.forEach(c => {
             html += `<td style="padding:14px 6px;font-weight:800;color:#fff;font-size:0.95rem;border:1px solid rgba(255,255,255,0.15);">${colTotals[c] > 0 ? colTotals[c] : '-'}</td>`;
         });
@@ -3889,7 +3977,7 @@
 
     function buildGenericWosgTable(container, dataArr, groupColName, title) {
         const today = new Date();
-        const dateStr = String(today.getDate()).padStart(2,'0') + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + today.getFullYear();
+        const dateStr = String(today.getDate()).padStart(2, '0') + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + today.getFullYear();
 
         const cols = ['Connected', 'Disconnected', 'Not Connected', 'Interested', 'Not Interested', 'Follow-up', 'Closed', 'Not Called'];
 
@@ -3927,7 +4015,7 @@
             grandValue += grp.totalValue;
 
             html += `<tr style="background:${rowBg}; transition:background 0.2s;" onmouseover="this.style.background='rgba(37,99,235,0.1)';" onmouseout="this.style.background='${rowBg}';">`;
-            
+
             html += `<td style="padding:12px 14px;border:${cellBorder};vertical-align:middle;text-align:left;background:rgba(37,99,235,0.05);border-left:4px solid #3b82f6;">
                 <div style="font-weight:800;font-size:0.9rem;color:#60a5fa;">${grp.date === 'OVERALL' ? 'Company Total' : grp.date}</div>
             </td>`;
@@ -3945,7 +4033,7 @@
 
         html += `<tr style="background:linear-gradient(135deg,#1d4ed8,#1e3a8a);">
             <td style="padding:14px 14px;font-weight:800;color:#fff;font-size:0.85rem;letter-spacing:1px;text-transform:uppercase;border:1px solid rgba(255,255,255,0.15);text-align:left;">GRAND TOTAL</td>`;
-            
+
         cols.forEach(c => {
             html += `<td style="padding:14px 6px;font-weight:800;color:#fff;font-size:0.95rem;border:1px solid rgba(255,255,255,0.15);">${colTotals[c] > 0 ? colTotals[c] : '-'}</td>`;
         });
@@ -3955,7 +4043,7 @@
         </tr>`;
 
         html += '</tbody></table></div>';
-        
+
         const kpiHtml = `
         <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:24px;">
             <div style="flex:1;min-width:140px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;border-top:3px solid #2563eb;">
@@ -3972,10 +4060,10 @@
     }
 
 
-    window.exportWosgReport = function() {
+    window.exportWosgReport = function () {
         const tab = window._wosgActiveTab || 'main';
         const today = new Date();
-        const dateStr = String(today.getDate()).padStart(2,'0') + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + today.getFullYear();
+        const dateStr = String(today.getDate()).padStart(2, '0') + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + today.getFullYear();
 
         // ---- CALLER TAB: Full styled export ----
         if (tab === 'caller') {
@@ -4071,7 +4159,7 @@
             if (typeof CO_CALLERS !== 'undefined') {
                 CO_CALLERS.forEach(c => { callerColors[c.name] = c.color || '#F97316'; });
             }
-            const hexToRGB = (hex) => hex.replace('#','').toUpperCase().padStart(6,'0');
+            const hexToRGB = (hex) => hex.replace('#', '').toUpperCase().padStart(6, '0');
 
             const totalRows = aoa.length;
             const totalCols = cols.length + 3;
@@ -4162,11 +4250,11 @@
             fileName = 'Without_OSG_Main_Report_' + dateStr + '.xlsx';
             aoa.push([title]);
             aoa.push(['SUMMARY', ...cols, 'TOTAL VALUE', 'TOTAL COUNT']);
-            
+
             window._wosgMainData.forEach(grp => {
                 let counts = {};
                 grp.rows.forEach(r => counts[r.status] = r.count);
-                
+
                 let row = ['Overall'];
                 cols.forEach(c => {
                     row.push(counts[c] || 0);
@@ -4175,7 +4263,7 @@
                 row.push(Math.round(grp.totalValue));
                 row.push(grp.totalCount);
                 aoa.push(row);
-                
+
                 grandCount += grp.totalCount; grandValue += grp.totalValue;
             });
         } else if (tab === 'caller') {
@@ -4184,12 +4272,12 @@
             fileName = 'Without_OSG_Caller_Report_' + dateStr + '.xlsx';
             aoa.push([title]);
             aoa.push(['CALLER', ...cols, 'TOTAL VALUE', 'TOTAL COUNT']);
-            
+
             window._wosgCallers.forEach(callerName => {
                 const cd = window._wosgCallerData[callerName];
                 let counts = {};
                 cd.rows.forEach(r => counts[r.status] = r.count);
-                
+
                 let row = [callerName];
                 cols.forEach(c => {
                     row.push(counts[c] || 0);
@@ -4198,7 +4286,7 @@
                 row.push(Math.round(cd.totalValue));
                 row.push(cd.totalCount);
                 aoa.push(row);
-                
+
                 grandCount += cd.totalCount; grandValue += cd.totalValue;
             });
         } else if (tab === 'daily') {
@@ -4207,11 +4295,11 @@
             fileName = 'Without_OSG_Daily_Report_' + dateStr + '.xlsx';
             aoa.push([title]);
             aoa.push(['DATE', ...cols, 'TOTAL VALUE', 'TOTAL COUNT']);
-            
+
             window._wosgDailyData.forEach(grp => {
                 let counts = {};
                 grp.rows.forEach(r => counts[r.status] = r.count);
-                
+
                 let row = [grp.date];
                 cols.forEach(c => {
                     row.push(counts[c] || 0);
@@ -4220,7 +4308,7 @@
                 row.push(Math.round(grp.totalValue));
                 row.push(grp.totalCount);
                 aoa.push(row);
-                
+
                 grandCount += grp.totalCount; grandValue += grp.totalValue;
             });
         } else if (tab === 'monthly') {
@@ -4229,11 +4317,11 @@
             fileName = 'Without_OSG_Monthly_Report_' + dateStr + '.xlsx';
             aoa.push([title]);
             aoa.push(['MONTH', ...cols, 'TOTAL VALUE', 'TOTAL COUNT']);
-            
+
             window._wosgMonthlyData.forEach(grp => {
                 let counts = {};
                 grp.rows.forEach(r => counts[r.status] = r.count);
-                
+
                 let row = [grp.date];
                 cols.forEach(c => {
                     row.push(counts[c] || 0);
@@ -4242,7 +4330,7 @@
                 row.push(Math.round(grp.totalValue));
                 row.push(grp.totalCount);
                 aoa.push(row);
-                
+
                 grandCount += grp.totalCount; grandValue += grp.totalValue;
             });
         }
@@ -4255,14 +4343,14 @@
 
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.aoa_to_sheet(aoa);
-        
+
         // Col widths based on pivot structure
         let wscols = [{ wch: 18 }]; // Caller/Date/Month
         cols.forEach(() => wscols.push({ wch: 14 }));
         wscols.push({ wch: 16 }); // Total Val
         wscols.push({ wch: 12 }); // Total Cnt
         ws['!cols'] = wscols;
-        
+
         ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: cols.length + 2 } }];
 
         XLSX.utils.book_append_sheet(wb, ws, tab === 'caller' ? 'Caller Report' : (tab === 'daily' ? 'Daily Report' : (tab === 'main' ? 'Main Report' : 'Monthly Report')));
@@ -4304,84 +4392,185 @@
 
     function loadCoStatuses(callback) {
         if (typeof firebase === 'undefined') { if (callback) callback(); return; }
-        const month = window.coActiveMonth || new Date().toISOString().substring(0,7);
+        const month = window.coActiveMonth || new Date().toISOString().substring(0, 7);
         const path = 'customerStatus/' + month;
 
         if (!isCoStatusLive) {
             isCoStatusLive = true;
-            // Detach previous listener if switching months
-            if (coLiveRef) coLiveRef.off('value');
+            // Detach all previous listeners when switching months
+            if (coLiveRef) {
+                coLiveRef.off('value');
+                coLiveRef.off('child_changed');
+                coLiveRef.off('child_added');
+            }
             coLiveRef = firebase.database().ref(path);
-            coStatusMap = {}; // Clear old month's data
+            coStatusMap = {};
 
-            coLiveRef.on('value', snap => {
+            // === STEP 1: Initial full load (once) — then render page ===
+            coLiveRef.once('value', snap => {
                 const data = snap.val() || {};
-                let changed = false;
+                Object.keys(data).forEach(inv => { coStatusMap[inv] = data[inv]; });
+                if (callback) { callback(); callback = null; }
 
-                Object.keys(data).forEach(inv => {
-                    if (JSON.stringify(coStatusMap[inv]) !== JSON.stringify(data[inv])) {
-                        coStatusMap[inv] = data[inv];
-                        changed = true;
-                        const rowEl = document.getElementById('co-row-' + inv);
-                        if (rowEl && !rowEl.contains(document.activeElement)) {
+                // === STEP 2: Real-time — fires on ALL clients when any record changes ===
+                coLiveRef.on('child_changed', childSnap => {
+                    const inv = childSnap.key;
+                    const newVal = childSnap.val();
+                    const prevCalledBy = (coStatusMap[inv] || {}).calledBy;
+                    coStatusMap[inv] = newVal;
+
+                    // If this invoice just got claimed by another caller, animate it out
+                    const claimedByOther = newVal.calledBy && newVal.calledBy !== currentCaller;
+                    const justClaimed = claimedByOther && !prevCalledBy;
+
+                    const rowEl = document.getElementById('co-row-' + inv);
+                    if (rowEl) {
+                        if (claimedByOther) {
+                            // Flash the row then slide it out
+                            _animateRowClaimed(rowEl, newVal.calledBy);
+                        } else if (!rowEl.contains(document.activeElement)) {
                             if (typeof updateCoSingleRow === 'function') updateCoSingleRow(inv);
                         }
                     }
+                    if (typeof updateCoStatsInPlace === 'function') updateCoStatsInPlace();
                 });
 
-                if (changed && typeof updateCoStatsInPlace === 'function') {
-                    updateCoStatsInPlace();
-                }
-
-                if (callback) { callback(); callback = null; }
+                // === STEP 3: New records added for the first time ===
+                coLiveRef.on('child_added', childSnap => {
+                    const inv = childSnap.key;
+                    if (coStatusMap[inv]) return; // skip already loaded
+                    coStatusMap[inv] = childSnap.val();
+                    const rowEl = document.getElementById('co-row-' + inv);
+                    if (rowEl && !rowEl.contains(document.activeElement)) {
+                        if (typeof updateCoSingleRow === 'function') updateCoSingleRow(inv);
+                    }
+                    if (typeof updateCoStatsInPlace === 'function') updateCoStatsInPlace();
+                });
             });
         } else {
             if (callback) callback();
         }
     }
 
+    // Flashes a row with a colour pulse, shows who claimed it, then slides it away
+    function _animateRowClaimed(rowEl, callerName) {
+        const callerObj = (typeof CO_CALLERS !== 'undefined' ? CO_CALLERS : []).find(x => x.name === callerName);
+        const claimColor = callerObj ? callerObj.color : '#f59e0b';
+        const claimBg    = callerObj ? callerObj.bg    : 'rgba(245,158,11,0.18)';
+
+        // Inject claim-flash CSS once
+        if (!document.getElementById('_co_claim_style')) {
+            const s = document.createElement('style');
+            s.id = '_co_claim_style';
+            s.textContent = `
+                @keyframes co-claim-pulse {
+                    0%   { opacity:1; }
+                    30%  { opacity:0.9; }
+                    60%  { opacity:1; }
+                    100% { opacity:0; }
+                }
+                .co-row-claiming {
+                    animation: co-claim-pulse 1.4s ease forwards !important;
+                    pointer-events: none !important;
+                    overflow: hidden;
+                }
+            `;
+            document.head.appendChild(s);
+        }
+
+        // Overlay a banner showing who claimed it
+        rowEl.style.position = 'relative';
+        rowEl.style.background = claimBg;
+        rowEl.style.outline = '2px solid ' + claimColor;
+        rowEl.style.transition = 'all 0.3s';
+
+        const banner = document.createElement('td');
+        banner.colSpan = 10;
+        banner.style.cssText = `position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+            background:${claimBg};color:${claimColor};font-weight:700;font-size:0.85rem;gap:8px;border-radius:6px;`;
+        banner.innerHTML = `<span style="font-size:1.1rem;">🔒</span> Claimed by <strong>${callerName}</strong> — removing from your list...`;
+        rowEl.innerHTML = '';
+        rowEl.appendChild(banner);
+        rowEl.classList.add('co-row-claiming');
+
+        // Remove from DOM + coCurrentRows after animation
+        setTimeout(() => {
+            rowEl.style.maxHeight = (rowEl.offsetHeight) + 'px';
+            rowEl.style.transition = 'max-height 0.35s ease, opacity 0.35s ease, padding 0.35s ease';
+            requestAnimationFrame(() => {
+                rowEl.style.maxHeight = '0';
+                rowEl.style.opacity  = '0';
+                rowEl.style.paddingTop = '0';
+                rowEl.style.paddingBottom = '0';
+            });
+            setTimeout(() => {
+                rowEl.remove();
+                if (typeof updateCoStatsInPlace === 'function') updateCoStatsInPlace();
+            }, 380);
+        }, 1450);
+    }
+
     // Switch to a different month's archive
-    window.switchCoMonth = function(month) {
+    window.switchCoMonth = async function (month) {
         window.coActiveMonth = month;
+
+        // Try to load local data
+        const localData = await loadMonthlyDataFromDB(month);
+        if (localData) {
+            productData = localData.productData || [];
+            osgData = localData.osgData || [];
+            amcData = localData.amcData || [];
+            samsungData = localData.samsungData || [];
+            allData = [...productData, ...amcData];
+            console.log('[IndexedDB] Loaded data for month:', month);
+        } else {
+            console.warn('[IndexedDB] No local data found for month', month);
+        }
+
         isCoStatusLive = false; // Force re-subscribe
         loadCoStatuses(() => renderCustomersOSGPage());
         if (typeof updateMonthSwitcherUI === 'function') updateMonthSwitcherUI();
     };
 
     // Build month switcher dropdown from Firebase keys + current month
-    window.buildMonthSwitcher = function() {
+    window.buildMonthSwitcher = async function () {
         if (typeof firebase === 'undefined') return;
+        const localMonths = await getAllMonthsFromDB();
         firebase.database().ref('customerStatus').once('value').then(snap => {
-            const keys = Object.keys(snap.val() || {}).filter(k => /^\d{4}-\d{2}$/.test(k)).sort().reverse();
+            let keys = Object.keys(snap.val() || {}).filter(k => /^\d{4}-\d{2}$/.test(k));
+            localMonths.forEach(m => { if (!keys.includes(m)) keys.push(m); });
+            keys.sort().reverse();
+
             const current = window.coActiveMonth || '';
             // Auto-set to the most recent month available in Firebase if not already set
             if (!window.coActiveMonth && keys.length > 0) {
                 window.coActiveMonth = keys[0];
             }
             if (!window.coActiveMonth) {
-                window.coActiveMonth = new Date().toISOString().substring(0,7);
+                window.coActiveMonth = new Date().toISOString().substring(0, 7);
             }
             if (!keys.includes(window.coActiveMonth)) keys.unshift(window.coActiveMonth);
             const el = document.getElementById('coMonthSwitcher');
             if (!el) return;
             el.innerHTML = keys.map(k => {
                 const [y, m] = k.split('-');
-                const label = new Date(y, m-1, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
-                return `<option value="${k}" ${k === window.coActiveMonth ? 'selected' : ''}>${label}</option>`;
+                const label = new Date(y, m - 1, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+                const isLocal = localMonths.includes(k) ? ' (Local)' : '';
+                return `<option value="${k}" ${k === window.coActiveMonth ? 'selected' : ''}>${label}${isLocal}</option>`;
             }).join('');
             // Update badge after dropdown is built
             const [y, m] = window.coActiveMonth.split('-');
-            const label = new Date(y, m-1, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+            const label = new Date(y, m - 1, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
             const badge = document.getElementById('coMonthBadge');
             if (badge) badge.textContent = label;
         });
     };
 
     // Update the month switcher UI badge
-    window.updateMonthSwitcherUI = function() {
-        const month = window.coActiveMonth || new Date().toISOString().substring(0,7);
+    window.updateMonthSwitcherUI = function () {
+        const month = window.coActiveMonth || new Date().toISOString().substring(0, 7);
         const [y, m] = month.split('-');
-        const label = new Date(y, m-1, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+        const label = new Date(y, m - 1, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
         const badge = document.getElementById('coMonthBadge');
         if (badge) badge.textContent = label;
         const el = document.getElementById('coMonthSwitcher');
@@ -4391,35 +4580,35 @@
 
     function saveCoStatus(inv) {
         if (typeof firebase === 'undefined') return;
-        const month = window.coActiveMonth || new Date().toISOString().substring(0,7);
+        const month = window.coActiveMonth || new Date().toISOString().substring(0, 7);
         const status = coStatusMap[inv] || { callStatus: null, interest: null };
         firebase.database().ref('customerStatus/' + month + '/' + inv).set(status).catch(e => console.warn('[Firebase] Status save failed:', e));
     }
 
     // ---- SHARE CRM LINK ----
-    window.shareCRMLink = function() {
+    window.shareCRMLink = function () {
         if (typeof firebase === 'undefined') return alert('Firebase not available.');
         const rows = coCurrentRows;
         if (!rows || rows.length === 0) {
             return alert('No customers loaded. Please upload data and open the CRM tab first.');
         }
-        const month = window.coActiveMonth || new Date().toISOString().substring(0,7);
+        const month = window.coActiveMonth || new Date().toISOString().substring(0, 7);
         const [y, m] = month.split('-');
-        const monthLabel = new Date(y, m-1, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+        const monthLabel = new Date(y, m - 1, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
 
         showLoading(true);
         const payload = rows.map(r => ({
-            invoice:      r.invoice      || '',
+            invoice: r.invoice || '',
             customerName: r.customerName || '',
-            customerNo:   r.customerNo   || '',
-            staff:        r.staff        || '',
-            branch:       r.branch       || '',
-            product:      r.product      || '',
-            soldPrice:    r.soldPrice    || 0,
-            brand:        r.brand        || '',
-            rbm:          r.rbm          || '',
-            bdm:          r.bdm          || '',
-            invoiceDate:  r.invoiceDate  || r.time || '',
+            customerNo: r.customerNo || '',
+            staff: r.staff || '',
+            branch: r.branch || '',
+            product: r.product || '',
+            soldPrice: r.soldPrice || 0,
+            brand: r.brand || '',
+            rbm: r.rbm || '',
+            bdm: r.bdm || '',
+            invoiceDate: r.invoiceDate || r.time || '',
         }));
 
         try {
@@ -4476,7 +4665,7 @@
                     modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
                 })
                 .catch(e => { showLoading(false); alert('Failed to generate CRM link: ' + e.message); });
-        } catch(e) {
+        } catch (e) {
             showLoading(false);
             alert('Compression failed: ' + e.message);
         }
@@ -4513,7 +4702,7 @@
         const selDate = document.getElementById('coDateFilter') ? document.getElementById('coDateFilter').value : '';
         coCurrentSelDate = selDate;
         const selStatusFilter = document.getElementById('coStatusFilter') ? document.getElementById('coStatusFilter').value : '';
-          const selCallerFilter = document.getElementById('coCallerFilter') ? document.getElementById('coCallerFilter').value : '';
+        const selCallerFilter = document.getElementById('coCallerFilter') ? document.getElementById('coCallerFilter').value : '';
 
         // Populate filter dropdowns (preserve selection)
         const brandSet = [...new Set(sourceData.map(r => r.brand).filter(Boolean))].sort();
@@ -4522,97 +4711,109 @@
         const prodSet = [...new Set(sourceData.map(r => r.product).filter(Boolean))].sort();
         const branchSet = [...new Set(sourceData.map(r => r.branch).filter(Boolean))].sort();
 
-            if($('coBrand')) $('coBrand').innerHTML = '<option value="">All Brands</option>' + brandSet.map(b => `<option value="${b}" ${b === selBrand ? 'selected' : ''}>${b}</option>`).join('');
-            $('coRBM').innerHTML = '<option value="">All RBMs</option>' + rbmSet.map(r => `<option value="${r}" ${r === selRBM ? 'selected' : ''}>${r}</option>`).join('');
-            $('coBDM').innerHTML = '<option value="">All BDMs</option>' + bdmSet.map(b => `<option value="${b}" ${b === selBDM ? 'selected' : ''}>${b}</option>`).join('');
-            $('coProduct').innerHTML = '<option value="">All Products</option>' + prodSet.map(p => `<option value="${p}" ${p === selProduct ? 'selected' : ''}>${p}</option>`).join('');
-            $('coBranch').innerHTML = '<option value="">All Branches</option>' + branchSet.map(b => `<option value="${b}" ${b === selBranch ? 'selected' : ''}>${b}</option>`).join('');
+        if ($('coBrand')) $('coBrand').innerHTML = '<option value="">All Brands</option>' + brandSet.map(b => `<option value="${b}" ${b === selBrand ? 'selected' : ''}>${b}</option>`).join('');
+        $('coRBM').innerHTML = '<option value="">All RBMs</option>' + rbmSet.map(r => `<option value="${r}" ${r === selRBM ? 'selected' : ''}>${r}</option>`).join('');
+        $('coBDM').innerHTML = '<option value="">All BDMs</option>' + bdmSet.map(b => `<option value="${b}" ${b === selBDM ? 'selected' : ''}>${b}</option>`).join('');
+        $('coProduct').innerHTML = '<option value="">All Products</option>' + prodSet.map(p => `<option value="${p}" ${p === selProduct ? 'selected' : ''}>${p}</option>`).join('');
+        $('coBranch').innerHTML = '<option value="">All Branches</option>' + branchSet.map(b => `<option value="${b}" ${b === selBranch ? 'selected' : ''}>${b}</option>`).join('');
 
-            // Filter product rows
-            let filtP = sourceData;
-            if (selBrand) filtP = filtP.filter(r => r.brand === selBrand);
-            if (selRBM) filtP = filtP.filter(r => r.rbm === selRBM);
-            if (selBDM) filtP = filtP.filter(r => r.bdm === selBDM);
-            if (selProduct) filtP = filtP.filter(r => r.product === selProduct);
-            if (selBranch) filtP = filtP.filter(r => r.branch === selBranch);
-            
-            if (selDate) {
-                filtP = filtP.filter(r => {
-                    let dStr = '';
-                    let dt = r.invoiceDate || r.time;
-                    if (!dt) return false;
-                    
-                    if (dt instanceof Date && !isNaN(dt)) {
-                        const y = dt.getFullYear();
-                        const m = String(dt.getMonth() + 1).padStart(2, '0');
-                        const d = String(dt.getDate()).padStart(2, '0');
-                        dStr = `${y}-${m}-${d}`;
-                    } else if (typeof dt === 'string') {
-                        if (dt.match(/^\d{4}-\d{2}-\d{2}/)) {
-                            dStr = dt.substring(0, 10);
+        // Filter product rows
+        let filtP = sourceData;
+        if (selBrand) filtP = filtP.filter(r => r.brand === selBrand);
+        if (selRBM) filtP = filtP.filter(r => r.rbm === selRBM);
+        if (selBDM) filtP = filtP.filter(r => r.bdm === selBDM);
+        if (selProduct) filtP = filtP.filter(r => r.product === selProduct);
+        if (selBranch) filtP = filtP.filter(r => r.branch === selBranch);
+
+        if (selDate) {
+            filtP = filtP.filter(r => {
+                let dStr = '';
+                let dt = r.invoiceDate || r.time;
+                if (!dt) return false;
+
+                if (dt instanceof Date && !isNaN(dt)) {
+                    const y = dt.getFullYear();
+                    const m = String(dt.getMonth() + 1).padStart(2, '0');
+                    const d = String(dt.getDate()).padStart(2, '0');
+                    dStr = `${y}-${m}-${d}`;
+                } else if (typeof dt === 'string') {
+                    if (dt.match(/^\d{4}-\d{2}-\d{2}/)) {
+                        dStr = dt.substring(0, 10);
+                    } else {
+                        let match = dt.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+                        if (match) {
+                            let yy = match[3].length === 2 ? "20" + match[3] : match[3];
+                            dStr = `${yy}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}`;
                         } else {
-                            let match = dt.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
-                            if (match) {
-                                let yy = match[3].length === 2 ? "20" + match[3] : match[3];
-                                dStr = `${yy}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}`;
-                            } else {
-                                const pd = new Date(dt);
-                                if (!isNaN(pd)) {
-                                    dStr = `${pd.getFullYear()}-${String(pd.getMonth() + 1).padStart(2, '0')}-${String(pd.getDate()).padStart(2, '0')}`;
-                                }
+                            const pd = new Date(dt);
+                            if (!isNaN(pd)) {
+                                dStr = `${pd.getFullYear()}-${String(pd.getMonth() + 1).padStart(2, '0')}-${String(pd.getDate()).padStart(2, '0')}`;
                             }
                         }
-                    } else if (typeof dt === 'number') {
-                        // Excel serial number (days since 1900)
-                        let dObj = new Date(Math.round((dt - 25569) * 86400 * 1000));
-                        dStr = `${dObj.getUTCFullYear()}-${String(dObj.getUTCMonth()+1).padStart(2,'0')}-${String(dObj.getUTCDate()).padStart(2,'0')}`;
                     }
-                    return dStr === selDate;
-                });
-            }
-
-            // Build OSG invoice set (empty if none uploaded, harmless in shared view)
-            const osgInvoices = new Set();
-            (typeof osgData !== 'undefined' ? osgData : []).forEach(r => { if (r.invoice) osgInvoices.add(r.invoice); });
-
-            // Find product rows with no matching OSG invoice, deduplicated by invoice
-            const seenInv = new Set();
-            filtP.forEach(r => {
-                // In shared view, sourceData is already osg-filtered
-                const isMissed = window.sharedMissedUnique ? true : (r.invoice && !osgInvoices.has(r.invoice));
-                if (isMissed && !seenInv.has(r.invoice)) {
-                    seenInv.add(r.invoice);
-                    missedUnique.push(r);
+                } else if (typeof dt === 'number') {
+                    // Excel serial number (days since 1900)
+                    let dObj = new Date(Math.round((dt - 25569) * 86400 * 1000));
+                    dStr = `${dObj.getUTCFullYear()}-${String(dObj.getUTCMonth() + 1).padStart(2, '0')}-${String(dObj.getUTCDate()).padStart(2, '0')}`;
                 }
+                return dStr === selDate;
             });
+        }
 
-            // Apply caller filter - only show rows called by selected caller
-            if (selCallerFilter) {
-                const filtered = missedUnique.filter(r => {
-                    const st = coStatusMap[r.invoice || ''] || {};
-                    return st.calledBy === selCallerFilter;
-                });
-                missedUnique.length = 0;
-                filtered.forEach(r => missedUnique.push(r));
-            }
+        // Build OSG invoice set (empty if none uploaded, harmless in shared view)
+        const osgInvoices = new Set();
+        (typeof osgData !== 'undefined' ? osgData : []).forEach(r => { if (r.invoice) osgInvoices.add(r.invoice); });
 
-            if (window.coDueTodayFilter) {
-                const today = new Date().toISOString().substring(0, 10);
-                const filtered = missedUnique.filter(r => {
-                    const st = coStatusMap[r.invoice || ''] || {};
-                    return st.interest === 'follow-up' && st.followUpDate && st.followUpDate <= today;
-                });
-                missedUnique.length = 0;
-                filtered.forEach(r => missedUnique.push(r));
+        // Find product rows with no matching OSG invoice, deduplicated by invoice
+        const seenInv = new Set();
+        filtP.forEach(r => {
+            // In shared view, sourceData is already osg-filtered
+            const isMissed = window.sharedMissedUnique ? true : (r.invoice && !osgInvoices.has(r.invoice));
+            if (isMissed && !seenInv.has(r.invoice)) {
+                seenInv.add(r.invoice);
+                missedUnique.push(r);
             }
+        });
 
-            if (window.sharedMissedUnique) {
-                $('coMissedCount').textContent = `${missedUnique.length} of ${window.sharedMissedUnique.length} customers (Shared View)`;
-                $('coMissedCount').style.background = 'linear-gradient(135deg, #10b981, #059669)';
-            } else {
-                $('coMissedCount').textContent = `${missedUnique.length} customers`;
-                $('coMissedCount').style.background = '';
-            }
+        // Hide rows already claimed by ANOTHER caller (they won't appear in this caller's list)
+        // Only apply in shared/caller view and only when a caller is logged in
+        if (currentCaller && window.isCRMSharedView) {
+            const visible = missedUnique.filter(r => {
+                const st = coStatusMap[r.invoice || ''] || {};
+                // Show row if: unclaimed, OR claimed by the current caller
+                return !st.calledBy || st.calledBy === currentCaller;
+            });
+            missedUnique.length = 0;
+            visible.forEach(r => missedUnique.push(r));
+        }
+
+        // Apply manual caller filter dropdown (admin view — shows rows by a specific caller)
+        if (selCallerFilter) {
+            const filtered = missedUnique.filter(r => {
+                const st = coStatusMap[r.invoice || ''] || {};
+                return st.calledBy === selCallerFilter;
+            });
+            missedUnique.length = 0;
+            filtered.forEach(r => missedUnique.push(r));
+        }
+
+        if (window.coDueTodayFilter) {
+            const today = new Date().toISOString().substring(0, 10);
+            const filtered = missedUnique.filter(r => {
+                const st = coStatusMap[r.invoice || ''] || {};
+                return st.interest === 'follow-up' && st.followUpDate && st.followUpDate <= today;
+            });
+            missedUnique.length = 0;
+            filtered.forEach(r => missedUnique.push(r));
+        }
+
+        if (window.sharedMissedUnique) {
+            $('coMissedCount').textContent = `${missedUnique.length} of ${window.sharedMissedUnique.length} customers (Shared View)`;
+            $('coMissedCount').style.background = 'linear-gradient(135deg, #10b981, #059669)';
+        } else {
+            $('coMissedCount').textContent = `${missedUnique.length} customers`;
+            $('coMissedCount').style.background = '';
+        }
 
         // Sort based on user selection
         const sortMode = (typeof window.coSortMode !== 'undefined') ? window.coSortMode : 'value-desc';
@@ -4636,12 +4837,12 @@
         coDisplayLimit = 100;
 
         // ---- Stats Bar (with IDs for in-place update) ----
-        const total        = missedUnique.length;
-        const connected    = missedUnique.filter(r => (coStatusMap[r.invoice||'']||{}).callStatus === 'connected').length;
-        const disconnected = missedUnique.filter(r => (coStatusMap[r.invoice||'']||{}).callStatus === 'disconnected').length;
-        const interested   = missedUnique.filter(r => (coStatusMap[r.invoice||'']||{}).interest === 'interested').length;
-        const notInterested= missedUnique.filter(r => (coStatusMap[r.invoice||'']||{}).interest === 'not-interested').length;
-        const notCalled    = total - connected - disconnected;
+        const total = missedUnique.length;
+        const connected = missedUnique.filter(r => (coStatusMap[r.invoice || ''] || {}).callStatus === 'connected').length;
+        const disconnected = missedUnique.filter(r => (coStatusMap[r.invoice || ''] || {}).callStatus === 'disconnected').length;
+        const interested = missedUnique.filter(r => (coStatusMap[r.invoice || ''] || {}).interest === 'interested').length;
+        const notInterested = missedUnique.filter(r => (coStatusMap[r.invoice || ''] || {}).interest === 'not-interested').length;
+        const notCalled = total - connected - disconnected;
 
         const statsBar = `
         <div id="coStatsBar" style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px;">
@@ -4681,14 +4882,14 @@
                     display:flex;align-items:center;gap:7px;
                     padding:7px 16px;border-radius:20px;border:2px solid ${c.color};
                     font-size:0.85rem;font-family:inherit;cursor:pointer;font-weight:600;
-                    background:${currentCaller===c.name ? c.bg : 'transparent'};
+                    background:${currentCaller === c.name ? c.bg : 'transparent'};
                     color:${c.color};
-                    box-shadow:${currentCaller===c.name ? '0 0 0 2px '+c.color+'55' : 'none'};
+                    box-shadow:${currentCaller === c.name ? '0 0 0 2px ' + c.color + '55' : 'none'};
                     transition:all 0.2s;
                 ">
                     <span style="width:24px;height:24px;border-radius:50%;background:${c.color};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;">${c.name[0]}</span>
                     ${c.name}
-                    ${currentCaller===c.name ? '<span style="font-size:0.7rem;opacity:0.8;">— Active</span>' : ''}
+                    ${currentCaller === c.name ? '<span style="font-size:0.7rem;opacity:0.8;">— Active</span>' : ''}
                 </button>`).join('')}
             </div>
             ${currentCaller
@@ -4728,11 +4929,11 @@
         $('coMissedTable').innerHTML = statsBar + callerSelector + tableHeader + rowsHTML + '</tbody></table></div>' + loadMoreBtn;
 
         // ---- Handlers ----
-        window.selectCoCaller = function(name) {
+        window.selectCoCaller = function (name) {
             // Find caller object to check password
             const callerObj = CO_CALLERS.find(c => c.name === name);
             if (!callerObj) return;
-            
+
             // If already selected, do nothing or toggling off
             if (currentCaller === name) {
                 currentCaller = null;
@@ -4751,7 +4952,7 @@
             }
         };
 
-        window.coLoadMore = function() {
+        window.coLoadMore = function () {
             const tbody = $('coTableBody');
             if (!tbody) return;
             const from = coDisplayLimit;
@@ -4768,23 +4969,23 @@
                     wrap.innerHTML = `<button onclick="window.coLoadMore()" style="
                         padding:10px 28px;border-radius:20px;border:1.5px solid var(--accent);
                         background:transparent;color:var(--accent);font-family:inherit;
-                        font-size:0.88rem;font-weight:600;cursor:pointer;">⬇ Load ${Math.min(remaining2,100)} more (${remaining2} remaining)</button>`;
+                        font-size:0.88rem;font-weight:600;cursor:pointer;">⬇ Load ${Math.min(remaining2, 100)} more (${remaining2} remaining)</button>`;
                 } else {
                     wrap.remove();
                 }
             }
         };
 
-        window.toggleCoCall = function(inv, status) {
+        window.toggleCoCall = function (inv, status) {
             if (!currentCaller && status !== "") {
-                alert('Please select your name (Harmiya / Aswathi / Shikha / Sarath) at the top of the page before logging a call.');
+                alert('Please select your name (Harmiya / Aswathi / Shikha) at the top of the page before logging a call.');
                 updateCoSingleRow(inv);
                 return;
             }
             if (!coStatusMap[inv]) coStatusMap[inv] = { callStatus: null, interest: null, calledBy: null, remarks: '' };
             coStatusMap[inv].callStatus = status === "" ? null : status;
             if (status !== "") coStatusMap[inv].calledBy = currentCaller;
-            
+
             if (!coStatusMap[inv].callStatus && !coStatusMap[inv].interest && !coStatusMap[inv].remarks) {
                 coStatusMap[inv].calledBy = null;
                 delete coStatusMap[inv].timestamp;
@@ -4796,7 +4997,7 @@
             updateCoStatsInPlace();
         };
 
-        window.toggleCoInterest = function(inv, status) {
+        window.toggleCoInterest = function (inv, status) {
             if (!currentCaller && status !== "") {
                 alert('Please select your name first.');
                 updateCoSingleRow(inv);
@@ -4805,7 +5006,7 @@
             if (!coStatusMap[inv]) coStatusMap[inv] = { callStatus: null, interest: null, calledBy: null, remarks: '', followUpDate: '' };
             coStatusMap[inv].interest = status === "" ? null : status;
             if (status !== "") coStatusMap[inv].calledBy = currentCaller;
-            
+
             if (!coStatusMap[inv].callStatus && !coStatusMap[inv].interest && !coStatusMap[inv].remarks) {
                 coStatusMap[inv].calledBy = null;
                 delete coStatusMap[inv].timestamp;
@@ -4816,26 +5017,26 @@
             updateCoSingleRow(inv);
             updateCoStatsInPlace();
         };
-        
-        window.setCoFollowUpDate = function(inv, dateStr) {
+
+        window.setCoFollowUpDate = function (inv, dateStr) {
             if (!coStatusMap[inv]) coStatusMap[inv] = { callStatus: null, interest: null, calledBy: null, remarks: '', followUpDate: '' };
             coStatusMap[inv].followUpDate = dateStr;
-            
+
             if (!coStatusMap[inv].callStatus && !coStatusMap[inv].interest && !coStatusMap[inv].remarks && (!dateStr || dateStr === '')) {
                 coStatusMap[inv].calledBy = null;
                 delete coStatusMap[inv].timestamp;
             } else {
                 coStatusMap[inv].timestamp = new Date().toISOString();
             }
-            
+
             saveCoStatus(inv);
             updateCoSingleRow(inv);
         };
 
-        window.saveCoRemark = function(inv, remark) {
+        window.saveCoRemark = function (inv, remark) {
             if (!coStatusMap[inv]) coStatusMap[inv] = { callStatus: null, interest: null, calledBy: null, remarks: '' };
             coStatusMap[inv].remarks = remark;
-            
+
             if (!coStatusMap[inv].callStatus && !coStatusMap[inv].interest && !coStatusMap[inv].remarks) {
                 coStatusMap[inv].calledBy = null;
                 delete coStatusMap[inv].timestamp;
@@ -4855,11 +5056,11 @@
     function updateCoStatsInPlace() {
         const rows = coCurrentRows || [];
         const total = rows.length;
-        const connected    = rows.filter(r => (coStatusMap[r.invoice||'']||{}).callStatus === 'connected').length;
-        const disconnected = rows.filter(r => (coStatusMap[r.invoice||'']||{}).callStatus === 'disconnected').length;
-        const interested   = rows.filter(r => (coStatusMap[r.invoice||'']||{}).interest === 'interested').length;
-        const notInterested= rows.filter(r => (coStatusMap[r.invoice||'']||{}).interest === 'not-interested').length;
-        const notCalled    = total - connected - disconnected;
+        const connected = rows.filter(r => (coStatusMap[r.invoice || ''] || {}).callStatus === 'connected').length;
+        const disconnected = rows.filter(r => (coStatusMap[r.invoice || ''] || {}).callStatus === 'disconnected').length;
+        const interested = rows.filter(r => (coStatusMap[r.invoice || ''] || {}).interest === 'interested').length;
+        const notInterested = rows.filter(r => (coStatusMap[r.invoice || ''] || {}).interest === 'not-interested').length;
+        const notCalled = total - connected - disconnected;
 
         const set = (id, val) => { const el = $(id); if (el) el.textContent = val; };
         set('coStat_total', total);
@@ -4876,17 +5077,18 @@
 
     function renderCallerPerformanceHTML() {
         if (!CO_CALLERS || CO_CALLERS.length === 0) return '';
-        
+
         let html = '<div class="caller-performance-grid">';
         CO_CALLERS.forEach(caller => {
             // Aggregate stats from global coStatusMap for THIS caller
-            const stats = { conn: 0, disc: 0, int: 0, nint: 0 };
+            const stats = { conn: 0, disc: 0, int: 0, closed: 0, followup: 0 };
             Object.values(coStatusMap).forEach(st => {
                 if (st.calledBy === caller.name) {
                     if (st.callStatus === 'connected') stats.conn++;
                     if (st.callStatus === 'disconnected') stats.disc++;
                     if (st.interest === 'interested') stats.int++;
-                    if (st.interest === 'not-interested') stats.nint++;
+                    if (st.interest === 'bought') stats.closed++;
+                    if (st.interest === 'follow-up') stats.followup++;
                 }
             });
 
@@ -4910,9 +5112,13 @@
                         <span class="mini-stat-label">Interested</span>
                         <span class="mini-stat-val">${stats.int}</span>
                     </div>
-                    <div class="mini-stat nint">
-                        <span class="mini-stat-label">Not Interested</span>
-                        <span class="mini-stat-val">${stats.nint}</span>
+                    <div class="mini-stat closed">
+                        <span class="mini-stat-label">Closed</span>
+                        <span class="mini-stat-val">${stats.closed}</span>
+                    </div>
+                    <div class="mini-stat followup">
+                        <span class="mini-stat-label">Follow-up</span>
+                        <span class="mini-stat-val">${stats.followup}</span>
                     </div>
                 </div>
             </div>`;
@@ -4927,6 +5133,14 @@
         if (!rowEl) return;
         const idx = coCurrentRows.findIndex((r, i) => (r.invoice || String(i)) === inv);
         if (idx === -1) return;
+
+        // If this row was just claimed by another caller in shared view, animate it out
+        const st = coStatusMap[inv] || {};
+        if (currentCaller && window.isCRMSharedView && st.calledBy && st.calledBy !== currentCaller) {
+            _animateRowClaimed(rowEl, st.calledBy);
+            return;
+        }
+
         const newRowHTML = buildCoRowHTML(coCurrentRows[idx], idx);
         rowEl.outerHTML = newRowHTML;
     }
@@ -4934,18 +5148,18 @@
     // Builds HTML for a single table row
     function buildCoRowHTML(r, i) {
         const inv = r.invoice || String(i);
-        const st  = coStatusMap[inv] || { callStatus: null, interest: null, calledBy: null, remarks: '' };
+        const st = coStatusMap[inv] || { callStatus: null, interest: null, calledBy: null, remarks: '' };
 
-        const rowBg = st.interest === 'bought'         ? 'rgba(16, 185, 129, 0.15)'
-                    : st.interest === 'interested'     ? 'rgba(22, 163, 74, 0.08)'
-                    : st.interest === 'not-interested' ? 'rgba(220, 38, 38, 0.08)'
+        const rowBg = st.interest === 'bought' ? 'rgba(16, 185, 129, 0.15)'
+            : st.interest === 'interested' ? 'rgba(22, 163, 74, 0.08)'
+                : st.interest === 'not-interested' ? 'rgba(220, 38, 38, 0.08)'
                     : st.callStatus === 'disconnected' ? 'rgba(147, 51, 234, 0.05)'
-                    : st.callStatus === 'connected'    ? 'rgba(59, 130, 246, 0.05)'
-                    : 'transparent';
-                    
+                        : st.callStatus === 'connected' ? 'rgba(59, 130, 246, 0.05)'
+                            : 'transparent';
+
         const isFinalState = ['interested', 'not-interested', 'bought'].includes(st.interest) || st.callStatus === 'disconnected';
         const rowOpacity = isFinalState ? '0.55' : '1';
-                    
+
         // Locking logic
         const isLocked = st.calledBy && st.calledBy !== currentCaller;
         const disAttr = isLocked ? 'disabled' : '';
@@ -4963,7 +5177,7 @@
         let setDateBtn = '';
         if (st.interest === 'follow-up') {
             const fDate = st.followUpDate ? new Date(st.followUpDate).toLocaleDateString('en-GB') : 'Set date';
-            setDateBtn = `<button ${disAttr} style="margin-top:6px; padding:6px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.1); background:#111827; color:#d1d5db; font-size:0.75rem; font-family:inherit; cursor:pointer; width:100%; display:flex; align-items:center; gap:6px; ${opcStyle}" onclick="window.coCalWidget.open(this, '${st.followUpDate||''}', (val) => window.setCoFollowUpDate('${inv}', val))"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ${fDate}</button>`;
+            setDateBtn = `<button ${disAttr} style="margin-top:6px; padding:6px 10px; border-radius:6px; border:1px solid rgba(255,255,255,0.1); background:#111827; color:#d1d5db; font-size:0.75rem; font-family:inherit; cursor:pointer; width:100%; display:flex; align-items:center; gap:6px; ${opcStyle}" onclick="window.coCalWidget.open(this, '${st.followUpDate || ''}', (val) => window.setCoFollowUpDate('${inv}', val))"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ${fDate}</button>`;
         }
 
         const interestBtn = `
@@ -4979,7 +5193,7 @@
         `;
 
         const callerInfo = st.calledBy ? (() => {
-            const c = CO_CALLERS.find(x => x.name === st.calledBy) || { color:'#64748b', bg:'rgba(100,116,139,0.15)' };
+            const c = CO_CALLERS.find(x => x.name === st.calledBy) || { color: '#64748b', bg: 'rgba(100,116,139,0.15)' };
             return `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;background:${c.bg};color:${c.color};font-size:0.7rem;font-weight:700;margin-top:5px;">
                 <span style="width:14px;height:14px;border-radius:50%;background:${c.color};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:0.55rem;font-weight:800;">${st.calledBy[0]}</span>
                 ${st.calledBy}</span>`;
@@ -5011,14 +5225,14 @@
         if (st.timestamp) {
             // Always show caller activity timestamp
             const upd = new Date(st.timestamp);
-            dStr = `<span style="color:#10b981;font-weight:600;" title="Status Updated">&#x2714; ${upd.toLocaleString('en-GB', { day:'numeric', month:'short', hour:'numeric', minute:'numeric' })}</span>`;
+            dStr = `<span style="color:#10b981;font-weight:600;" title="Status Updated">&#x2714; ${upd.toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: 'numeric', minute: 'numeric' })}</span>`;
         } else if (coCurrentSelDate) {
             // Only show purchase date when a date filter is active
             let dt = r.time || r.invoiceDate;
             if (dt) {
                 const pd = new Date(dt);
                 if (!isNaN(pd)) {
-                    dStr = pd.toLocaleString('en-GB', { day:'numeric', month:'short', year:'numeric', hour:'numeric', minute:'numeric' });
+                    dStr = pd.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: 'numeric' });
                 } else {
                     dStr = String(dt).substring(0, 16);
                 }
@@ -5026,42 +5240,42 @@
         }
 
         return `<tr id="co-row-${inv}" style="border-bottom:1px solid var(--border);background:${rowBg};opacity:${rowOpacity};transition:background 0.2s, opacity 0.2s;">
-            <td style="padding:12px 10px;color:var(--text-muted);font-size:0.8rem;">${i+1}</td>
+            <td style="padding:12px 10px;color:var(--text-muted);font-size:0.8rem;">${i + 1}</td>
             <td style="padding:12px 10px;font-family:monospace;font-size:0.82rem;color:var(--text-secondary); width:120px;">${dStr}</td>
-            <td style="padding:12px 10px;"><strong style="color:var(--text-primary);font-size:0.9rem;">${r.customerName||'-'}</strong><div style="font-size:0.75rem;color:var(--text-muted)">${r.invoice}</div></td>
+            <td style="padding:12px 10px;"><strong style="color:var(--text-primary);font-size:0.9rem;">${r.customerName || '-'}</strong><div style="font-size:0.75rem;color:var(--text-muted)">${r.invoice}</div></td>
             <td style="padding:12px 10px; width:150px;">${interestBtn}</td>
             <td style="padding:12px 10px; width:160px;">
                 <div style="display:flex;align-items:center;gap:6px;">
-                    <span style="font-weight:600;color:var(--text-primary);font-size:0.88rem;">${r.customerNo||'-'}</span>
-                    ${r.customerNo?`<a href="tel:${r.customerNo}" title="Call" style="color:var(--primary);display:flex;padding:5px;border-radius:50%;background:rgba(59,130,246,0.12);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>`:''}
-                    ${r.customerNo ? `<a href="${(function(){
-                        const phone  = '91' + r.customerNo.replace(/\D/g, '');
-                        const name   = (r.customerName || 'Customer').split(' ')[0];
-                        const prod   = r.product || 'your product';
-                        const inv    = r.invoice || '';
-                        const val    = r.soldPrice && r.soldPrice > 0 ? ' (worth ₹' + r.soldPrice.toLocaleString('en-IN') + ')' : '';
-                        const msg = 'Dear ' + name + ',\n\nGreetings from myG 😊\n\nThank you for your recent purchase of *' + prod + '*' + val + ' (Invoice: ' + inv + ').\n\n We noticed your purchase does not yet include an *OSG Extended Warranty* plan. OSG covers:\n\n✅ Extended protection beyond manufacturer warranty\n✅ Free doorstep repair service\n✅ Zero hidden charges\n✅ Instant claim processing\n\nSecuring your device takes just a minute — and gives you complete peace of mind! \n\nWould you be interested? Reply *YES* and we will take care of everything.\n\nWarm regards,\nmyG Team';
-                        return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
-                    })()}" target="_blank" title="WhatsApp (English)" style="color:#25D366;display:flex;padding:5px;border-radius:50%;background:rgba(37,211,102,0.12);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>` : ''}
-                    ${r.customerNo ? `<a href="${(function(){
-                        const phone  = '91' + r.customerNo.replace(/\D/g, '');
-                        const name   = (r.customerName || 'Customer').split(' ')[0];
-                        const prod   = r.product || 'your product';
-                        const inv    = r.invoice || '';
-                        const valML  = r.soldPrice && r.soldPrice > 0 ? ' (₹' + r.soldPrice.toLocaleString('en-IN') + ')' : '';
-                        const msgML = 'പ്രിയ ' + name + ',\n\nmyG-ൽ നിന്നുള്ള ആശംസകൾ 😊\n\nനിങ്ങൾ അടുത്തിടെ വാങ്ങിയ *' + prod + '*' + valML + ' ന് നന്ദി. (ഇൻവോയ്സ്: ' + inv + ').\n\n നിങ്ങളുടെ പർച്ചേസിൽ ഇതുവരെ *OSG എക്സ്റ്റൻഡഡ് വാറൻ്റി* പ്ലാൻ ഉൾപ്പെടുത്തിയിട്ടില്ല എന്ന് ഞങ്ങൾ ശ്രദ്ധിച്ചു. OSG വഴി നിങ്ങൾക്ക് ലഭിക്കുന്നത്:\n\n✅ കമ്പനി വാറൻ്റിക്ക് ശേഷവും പരിരക്ഷ\n✅ സൗജന്യ ഡോർസ്റ്റെപ്പ് റിപ്പയർ സേവനം\n✅ ഹിഡൻ ചാർജുകൾ ഇല്ല\n✅ വേഗത്തിലുള്ള ക്ലെയിം പ്രോസസ്സിംഗ്\n\nനിങ്ങളുടെ ഡിവൈസ് സുരക്ഷിതമാക്കാൻ വെറും ഒരു മിനിറ്റ് മതി — ഒപ്പം നിങ്ങൾക്ക് പൂർണ്ണ സമാധാനവും ലഭിക്കും! \n\nനിങ്ങൾക്ക് താല്പര്യമുണ്ടോ? *YES* എന്ന് മറുപടി നൽകുക, ബാക്കി കാര്യങ്ങൾ ഞങ്ങൾ ചെയ്തു തരാം.\n\nസ്നേഹത്തോടെ,\nmyG ടീം';
-                        return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msgML);
-                    })()}" target="_blank" title="WhatsApp (Malayalam)" style="color:#25D366;display:flex;padding:3px 6px;border-radius:12px;background:rgba(37,211,102,0.12);font-size:0.75rem;font-weight:700;text-decoration:none;align-items:center;">ML</a>` : ''}
+                    <span style="font-weight:600;color:var(--text-primary);font-size:0.88rem;">${r.customerNo || '-'}</span>
+                    ${r.customerNo ? `<a href="tel:${r.customerNo}" title="Call" style="color:var(--primary);display:flex;padding:5px;border-radius:50%;background:rgba(59,130,246,0.12);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>` : ''}
+                    ${r.customerNo ? `<a href="${(function () {
+                const phone = '91' + r.customerNo.replace(/\D/g, '');
+                const name = (r.customerName || 'Customer').split(' ')[0];
+                const prod = r.product || 'your product';
+                const inv = r.invoice || '';
+                const val = r.soldPrice && r.soldPrice > 0 ? ' (worth ₹' + r.soldPrice.toLocaleString('en-IN') + ')' : '';
+                const msg = 'Dear ' + name + ',\n\nGreetings from myG 😊\n\nThank you for your recent purchase of *' + prod + '*' + val + ' (Invoice: ' + inv + ').\n\n We noticed your purchase does not yet include an *OSG Extended Warranty* plan. OSG covers:\n\n✅ Extended protection beyond manufacturer warranty\n✅ Free doorstep repair service\n✅ Zero hidden charges\n✅ Instant claim processing\n\nSecuring your device takes just a minute — and gives you complete peace of mind! \n\nWould you be interested? Reply *YES* and we will take care of everything.\n\nWarm regards,\nmyG Team';
+                return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
+            })()}" target="_blank" title="WhatsApp (English)" style="color:#25D366;display:flex;padding:5px;border-radius:50%;background:rgba(37,211,102,0.12);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>` : ''}
+                    ${r.customerNo ? `<a href="${(function () {
+                const phone = '91' + r.customerNo.replace(/\D/g, '');
+                const name = (r.customerName || 'Customer').split(' ')[0];
+                const prod = r.product || 'your product';
+                const inv = r.invoice || '';
+                const valML = r.soldPrice && r.soldPrice > 0 ? ' (₹' + r.soldPrice.toLocaleString('en-IN') + ')' : '';
+                const msgML = 'പ്രിയ ' + name + ',\n\nmyG-ൽ നിന്നുള്ള ആശംസകൾ 😊\n\nനിങ്ങൾ അടുത്തിടെ വാങ്ങിയ *' + prod + '*' + valML + ' ന് നന്ദി. (ഇൻവോയ്സ്: ' + inv + ').\n\n നിങ്ങളുടെ പർച്ചേസിൽ ഇതുവരെ *OSG എക്സ്റ്റൻഡഡ് വാറൻ്റി* പ്ലാൻ ഉൾപ്പെടുത്തിയിട്ടില്ല എന്ന് ഞങ്ങൾ ശ്രദ്ധിച്ചു. OSG വഴി നിങ്ങൾക്ക് ലഭിക്കുന്നത്:\n\n✅ കമ്പനി വാറൻ്റിക്ക് ശേഷവും പരിരക്ഷ\n✅ സൗജന്യ ഡോർസ്റ്റെപ്പ് റിപ്പയർ സേവനം\n✅ ഹിഡൻ ചാർജുകൾ ഇല്ല\n✅ വേഗത്തിലുള്ള ക്ലെയിം പ്രോസസ്സിംഗ്\n\nനിങ്ങളുടെ ഡിവൈസ് സുരക്ഷിതമാക്കാൻ വെറും ഒരു മിനിറ്റ് മതി — ഒപ്പം നിങ്ങൾക്ക് പൂർണ്ണ സമാധാനവും ലഭിക്കും! \n\nനിങ്ങൾക്ക് താല്പര്യമുണ്ടോ? *YES* എന്ന് മറുപടി നൽകുക, ബാക്കി കാര്യങ്ങൾ ഞങ്ങൾ ചെയ്തു തരാം.\n\nസ്നേഹത്തോടെ,\nmyG ടീം';
+                return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msgML);
+            })()}" target="_blank" title="WhatsApp (Malayalam)" style="color:#25D366;display:flex;padding:3px 6px;border-radius:12px;background:rgba(37,211,102,0.12);font-size:0.75rem;font-weight:700;text-decoration:none;align-items:center;">ML</a>` : ''}
                 </div>
                 ${callBtns}
             </td>
             <td style="padding:12px 10px;">${remarksInput}</td>
-            <td style="padding:12px 10px;color:var(--text-secondary);font-size:0.85rem;">${r.branch||'-'}</td>
-            <td style="padding:12px 10px;color:var(--text-secondary);font-size:0.85rem;">${r.product||'-'}</td>
+            <td style="padding:12px 10px;color:var(--text-secondary);font-size:0.85rem;">${r.branch || '-'}</td>
+            <td style="padding:12px 10px;color:var(--text-secondary);font-size:0.85rem;">${r.product || '-'}</td>
             <td style="padding:12px 10px;text-align:right;font-weight:600;color:var(--text-primary);font-size:0.88rem;white-space:nowrap;">${fmtShort(Math.abs(r.soldPrice || 0))}</td>
         </tr>`;
     }
-function exportCustomersOSGExcel() {
+    function exportCustomersOSGExcel() {
         if (productData.length === 0) return;
         const selRBM = $('coRBM').value;
         const selBDM = $('coBDM').value;
@@ -5095,11 +5309,11 @@ function exportCustomersOSGExcel() {
             let dStr = '';
             if (r.invoiceDate) dStr = new Date(r.invoiceDate).toLocaleDateString();
             else if (r.time) dStr = new Date(r.time).toLocaleDateString();
-            
+
             return [
                 i + 1, r.invoice, dStr, r.customerName || '', r.customerNo || '',
                 st.callStatus || '', st.interest || '', st.followUpDate || '', st.calledBy || '', st.remarks || '',
-                r.branch || '', r.product || '', Math.round(r.soldPrice||0)
+                r.branch || '', r.product || '', Math.round(r.soldPrice || 0)
             ];
         });
         exportToStyledExcel(data, hdr, 'customers_without_osg.xlsx', 'Missed OSG Customers');
@@ -5142,7 +5356,7 @@ function exportCustomersOSGExcel() {
             for (let C = 0; C < headers.length; ++C) {
                 const cell_ref = XLSX.utils.encode_cell({ c: C, r: R });
                 if (!ws[cell_ref]) ws[cell_ref] = { t: 's', v: '' };
-                
+
                 if (R === 0) {
                     ws[cell_ref].s = headerStyle;
                 } else {
@@ -5304,13 +5518,13 @@ function exportCustomersOSGExcel() {
     // ========================================================================
     const modalFSDash = $('fsExportDashboardModal');
     const btnCloseFSDash = $('btnCloseFSDashboard');
-    
+
     if (modalFSDash && btnCloseFSDash) {
         // Close modal
         btnCloseFSDash.addEventListener('click', () => {
             modalFSDash.style.display = 'none';
         });
-        
+
         // Tab switching
         const dashTabs = document.querySelectorAll('.dash-tab');
         dashTabs.forEach(tab => {
@@ -5331,7 +5545,7 @@ function exportCustomersOSGExcel() {
 
     function renderFsExportDashboard(initFilters = false) {
         if (!productData || productData.length === 0) return;
-        
+
         const selRBM = $('fsDashRBM').value;
         const selBDM = $('fsDashBDM').value;
         const selBranch = $('fsDashBranch').value;
@@ -5365,7 +5579,7 @@ function exportCustomersOSGExcel() {
         }
 
         // Apply Current Filters
-        fProduct = fProduct.filter(r => 
+        fProduct = fProduct.filter(r =>
             (!selRBM || r.rbm === selRBM) &&
             (!selBDM || r.bdm === selBDM) &&
             (!selBranch || r.branch === selBranch) &&
@@ -5391,15 +5605,15 @@ function exportCustomersOSGExcel() {
         const brGrp = {}; // key: BDM|Branch
         fProduct.forEach(r => {
             const k = (r.bdm || 'Unknown') + '|' + r.branch;
-            if (!brGrp[k]) brGrp[k] = { bdm: r.bdm || 'Unknown', branch: r.branch, p:[], o:[], a:[], s:[] };
+            if (!brGrp[k]) brGrp[k] = { bdm: r.bdm || 'Unknown', branch: r.branch, p: [], o: [], a: [], s: [] };
             brGrp[k].p.push(r);
         });
-        fOSG.forEach(r => { const k = invMeta[r.invoice].bdm + '|' + invMeta[r.invoice].branch; if(brGrp[k]) brGrp[k].o.push(r); });
-        fAMC.forEach(r => { const k = invMeta[r.invoice].bdm + '|' + invMeta[r.invoice].branch; if(brGrp[k]) brGrp[k].a.push(r); });
-        fSamsung.forEach(r => { const k = invMeta[r.invoice].bdm + '|' + invMeta[r.invoice].branch; if(brGrp[k]) brGrp[k].s.push(r); });
+        fOSG.forEach(r => { const k = invMeta[r.invoice].bdm + '|' + invMeta[r.invoice].branch; if (brGrp[k]) brGrp[k].o.push(r); });
+        fAMC.forEach(r => { const k = invMeta[r.invoice].bdm + '|' + invMeta[r.invoice].branch; if (brGrp[k]) brGrp[k].a.push(r); });
+        fSamsung.forEach(r => { const k = invMeta[r.invoice].bdm + '|' + invMeta[r.invoice].branch; if (brGrp[k]) brGrp[k].s.push(r); });
 
         let brHtml = `<tr><th>BDM</th><th>Branch</th><th>Prod Qty</th><th>OSG Qty</th><th>LG-AMC Qty</th><th>Samsung Qty</th><th>OSG Val Conv %</th><th>LG-AMC Val Conv %</th><th>Samsung Val Conv %</th></tr>`;
-        Object.values(brGrp).sort((a,b) => a.bdm.localeCompare(b.bdm) || a.branch.localeCompare(b.branch)).forEach(grp => {
+        Object.values(brGrp).sort((a, b) => a.bdm.localeCompare(b.bdm) || a.branch.localeCompare(b.branch)).forEach(grp => {
             const pQ = grp.p.reduce((s, r) => s + r.qty, 0);
             const oQ = grp.o.reduce((s, r) => s + r.qty, 0);
             const aQ = grp.a.reduce((s, r) => s + r.qty, 0);
@@ -5408,11 +5622,11 @@ function exportCustomersOSGExcel() {
             const oR = grp.o.reduce((s, r) => s + r.soldPrice, 0);
             const aR = grp.a.reduce((s, r) => s + r.soldPrice, 0);
             const sR = grp.s.reduce((s, r) => s + r.soldPrice, 0);
-            
+
             const lgPR = grp.p.reduce((s, r) => s + ((r.brand && r.brand.toUpperCase().includes('LG')) ? r.soldPrice : 0), 0);
             const samsungAllowedCats = ['AC', 'MICROWAVE OVEN', 'REFRIGERATOR', 'WASHING MACHINE'];
             const samPR = grp.p.reduce((s, r) => s + ((r.brand && r.brand.toUpperCase().includes('SAMSUNG') && r.product && samsungAllowedCats.includes(r.product.toUpperCase().trim())) ? r.soldPrice : 0), 0);
-            
+
             const oConv = pR > 0 ? ((oR / pR) * 100).toFixed(2) : '0.00';
             const aConv = lgPR > 0 ? ((aR / lgPR) * 100).toFixed(2) : '0.00';
             const sConv = samPR > 0 ? ((sR / samPR) * 100).toFixed(2) : '0.00';
@@ -5438,15 +5652,15 @@ function exportCustomersOSGExcel() {
         const stGrp = {}; // key: Branch|Staff
         fProduct.forEach(r => {
             const k = r.branch + '|' + (r.staff || 'Unknown');
-            if (!stGrp[k]) stGrp[k] = { branch: r.branch, staff: r.staff || 'Unknown', p:[], o:[], a:[], s:[] };
+            if (!stGrp[k]) stGrp[k] = { branch: r.branch, staff: r.staff || 'Unknown', p: [], o: [], a: [], s: [] };
             stGrp[k].p.push(r);
         });
-        fOSG.forEach(r => { const k = invMeta[r.invoice].branch + '|' + invMeta[r.invoice].staff; if(stGrp[k]) stGrp[k].o.push(r); });
-        fAMC.forEach(r => { const k = invMeta[r.invoice].branch + '|' + invMeta[r.invoice].staff; if(stGrp[k]) stGrp[k].a.push(r); });
-        fSamsung.forEach(r => { const k = invMeta[r.invoice].branch + '|' + invMeta[r.invoice].staff; if(stGrp[k]) stGrp[k].s.push(r); });
+        fOSG.forEach(r => { const k = invMeta[r.invoice].branch + '|' + invMeta[r.invoice].staff; if (stGrp[k]) stGrp[k].o.push(r); });
+        fAMC.forEach(r => { const k = invMeta[r.invoice].branch + '|' + invMeta[r.invoice].staff; if (stGrp[k]) stGrp[k].a.push(r); });
+        fSamsung.forEach(r => { const k = invMeta[r.invoice].branch + '|' + invMeta[r.invoice].staff; if (stGrp[k]) stGrp[k].s.push(r); });
 
         let stHtml = `<tr><th>Branch</th><th>Staff</th><th>Prod Qty</th><th>OSG Qty</th><th>LG-AMC Qty</th><th>Samsung Qty</th><th>OSG Val Conv %</th><th>LG-AMC Val Conv %</th><th>Samsung Val Conv %</th></tr>`;
-        Object.values(stGrp).sort((a,b) => a.branch.localeCompare(b.branch) || a.staff.localeCompare(b.staff)).forEach(grp => {
+        Object.values(stGrp).sort((a, b) => a.branch.localeCompare(b.branch) || a.staff.localeCompare(b.staff)).forEach(grp => {
             const pQ = grp.p.reduce((s, r) => s + r.qty, 0);
             const oQ = grp.o.reduce((s, r) => s + r.qty, 0);
             const aQ = grp.a.reduce((s, r) => s + r.qty, 0);
@@ -5455,11 +5669,11 @@ function exportCustomersOSGExcel() {
             const oR = grp.o.reduce((s, r) => s + r.soldPrice, 0);
             const aR = grp.a.reduce((s, r) => s + r.soldPrice, 0);
             const sR = grp.s.reduce((s, r) => s + r.soldPrice, 0);
-            
+
             const lgPR = grp.p.reduce((s, r) => s + ((r.brand && r.brand.toUpperCase().includes('LG')) ? r.soldPrice : 0), 0);
             const samsungAllowedCats = ['AC', 'MICROWAVE OVEN', 'REFRIGERATOR', 'WASHING MACHINE'];
             const samPR = grp.p.reduce((s, r) => s + ((r.brand && r.brand.toUpperCase().includes('SAMSUNG') && r.product && samsungAllowedCats.includes(r.product.toUpperCase().trim())) ? r.soldPrice : 0), 0);
-            
+
             const oConv = pR > 0 ? ((oR / pR) * 100).toFixed(2) : '0.00';
             const aConv = lgPR > 0 ? ((aR / lgPR) * 100).toFixed(2) : '0.00';
             const sConv = samPR > 0 ? ((sR / samPR) * 100).toFixed(2) : '0.00';
@@ -5486,21 +5700,21 @@ function exportCustomersOSGExcel() {
         const pLG = fProduct.filter(r => r.brand && r.brand.toUpperCase().includes('LG'));
         pLG.forEach(r => {
             const k = (r.product || 'Unknown').toUpperCase().trim();
-            if(!amcProdGrp[k]) amcProdGrp[k] = { name: k, pQ:0, pR:0, aQ:0, aR:0 };
+            if (!amcProdGrp[k]) amcProdGrp[k] = { name: k, pQ: 0, pR: 0, aQ: 0, aR: 0 };
             amcProdGrp[k].pQ += r.qty || 0;
             amcProdGrp[k].pR += r.soldPrice || 0;
         });
         fAMC.forEach(r => {
             const k = (r.product || 'Unknown').toUpperCase().trim();
-            if(!amcProdGrp[k]) amcProdGrp[k] = { name: k, pQ:0, pR:0, aQ:0, aR:0 };
+            if (!amcProdGrp[k]) amcProdGrp[k] = { name: k, pQ: 0, pR: 0, aQ: 0, aR: 0 };
             amcProdGrp[k].aQ += r.qty || 0;
             amcProdGrp[k].aR += r.soldPrice || 0;
         });
 
         let amcHtml = `<tr><th>LG Category</th><th>Prod Qty</th><th>AMC Qty</th><th>Prod Rev</th><th>AMC Rev</th><th>Qty Conv %</th><th>Val Conv %</th></tr>`;
-        Object.values(amcProdGrp).sort((a,b) => b.pQ - a.pQ).forEach(grp => {
-            const qConv = grp.pQ > 0 ? ((grp.aQ / grp.pQ)*100).toFixed(2) : '0.00';
-            const vConv = grp.pR > 0 ? ((grp.aR / grp.pR)*100).toFixed(2) : '0.00';
+        Object.values(amcProdGrp).sort((a, b) => b.pQ - a.pQ).forEach(grp => {
+            const qConv = grp.pQ > 0 ? ((grp.aQ / grp.pQ) * 100).toFixed(2) : '0.00';
+            const vConv = grp.pR > 0 ? ((grp.aR / grp.pR) * 100).toFixed(2) : '0.00';
             amcHtml += `<tr>
                 <td><strong>${grp.name}</strong></td>
                 <td class="col-num">${grp.pQ}</td>
@@ -5522,21 +5736,21 @@ function exportCustomersOSGExcel() {
         const pSam = fProduct.filter(r => r.brand && r.brand.toUpperCase().includes('SAMSUNG') && r.product && samsungAllowedCats.includes(r.product.toUpperCase().trim()));
         pSam.forEach(r => {
             const k = (r.product || 'Unknown').toUpperCase().trim();
-            if(!samProdGrp[k]) samProdGrp[k] = { name: k, pQ:0, pR:0, sQ:0, sR:0 };
+            if (!samProdGrp[k]) samProdGrp[k] = { name: k, pQ: 0, pR: 0, sQ: 0, sR: 0 };
             samProdGrp[k].pQ += r.qty || 0;
             samProdGrp[k].pR += r.soldPrice || 0;
         });
         fSamsung.forEach(r => {
             const k = (r.product || 'Unknown').toUpperCase().trim();
-            if(!samProdGrp[k]) samProdGrp[k] = { name: k, pQ:0, pR:0, sQ:0, sR:0 };
+            if (!samProdGrp[k]) samProdGrp[k] = { name: k, pQ: 0, pR: 0, sQ: 0, sR: 0 };
             samProdGrp[k].sQ += r.qty || 0;
             samProdGrp[k].sR += r.soldPrice || 0;
         });
 
         let samHtml = `<tr><th>Samsung Category</th><th>Prod Qty</th><th>Samsung Care Qty</th><th>Prod Rev</th><th>Samsung Care Rev</th><th>Qty Conv %</th><th>Val Conv %</th></tr>`;
-        Object.values(samProdGrp).sort((a,b) => b.pQ - a.pQ).forEach(grp => {
-            const qConv = grp.pQ > 0 ? ((grp.sQ / grp.pQ)*100).toFixed(2) : '0.00';
-            const vConv = grp.pR > 0 ? ((grp.sR / grp.pR)*100).toFixed(2) : '0.00';
+        Object.values(samProdGrp).sort((a, b) => b.pQ - a.pQ).forEach(grp => {
+            const qConv = grp.pQ > 0 ? ((grp.sQ / grp.pQ) * 100).toFixed(2) : '0.00';
+            const vConv = grp.pR > 0 ? ((grp.sR / grp.pR) * 100).toFixed(2) : '0.00';
             samHtml += `<tr>
                 <td><strong>${grp.name}</strong></td>
                 <td class="col-num">${grp.pQ}</td>
@@ -5561,7 +5775,7 @@ window.coCalWidget = {
         const div = document.createElement('div');
         div.id = 'coCustomCal';
         div.style.cssText = "position:absolute; display:none; flex-direction:column; background:#1f2937; border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:16px; width:280px; box-shadow:0 10px 40px rgba(0,0,0,0.5); z-index:9999; font-family:'Inter', sans-serif;";
-        
+
         div.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
                 <button id="coCalPrev" style="background:#111827; border:none; color:#fff; width:28px; height:28px; border-radius:8px; cursor:pointer;">&lt;</button>
@@ -5583,9 +5797,9 @@ window.coCalWidget = {
 
         document.getElementById('coCalPrev').onclick = () => this.changeMonth(-1);
         document.getElementById('coCalNext').onclick = () => this.changeMonth(1);
-        document.getElementById('coCalClear').onclick = () => { 
-            this.activeCallback(''); 
-            this.close(); 
+        document.getElementById('coCalClear').onclick = () => {
+            this.activeCallback('');
+            this.close();
         };
 
         document.addEventListener('click', (e) => {
@@ -5599,13 +5813,13 @@ window.coCalWidget = {
     activeValue: '',
     activeCallback: null,
     activeBtn: null,
-    
+
     _showFilter(btn) {
         let current_val = document.getElementById('coDateFilter') ? document.getElementById('coDateFilter').value : '';
         this.open(btn, current_val, (selected) => {
-             if(document.getElementById('coDateFilter')) document.getElementById('coDateFilter').value = selected;
-             if(document.getElementById('coDateFilterLabel')) document.getElementById('coDateFilterLabel').textContent = selected ? new Date(selected).toLocaleDateString('en-GB') : 'All Dates';
-             if (typeof renderCustomersOSGPage === 'function') renderCustomersOSGPage();
+            if (document.getElementById('coDateFilter')) document.getElementById('coDateFilter').value = selected;
+            if (document.getElementById('coDateFilterLabel')) document.getElementById('coDateFilterLabel').textContent = selected ? new Date(selected).toLocaleDateString('en-GB') : 'All Dates';
+            if (typeof renderCustomersOSGPage === 'function') renderCustomersOSGPage();
         }, 'Click a date to filter invoices');
     },
 
@@ -5614,9 +5828,9 @@ window.coCalWidget = {
         this.activeBtn = btn;
         this.activeCallback = callback;
         this.activeValue = initialVal;
-        
+
         if (initialVal) this.currentDate = new Date(initialVal);
-        else this.currentDate = new Date(); 
+        else this.currentDate = new Date();
 
         document.getElementById('coCalFooter').textContent = footerText;
 
@@ -5641,18 +5855,18 @@ window.coCalWidget = {
         const y = this.currentDate.getFullYear();
         const m = this.currentDate.getMonth();
         document.getElementById('coCalMonth').textContent = new Date(y, m, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
-        
+
         const firstDay = new Date(y, m, 1).getDay();
         const daysInMon = new Date(y, m + 1, 0).getDate();
-        
+
         let html = '';
         for (let i = 0; i < firstDay; i++) {
             html += `<div></div>`;
         }
         for (let d = 1; d <= daysInMon; d++) {
-            const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
             const isSelected = (dateStr === this.activeValue);
-            
+
             let st = 'cursor:pointer; padding:6px 0; border-radius:6px; transition:all 0.1s; font-size:0.85rem; color:#d1d5db;';
             if (isSelected) {
                 st += 'border:2px solid #f59e0b; color:#fff; font-weight:700;';
@@ -5663,7 +5877,7 @@ window.coCalWidget = {
             html += `<div class="cal-day" data-date="${dateStr}" style="${st}" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">${d}</div>`;
         }
         document.getElementById('coCalDays').innerHTML = html;
-        
+
         document.querySelectorAll('.cal-day').forEach(el => {
             el.onclick = (e) => {
                 const val = e.target.getAttribute('data-date');

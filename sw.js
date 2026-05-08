@@ -1,4 +1,4 @@
-const CACHE_NAME = 'myg-portal-v87';
+const CACHE_NAME = 'myg-portal-v93';
 const SHELL_ASSETS = [
   './',
   './index.html',
