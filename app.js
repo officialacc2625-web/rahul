@@ -4419,16 +4419,24 @@
                     const prevCalledBy = (coStatusMap[inv] || {}).calledBy;
                     coStatusMap[inv] = newVal;
 
-                    // If this invoice just got claimed by another caller, animate it out
                     const claimedByOther = newVal.calledBy && newVal.calledBy !== currentCaller;
+                    // Only animate-out on the FIRST claim (was unclaimed before, now taken)
                     const justClaimed = claimedByOther && !prevCalledBy;
 
                     const rowEl = document.getElementById('co-row-' + inv);
                     if (rowEl) {
-                        if (claimedByOther) {
-                            // Flash the row then slide it out
+                        if (justClaimed) {
+                            // Row just got claimed by another caller → flash banner and remove
                             _animateRowClaimed(rowEl, newVal.calledBy);
+                        } else if (claimedByOther) {
+                            // Already claimed by another caller and they updated status —
+                            // briefly flash the row to signal the remote update, then it stays hidden
+                            rowEl.style.transition = 'background 0.4s';
+                            const callerObj = (typeof CO_CALLERS !== 'undefined' ? CO_CALLERS : []).find(x => x.name === newVal.calledBy);
+                            rowEl.style.background = callerObj ? callerObj.bg : 'rgba(245,158,11,0.18)';
+                            setTimeout(() => { rowEl.style.background = ''; }, 1200);
                         } else if (!rowEl.contains(document.activeElement)) {
+                            // Our own row or unclaimed — do a normal in-place update
                             if (typeof updateCoSingleRow === 'function') updateCoSingleRow(inv);
                         }
                     }
