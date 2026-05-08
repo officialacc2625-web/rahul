@@ -4712,11 +4712,16 @@
         const prodSet = [...new Set(sourceData.map(r => r.product).filter(Boolean))].sort();
         const branchSet = [...new Set(sourceData.map(r => r.branch).filter(Boolean))].sort();
 
-        if ($('coBrand')) $('coBrand').innerHTML = '<option value="">All Brands</option>' + brandSet.map(b => `<option value="${b}" ${b === selBrand ? 'selected' : ''}>${b}</option>`).join('');
-        $('coRBM').innerHTML = '<option value="">All RBMs</option>' + rbmSet.map(r => `<option value="${r}" ${r === selRBM ? 'selected' : ''}>${r}</option>`).join('');
-        $('coBDM').innerHTML = '<option value="">All BDMs</option>' + bdmSet.map(b => `<option value="${b}" ${b === selBDM ? 'selected' : ''}>${b}</option>`).join('');
-        $('coProduct').innerHTML = '<option value="">All Products</option>' + prodSet.map(p => `<option value="${p}" ${p === selProduct ? 'selected' : ''}>${p}</option>`).join('');
-        $('coBranch').innerHTML = '<option value="">All Branches</option>' + branchSet.map(b => `<option value="${b}" ${b === selBranch ? 'selected' : ''}>${b}</option>`).join('');
+        const coBrandEl = document.getElementById('coBrand');
+        if (coBrandEl) { coBrandEl.innerHTML = '<option value="">All Brands</option>' + brandSet.map(b => `<option value="${b}">${b}</option>`).join(''); coBrandEl.value = selBrand; }
+        const coRBMEl = document.getElementById('coRBM');
+        if (coRBMEl) { coRBMEl.innerHTML = '<option value="">All RBMs</option>' + rbmSet.map(r => `<option value="${r}">${r}</option>`).join(''); coRBMEl.value = selRBM; }
+        const coBDMEl = document.getElementById('coBDM');
+        if (coBDMEl) { coBDMEl.innerHTML = '<option value="">All BDMs</option>' + bdmSet.map(b => `<option value="${b}">${b}</option>`).join(''); coBDMEl.value = selBDM; }
+        const coProductEl = document.getElementById('coProduct');
+        if (coProductEl) { coProductEl.innerHTML = '<option value="">All Products</option>' + prodSet.map(p => `<option value="${p}">${p}</option>`).join(''); coProductEl.value = selProduct; }
+        const coBranchEl = document.getElementById('coBranch');
+        if (coBranchEl) { coBranchEl.innerHTML = '<option value="">All Branches</option>' + branchSet.map(b => `<option value="${b}">${b}</option>`).join(''); coBranchEl.value = selBranch; }
 
         // Filter product rows
         let filtP = sourceData;
@@ -4786,6 +4791,21 @@
             });
             missedUnique.length = 0;
             visible.forEach(r => missedUnique.push(r));
+        }
+
+        // Apply CRM Status filter dropdown
+        if (selStatusFilter) {
+            const statusFiltered = missedUnique.filter(r => {
+                const st = coStatusMap[r.invoice || ''] || {};
+                if (selStatusFilter === 'connected')      return st.callStatus === 'connected';
+                if (selStatusFilter === 'not-connected')  return st.callStatus === 'not-connected' || st.callStatus === 'disconnected';
+                if (selStatusFilter === 'follow-up')      return st.interest === 'follow-up';
+                if (selStatusFilter === 'interested')     return st.interest === 'interested';
+                if (selStatusFilter === 'not-interested') return st.interest === 'not-interested';
+                return true;
+            });
+            missedUnique.length = 0;
+            statusFiltered.forEach(r => missedUnique.push(r));
         }
 
         // Apply manual caller filter dropdown (admin view — shows rows by a specific caller)
