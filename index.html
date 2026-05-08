@@ -1313,7 +1313,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
 
-    <script src="app.js?v=96"></script>
+    <script src="app.js?v=97"></script>
 
     <!-- PWA Service Worker + Install Banner -->
     <script>
@@ -1321,6 +1321,19 @@
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js').then(reg => {
                     console.log('[SW] Registered:', reg.scope);
+                    // Force check for new SW immediately
+                    reg.update();
+                    // When a new SW is found, tell it to activate right away
+                    reg.addEventListener('updatefound', () => {
+                        const newSW = reg.installing;
+                        newSW.addEventListener('statechange', () => {
+                            if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+                                newSW.postMessage({ type: 'SKIP_WAITING' });
+                                console.log('[SW] New version activated — reloading...');
+                                window.location.reload();
+                            }
+                        });
+                    });
                 }).catch(err => console.warn('[SW] Failed:', err));
             });
         }

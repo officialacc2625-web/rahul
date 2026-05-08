@@ -4567,11 +4567,23 @@
         window.buildMonthSwitcher();
     };
 
+    // Sanitize invoice keys for Firebase (no . # $ [ ] / allowed)
+    function fbKey(inv) {
+        return String(inv).replace(/[.#$\[\]\/]/g, '_');
+    }
+
     function saveCoStatus(inv) {
-        if (typeof firebase === 'undefined') return;
+        if (typeof firebase === 'undefined') { console.error('[saveCoStatus] Firebase not loaded!'); return; }
         const month = window.coActiveMonth || new Date().toISOString().substring(0, 7);
         const status = coStatusMap[inv] || { callStatus: null, interest: null };
-        firebase.database().ref('customerStatus/' + month + '/' + inv).set(status).catch(e => console.warn('[Firebase] Status save failed:', e));
+        const safeKey = fbKey(inv);
+        console.log('[saveCoStatus] Saving:', month, safeKey, JSON.stringify(status));
+        firebase.database().ref('customerStatus/' + month + '/' + safeKey).set(status)
+            .then(() => { console.log('[saveCoStatus] SUCCESS:', safeKey); })
+            .catch(e => {
+                console.error('[saveCoStatus] FAILED:', safeKey, e);
+                alert('Failed to save status to server: ' + e.message);
+            });
     }
 
     // ---- SHARE CRM LINK ----

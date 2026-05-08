@@ -1,13 +1,11 @@
-const CACHE_NAME = 'myg-portal-v93';
+const CACHE_NAME = 'myg-portal-v96';
 const SHELL_ASSETS = [
-  './',
-  './index.html',
   './manifest.json',
   './icons/icon-192x192.png',
   './icons/icon-512x512.png'
 ];
 
-// Install: cache shell assets
+// Install: cache shell assets and immediately take over
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
@@ -16,7 +14,7 @@ self.addEventListener('install', event => {
   );
 });
 
-// Activate: delete old caches
+// Activate: delete ALL old caches and claim clients
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -25,22 +23,34 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Fetch: network-first for app.js (always fresh), cache-first for icons/assets
+// Fetch: NETWORK-FIRST for html, js, css, firebase. Cache-first ONLY for icons/fonts.
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
-  // Always go to network for Firebase, app.js (dynamic data)
+  // Network-first for: Firebase, app.js, index.html, style.css (all critical files)
   if (
     url.hostname.includes('firebase') ||
     url.hostname.includes('firebaseio') ||
     url.hostname.includes('googleapis') ||
-    url.pathname.includes('app.js')
+    url.pathname.includes('app.js') ||
+    url.pathname.includes('style.css') ||
+    url.pathname.endsWith('/') ||
+    url.pathname.endsWith('.html')
   ) {
-    event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
+    event.respondWith(
+      fetch(event.request).then(response => {
+        // Cache the fresh copy for offline fallback
+        if (response && response.status === 200) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        }
+        return response;
+      }).catch(() => caches.match(event.request))
+    );
     return;
   }
 
-  // Cache-first for everything else (icons, fonts, static)
+  // Cache-first for everything else (icons, fonts, images)
   event.respondWith(
     caches.match(event.request).then(cached => {
       return cached || fetch(event.request).then(response => {
@@ -54,7 +64,7 @@ self.addEventListener('fetch', event => {
   );
 });
 
-// Listen for skip-waiting message from new SW
+// Listen for skip-waiting message
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
