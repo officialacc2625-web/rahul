@@ -4397,7 +4397,8 @@
 
         if (!isCoStatusLive) {
             isCoStatusLive = true;
-            // Detach all previous listeners when switching months
+
+            // Detach any old listeners
             if (coLiveRef) {
                 coLiveRef.off('value');
                 coLiveRef.off('child_changed');
@@ -4406,55 +4407,35 @@
             coLiveRef = firebase.database().ref(path);
             coStatusMap = {};
 
-            // === STEP 1: Initial full load (once) — then render page ===
-            coLiveRef.once('value', snap => {
-                const data = snap.val() || {};
-                Object.keys(data).forEach(inv => { coStatusMap[inv] = data[inv]; });
-                if (callback) { callback(); callback = null; }
+            // ===== REAL-TIME LISTENER (attached FIRST, before initial load) =====
+            // This ensures NO change event is ever missed
+            coLiveRef.on('child_changed', childSnap => {
+                const inv = childSnap.key;
+                coStatusMap[inv] = childSnap.val();
+                const st = coStatusMap[inv];
 
-                // === STEP 2: Real-time — fires on ALL clients when any record changes ===
-                coLiveRef.on('child_changed', childSnap => {
-                    const inv = childSnap.key;
-                    const newVal = childSnap.val();
-                    const prevCalledBy = (coStatusMap[inv] || {}).calledBy;
-                    coStatusMap[inv] = newVal;
-
-                    const claimedByOther = newVal.calledBy && newVal.calledBy !== currentCaller;
-                    // Only animate-out on the FIRST claim (was unclaimed before, now taken)
-                    const justClaimed = claimedByOther && !prevCalledBy;
-
+                // If another caller made ANY selection → instantly remove from this caller's view
+                if (st.calledBy && st.calledBy !== currentCaller) {
                     const rowEl = document.getElementById('co-row-' + inv);
-                    if (rowEl) {
-                        if (justClaimed) {
-                            // Row just got claimed by another caller → flash banner and remove
-                            _animateRowClaimed(rowEl, newVal.calledBy);
-                        } else if (claimedByOther) {
-                            // Already claimed by another caller and they updated status —
-                            // briefly flash the row to signal the remote update, then it stays hidden
-                            rowEl.style.transition = 'background 0.4s';
-                            const callerObj = (typeof CO_CALLERS !== 'undefined' ? CO_CALLERS : []).find(x => x.name === newVal.calledBy);
-                            rowEl.style.background = callerObj ? callerObj.bg : 'rgba(245,158,11,0.18)';
-                            setTimeout(() => { rowEl.style.background = ''; }, 1200);
-                        } else if (!rowEl.contains(document.activeElement)) {
-                            // Our own row or unclaimed — do a normal in-place update
-                            if (typeof updateCoSingleRow === 'function') updateCoSingleRow(inv);
-                        }
-                    }
-                    if (typeof updateCoStatsInPlace === 'function') updateCoStatsInPlace();
-                });
-
-                // === STEP 3: New records added for the first time ===
-                coLiveRef.on('child_added', childSnap => {
-                    const inv = childSnap.key;
-                    if (coStatusMap[inv]) return; // skip already loaded
-                    coStatusMap[inv] = childSnap.val();
+                    if (rowEl) rowEl.remove();
+                } else {
+                    // Own row or unclaimed → update status colour in-place
                     const rowEl = document.getElementById('co-row-' + inv);
                     if (rowEl && !rowEl.contains(document.activeElement)) {
                         if (typeof updateCoSingleRow === 'function') updateCoSingleRow(inv);
                     }
-                    if (typeof updateCoStatsInPlace === 'function') updateCoStatsInPlace();
-                });
+                }
+
+                if (typeof updateCoStatsInPlace === 'function') updateCoStatsInPlace();
             });
+
+            // ===== INITIAL FULL LOAD (once) — then render page =====
+            coLiveRef.once('value', snap => {
+                const data = snap.val() || {};
+                Object.keys(data).forEach(inv => { coStatusMap[inv] = data[inv]; });
+                if (callback) { callback(); callback = null; }
+            });
+
         } else {
             if (callback) callback();
         }
