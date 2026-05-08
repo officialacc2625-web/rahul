@@ -322,7 +322,7 @@
     let pendingNavItem = null;
 
     // ---- CUSTOMER CALL TRACKING STATE ----
-    const coStatusMap = {};
+    let coStatusMap = {};
     const CO_CALLERS = [
         { name: 'Harmiya', color: '#7c3aed', bg: 'rgba(124,58,237,0.15)', pass: '1234' },
         { name: 'Aswathi', color: '#0891b2', bg: 'rgba(8,145,178,0.15)', pass: '5678' },
@@ -4378,6 +4378,9 @@
     document.querySelector('[data-section="customers-osg-section"]').addEventListener('click', () => {
         // Build month switcher immediately from Firebase, then load statuses & render
         if (typeof updateMonthSwitcherUI === 'function') updateMonthSwitcherUI();
+        // Render page immediately so data shows without waiting for Firebase
+        renderCustomersOSGPage();
+        // Then load statuses from Firebase and re-render with real-time status data
         loadCoStatuses(() => setTimeout(renderCustomersOSGPage, 50));
     });
     ['coBrand', 'coRBM', 'coBDM', 'coProduct', 'coBranch', 'coSort', 'coStatusFilter', 'coCallerFilter'].forEach(id => {
@@ -4389,6 +4392,18 @@
 
     let isCoStatusLive = false;
     let coLiveRef = null; // Track the active Firebase listener ref
+
+    // ---- SAVE STATUS TO FIREBASE ----
+    function saveCoStatus(inv) {
+        if (typeof firebase === 'undefined') { console.warn('[saveCoStatus] Firebase not available'); return; }
+        const month = window.coActiveMonth || new Date().toISOString().substring(0, 7);
+        const path = 'customerStatus/' + month + '/' + inv;
+        const data = coStatusMap[inv];
+        if (!data) return;
+        firebase.database().ref(path).set(data)
+            .then(() => console.log('[Firebase] Saved status for', inv))
+            .catch(e => console.error('[Firebase] Failed to save status for', inv, e));
+    }
 
     function loadCoStatuses(callback) {
         if (typeof firebase === 'undefined') { if (callback) callback(); return; }
