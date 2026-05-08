@@ -142,70 +142,7 @@
         });
     }
 
-    // ---- CRM SHARE LINK READER ----
-    const crmShareParam = new URLSearchParams(window.location.search).get('crmShare');
-    if (crmShareParam) {
-        window.isSharedView = true;
-        window.isCRMSharedView = true;
-        // Apply caller mode IMMEDIATELY — hides sidebar/topbar before DOM even paints
-        document.documentElement.style.setProperty('--crm-mode', '1');
-        document.addEventListener('DOMContentLoaded', () => {
-            document.body.classList.add('crm-caller-mode');
 
-            firebase.database().ref('crmShares/' + crmShareParam).once('value').then(snap => {
-                const data = snap.val();
-                if (data) {
-                    try {
-                        const decompressed = LZString.decompressFromUTF16(data.compressedData);
-                        window.sharedMissedUnique = JSON.parse(decompressed) || [];
-                    } catch (e) {
-                        console.error('[CRM Share] Decompress failed:', e);
-                        window.sharedMissedUnique = [];
-                    }
-                    window.coActiveMonth = data.month || new Date().toISOString().substring(0, 7);
-
-                    // Update caller header subtitle
-                    const [y, m] = window.coActiveMonth.split('-');
-                    const monthLabel = new Date(y, m - 1, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
-                    const sub = document.getElementById('crmCallerHeaderSub');
-                    if (sub) sub.textContent = monthLabel + ' \u2022 ' + window.sharedMissedUnique.length + ' customers';
-
-                    isAuthenticated = true;
-                    
-                    // Directly activate the section and load data (bypass fragile .click())
-                    document.querySelectorAll('.dashboard-section').forEach(sec => sec.classList.remove('active'));
-                    const targetSec = document.getElementById('customers-osg-section');
-                    if (targetSec) targetSec.classList.add('active');
-                    
-                    document.querySelectorAll('.sidebar-nav li').forEach(li => li.classList.remove('active'));
-                    const navLi = document.querySelector('[data-section="customers-osg-section"]');
-                    if (navLi) navLi.classList.add('active');
-
-                    if (typeof updateMonthSwitcherUI === 'function') updateMonthSwitcherUI();
-                    if (typeof loadCoStatuses === 'function') {
-                        loadCoStatuses(() => setTimeout(renderCustomersOSGPage, 50));
-                    }
-
-                    // Dismiss splash smoothly
-                    const splash = document.getElementById('crmCallerSplash');
-                    if (splash) {
-                        setTimeout(() => {
-                            splash.classList.add('hidden');
-                            setTimeout(() => splash.remove(), 450);
-                        }, 300);
-                    }
-                } else {
-                    alert('CRM share link is invalid or expired.');
-                    const splash = document.getElementById('crmCallerSplash');
-                    if (splash) splash.remove();
-                }
-            }).catch(() => {
-                alert('Failed to load CRM share link. Check your internet connection.');
-                const splash = document.getElementById('crmCallerSplash');
-                if (splash) splash.remove();
-            });
-        });
-    }
 
     // ---- COLUMN MAPPING (Product / AMC file) ----
     const PRODUCT_COL_MAP = {
@@ -4593,91 +4530,9 @@
             });
     }
 
-    // ---- SHARE CRM LINK ----
-    window.shareCRMLink = function () {
-        if (typeof firebase === 'undefined') return alert('Firebase not available.');
-        const rows = coCurrentRows;
-        if (!rows || rows.length === 0) {
-            return alert('No customers loaded. Please upload data and open the CRM tab first.');
-        }
-        const month = window.coActiveMonth || new Date().toISOString().substring(0, 7);
-        const [y, m] = month.split('-');
-        const monthLabel = new Date(y, m - 1, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
 
-        showLoading(true);
-        const payload = rows.map(r => ({
-            invoice: r.invoice || '',
-            customerName: r.customerName || '',
-            customerNo: r.customerNo || '',
-            staff: r.staff || '',
-            branch: r.branch || '',
-            product: r.product || '',
-            soldPrice: r.soldPrice || 0,
-            brand: r.brand || '',
-            rbm: r.rbm || '',
-            bdm: r.bdm || '',
-            invoiceDate: r.invoiceDate || r.time || '',
-        }));
 
-        try {
-            const compressed = LZString.compressToUTF16(JSON.stringify(payload));
-            const shareRef = firebase.database().ref('crmShares').push();
-            shareRef.set({ compressedData: compressed, month: month, timestamp: Date.now(), count: rows.length })
-                .then(() => {
-                    showLoading(false);
-                    const url = 'https://officialacc2625-web.github.io/rahul/?crmShare=' + shareRef.key;
 
-                    // Show modal
-                    const modal = document.createElement('div');
-                    modal.id = 'crmShareModal';
-                    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;';
-                    modal.innerHTML = `
-                        <div style="background:var(--bg-card,#1f2937);border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:20px;padding:28px;max-width:480px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.5);font-family:Outfit,sans-serif;">
-                            <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-                                <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#F26522,#e05510);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-                                </div>
-                                <div>
-                                    <div style="font-size:1rem;font-weight:700;color:var(--text-primary,#fff);">CRM Calling Link</div>
-                                    <div style="font-size:0.8rem;color:var(--text-muted,#9ca3af);">${monthLabel} &bull; ${rows.length} customers</div>
-                                </div>
-                                <button onclick="document.getElementById('crmShareModal').remove()" style="margin-left:auto;background:rgba(255,255,255,0.1);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;">&times;</button>
-                            </div>
-
-                            <div style="background:var(--bg-input,rgba(255,255,255,0.05));border:1px solid var(--border,rgba(255,255,255,0.1));border-radius:10px;padding:12px 14px;margin-bottom:16px;word-break:break-all;font-size:0.78rem;color:var(--text-muted,#9ca3af);line-height:1.5;">${url}</div>
-
-                            <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                                <button id="crmCopyBtn" onclick="
-                                    navigator.clipboard.writeText('${url}').then(()=>{
-                                        this.textContent='✅ Copied!';
-                                        this.style.background='#10b981';
-                                        setTimeout(()=>{this.textContent='📋 Copy Link';this.style.background='';},2500);
-                                    }).catch(()=>{
-                                        prompt('Copy this link:', '${url}');
-                                    });
-                                " style="flex:1;padding:11px 16px;background:linear-gradient(135deg,#F26522,#e05510);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:0.88rem;cursor:pointer;font-family:inherit;">📋 Copy Link</button>
-
-                                <a href="https://wa.me/?text=${encodeURIComponent('📞 ' + monthLabel + ' CRM Calling List\n\nOpen this link to view & call customers:\n' + url)}" target="_blank" style="flex:1;padding:11px 16px;background:#25D366;color:#fff;border-radius:10px;font-weight:700;font-size:0.88rem;text-decoration:none;text-align:center;display:flex;align-items:center;justify-content:center;gap:6px;">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-                                    Send via WhatsApp
-                                </a>
-                            </div>
-
-                            <div style="margin-top:14px;font-size:0.75rem;color:var(--text-muted,#6b7280);display:flex;align-items:center;gap:6px;">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                                Callers open this link and see only the calling screen. Call logs sync to all devices automatically.
-                            </div>
-                        </div>
-                    `;
-                    document.body.appendChild(modal);
-                    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
-                })
-                .catch(e => { showLoading(false); alert('Failed to generate CRM link: ' + e.message); });
-        } catch (e) {
-            showLoading(false);
-            alert('Compression failed: ' + e.message);
-        }
-    };
 
     function renderCustomersOSGPage() {
         let missedUnique = [];
@@ -4789,8 +4644,8 @@
         });
 
         // Hide rows already claimed by ANOTHER caller (they won't appear in this caller's list)
-        // Only apply in shared/caller view and only when a caller is logged in
-        if (currentCaller && window.isCRMSharedView) {
+        // Only apply when a caller is logged in
+        if (currentCaller) {
             const visible = missedUnique.filter(r => {
                 const st = coStatusMap[r.invoice || ''] || {};
                 // Show row if: unclaimed, OR claimed by the current caller
@@ -5164,7 +5019,7 @@
 
         // If this row was just claimed by another caller in shared view, animate it out
         const st = coStatusMap[inv] || {};
-        if (currentCaller && window.isCRMSharedView && st.calledBy && st.calledBy !== currentCaller) {
+        if (currentCaller && st.calledBy && st.calledBy !== currentCaller) {
             _animateRowClaimed(rowEl, st.calledBy);
             return;
         }
