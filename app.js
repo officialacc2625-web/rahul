@@ -4393,17 +4393,6 @@
     let isCoStatusLive = false;
     let coLiveRef = null; // Track the active Firebase listener ref
 
-    // ---- SAVE STATUS TO FIREBASE ----
-    function saveCoStatus(inv) {
-        if (typeof firebase === 'undefined') { console.warn('[saveCoStatus] Firebase not available'); return; }
-        const month = window.coActiveMonth || new Date().toISOString().substring(0, 7);
-        const path = 'customerStatus/' + month + '/' + inv;
-        const data = coStatusMap[inv];
-        if (!data) return;
-        firebase.database().ref(path).set(data)
-            .then(() => console.log('[Firebase] Saved status for', inv))
-            .catch(e => console.error('[Firebase] Failed to save status for', inv, e));
-    }
 
     function loadCoStatuses(callback) {
         if (typeof firebase === 'undefined') { if (callback) callback(); return; }
@@ -4592,6 +4581,9 @@
         const month = window.coActiveMonth || new Date().toISOString().substring(0, 7);
         const status = coStatusMap[inv] || { callStatus: null, interest: null };
         const safeKey = fbKey(inv);
+        // Keep coStatusMap in sync under BOTH the raw key and sanitized key
+        // so lookups work whether using r.invoice or the Firebase key
+        coStatusMap[safeKey] = status;
         console.log('[saveCoStatus] Saving:', month, safeKey, JSON.stringify(status));
         firebase.database().ref('customerStatus/' + month + '/' + safeKey).set(status)
             .then(() => { console.log('[saveCoStatus] SUCCESS:', safeKey); })
