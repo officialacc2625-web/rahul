@@ -260,6 +260,9 @@
 
     // ---- CUSTOMER CALL TRACKING STATE ----
     let coStatusMap = {};
+    function fbKey(inv) {
+        return String(inv || '').replace(/[.#$\[\]\/]/g, '_');
+    }
     const CO_CALLERS = [
         { name: 'Harmiya', color: '#7c3aed', bg: 'rgba(124,58,237,0.15)', pass: '1234' },
         { name: 'Aswathi', color: '#0891b2', bg: 'rgba(8,145,178,0.15)', pass: '5678' },
@@ -3512,7 +3515,7 @@
 
         allMissed.forEach(r => {
             const val = Math.abs(r.soldPrice || 0);
-            const st = coStatusMap[r.invoice || ''] || {};
+            const st = coStatusMap[fbKey(r.invoice)] || {};
             const cs = st.callStatus || '';
             const interest = st.interest || '';
 
@@ -3618,7 +3621,7 @@
             const cd = dateData[dtStr];
             const val = Math.abs(r.soldPrice || 0);
 
-            const st = coStatusMap[r.invoice || ''] || {};
+            const st = coStatusMap[fbKey(r.invoice)] || {};
             const cs = st.callStatus || '';
             const interest = st.interest || '';
 
@@ -3712,7 +3715,7 @@
             const cd = monthData[mStr];
             const val = Math.abs(r.soldPrice || 0);
 
-            const st = coStatusMap[r.invoice || ''] || {};
+            const st = coStatusMap[fbKey(r.invoice)] || {};
             const cs = st.callStatus || '';
             const interest = st.interest || '';
 
@@ -3766,7 +3769,7 @@
         callers.forEach(c => callerData[c] = { rows: [], totalCount: 0, totalValue: 0 });
 
         allMissed.forEach(r => {
-            const st = coStatusMap[r.invoice || ''] || {};
+            const st = coStatusMap[fbKey(r.invoice)] || {};
             const callerName = st.calledBy || '';
 
             if (!callerName) return; // skip unassigned
@@ -4352,18 +4355,19 @@
             // This ensures NO change event is ever missed
             coLiveRef.on('child_changed', childSnap => {
                 const inv = childSnap.key;
-                coStatusMap[inv] = childSnap.val();
-                const st = coStatusMap[inv];
+                coStatusMap[fbKey(inv)] = childSnap.val();
+                const st = coStatusMap[fbKey(inv)];
 
                 // If another caller made ANY selection → instantly remove from this caller's view
                 if (st.calledBy && st.calledBy !== currentCaller) {
-                    const rowEl = document.getElementById('co-row-' + inv);
+                    const rowEl = document.getElementById('co-row-' + fbKey(inv));
                     if (rowEl) rowEl.remove();
                 } else {
                     // Own row or unclaimed → update status colour in-place
-                    const rowEl = document.getElementById('co-row-' + inv);
+                    const rowEl = document.getElementById('co-row-' + fbKey(inv));
                     if (rowEl && !rowEl.contains(document.activeElement)) {
-                        if (typeof updateCoSingleRow === 'function') updateCoSingleRow(inv);
+                        const rowData = (coCurrentRows || []).find(r => fbKey(r.invoice) === inv);
+                        if (rowData && typeof updateCoSingleRow === 'function') updateCoSingleRow(rowData.invoice);
                     }
                 }
 
@@ -4373,7 +4377,7 @@
             // ===== INITIAL FULL LOAD (once) — then render page =====
             coLiveRef.once('value', snap => {
                 const data = snap.val() || {};
-                Object.keys(data).forEach(inv => { coStatusMap[inv] = data[inv]; });
+                Object.keys(data).forEach(inv => { coStatusMap[fbKey(inv)] = data[inv]; });
                 if (callback) { callback(); callback = null; }
             });
 
@@ -4516,11 +4520,9 @@
     function saveCoStatus(inv) {
         if (typeof firebase === 'undefined') { console.error('[saveCoStatus] Firebase not loaded!'); return; }
         const month = window.coActiveMonth || new Date().toISOString().substring(0, 7);
-        const status = coStatusMap[inv] || { callStatus: null, interest: null };
+        const status = coStatusMap[fbKey(inv)] || { callStatus: null, interest: null };
         const safeKey = fbKey(inv);
-        // Keep coStatusMap in sync under BOTH the raw key and sanitized key
-        // so lookups work whether using r.invoice or the Firebase key
-        coStatusMap[safeKey] = status;
+        
         console.log('[saveCoStatus] Saving:', month, safeKey, JSON.stringify(status));
         firebase.database().ref('customerStatus/' + month + '/' + safeKey).set(status)
             .then(() => { console.log('[saveCoStatus] SUCCESS:', safeKey); })
@@ -4647,7 +4649,7 @@
         // Only apply when a caller is logged in
         if (currentCaller) {
             const visible = missedUnique.filter(r => {
-                const st = coStatusMap[r.invoice || ''] || {};
+                const st = coStatusMap[fbKey(r.invoice)] || {};
                 // Show row if: unclaimed, OR claimed by the current caller
                 return !st.calledBy || st.calledBy === currentCaller;
             });
@@ -4658,7 +4660,7 @@
         // Apply CRM Status filter dropdown
         if (selStatusFilter) {
             const statusFiltered = missedUnique.filter(r => {
-                const st = coStatusMap[r.invoice || ''] || {};
+                const st = coStatusMap[fbKey(r.invoice)] || {};
                 if (selStatusFilter === 'connected')      return st.callStatus === 'connected';
                 if (selStatusFilter === 'not-connected')  return st.callStatus === 'not-connected' || st.callStatus === 'disconnected';
                 if (selStatusFilter === 'follow-up')      return st.interest === 'follow-up';
@@ -4673,7 +4675,7 @@
         // Apply manual caller filter dropdown (admin view — shows rows by a specific caller)
         if (selCallerFilter) {
             const filtered = missedUnique.filter(r => {
-                const st = coStatusMap[r.invoice || ''] || {};
+                const st = coStatusMap[fbKey(r.invoice)] || {};
                 return st.calledBy === selCallerFilter;
             });
             missedUnique.length = 0;
@@ -4683,7 +4685,7 @@
         if (window.coDueTodayFilter) {
             const today = new Date().toISOString().substring(0, 10);
             const filtered = missedUnique.filter(r => {
-                const st = coStatusMap[r.invoice || ''] || {};
+                const st = coStatusMap[fbKey(r.invoice)] || {};
                 return st.interest === 'follow-up' && st.followUpDate && st.followUpDate <= today;
             });
             missedUnique.length = 0;
@@ -4721,10 +4723,10 @@
 
         // ---- Stats Bar (with IDs for in-place update) ----
         const total = missedUnique.length;
-        const connected = missedUnique.filter(r => (coStatusMap[r.invoice || ''] || {}).callStatus === 'connected').length;
-        const disconnected = missedUnique.filter(r => (coStatusMap[r.invoice || ''] || {}).callStatus === 'disconnected').length;
-        const interested = missedUnique.filter(r => (coStatusMap[r.invoice || ''] || {}).interest === 'interested').length;
-        const notInterested = missedUnique.filter(r => (coStatusMap[r.invoice || ''] || {}).interest === 'not-interested').length;
+        const connected = missedUnique.filter(r => (coStatusMap[fbKey(r.invoice)] || {}).callStatus === 'connected').length;
+        const disconnected = missedUnique.filter(r => (coStatusMap[fbKey(r.invoice)] || {}).callStatus === 'disconnected').length;
+        const interested = missedUnique.filter(r => (coStatusMap[fbKey(r.invoice)] || {}).interest === 'interested').length;
+        const notInterested = missedUnique.filter(r => (coStatusMap[fbKey(r.invoice)] || {}).interest === 'not-interested').length;
         const notCalled = total - connected - disconnected;
 
         const statsBar = `
@@ -4865,15 +4867,15 @@
                 updateCoSingleRow(inv);
                 return;
             }
-            if (!coStatusMap[inv]) coStatusMap[inv] = { callStatus: null, interest: null, calledBy: null, remarks: '' };
-            coStatusMap[inv].callStatus = status === "" ? null : status;
-            if (status !== "") coStatusMap[inv].calledBy = currentCaller;
+            if (!coStatusMap[fbKey(inv)]) coStatusMap[fbKey(inv)] = { callStatus: null, interest: null, calledBy: null, remarks: '' };
+            coStatusMap[fbKey(inv)].callStatus = status === "" ? null : status;
+            if (status !== "") coStatusMap[fbKey(inv)].calledBy = currentCaller;
 
-            if (!coStatusMap[inv].callStatus && !coStatusMap[inv].interest && !coStatusMap[inv].remarks) {
-                coStatusMap[inv].calledBy = null;
-                delete coStatusMap[inv].timestamp;
+            if (!coStatusMap[fbKey(inv)].callStatus && !coStatusMap[fbKey(inv)].interest && !coStatusMap[fbKey(inv)].remarks) {
+                coStatusMap[fbKey(inv)].calledBy = null;
+                delete coStatusMap[fbKey(inv)].timestamp;
             } else {
-                coStatusMap[inv].timestamp = new Date().toISOString();
+                coStatusMap[fbKey(inv)].timestamp = new Date().toISOString();
             }
             saveCoStatus(inv);
             updateCoSingleRow(inv);
@@ -4886,15 +4888,15 @@
                 updateCoSingleRow(inv);
                 return;
             }
-            if (!coStatusMap[inv]) coStatusMap[inv] = { callStatus: null, interest: null, calledBy: null, remarks: '', followUpDate: '' };
-            coStatusMap[inv].interest = status === "" ? null : status;
-            if (status !== "") coStatusMap[inv].calledBy = currentCaller;
+            if (!coStatusMap[fbKey(inv)]) coStatusMap[fbKey(inv)] = { callStatus: null, interest: null, calledBy: null, remarks: '', followUpDate: '' };
+            coStatusMap[fbKey(inv)].interest = status === "" ? null : status;
+            if (status !== "") coStatusMap[fbKey(inv)].calledBy = currentCaller;
 
-            if (!coStatusMap[inv].callStatus && !coStatusMap[inv].interest && !coStatusMap[inv].remarks) {
-                coStatusMap[inv].calledBy = null;
-                delete coStatusMap[inv].timestamp;
+            if (!coStatusMap[fbKey(inv)].callStatus && !coStatusMap[fbKey(inv)].interest && !coStatusMap[fbKey(inv)].remarks) {
+                coStatusMap[fbKey(inv)].calledBy = null;
+                delete coStatusMap[fbKey(inv)].timestamp;
             } else {
-                coStatusMap[inv].timestamp = new Date().toISOString();
+                coStatusMap[fbKey(inv)].timestamp = new Date().toISOString();
             }
             saveCoStatus(inv);
             updateCoSingleRow(inv);
@@ -4902,14 +4904,14 @@
         };
 
         window.setCoFollowUpDate = function (inv, dateStr) {
-            if (!coStatusMap[inv]) coStatusMap[inv] = { callStatus: null, interest: null, calledBy: null, remarks: '', followUpDate: '' };
-            coStatusMap[inv].followUpDate = dateStr;
+            if (!coStatusMap[fbKey(inv)]) coStatusMap[fbKey(inv)] = { callStatus: null, interest: null, calledBy: null, remarks: '', followUpDate: '' };
+            coStatusMap[fbKey(inv)].followUpDate = dateStr;
 
-            if (!coStatusMap[inv].callStatus && !coStatusMap[inv].interest && !coStatusMap[inv].remarks && (!dateStr || dateStr === '')) {
-                coStatusMap[inv].calledBy = null;
-                delete coStatusMap[inv].timestamp;
+            if (!coStatusMap[fbKey(inv)].callStatus && !coStatusMap[fbKey(inv)].interest && !coStatusMap[fbKey(inv)].remarks && (!dateStr || dateStr === '')) {
+                coStatusMap[fbKey(inv)].calledBy = null;
+                delete coStatusMap[fbKey(inv)].timestamp;
             } else {
-                coStatusMap[inv].timestamp = new Date().toISOString();
+                coStatusMap[fbKey(inv)].timestamp = new Date().toISOString();
             }
 
             saveCoStatus(inv);
@@ -4917,18 +4919,18 @@
         };
 
         window.saveCoRemark = function (inv, remark) {
-            if (!coStatusMap[inv]) coStatusMap[inv] = { callStatus: null, interest: null, calledBy: null, remarks: '' };
-            coStatusMap[inv].remarks = remark;
+            if (!coStatusMap[fbKey(inv)]) coStatusMap[fbKey(inv)] = { callStatus: null, interest: null, calledBy: null, remarks: '' };
+            coStatusMap[fbKey(inv)].remarks = remark;
 
-            if (!coStatusMap[inv].callStatus && !coStatusMap[inv].interest && !coStatusMap[inv].remarks) {
-                coStatusMap[inv].calledBy = null;
-                delete coStatusMap[inv].timestamp;
+            if (!coStatusMap[fbKey(inv)].callStatus && !coStatusMap[fbKey(inv)].interest && !coStatusMap[fbKey(inv)].remarks) {
+                coStatusMap[fbKey(inv)].calledBy = null;
+                delete coStatusMap[fbKey(inv)].timestamp;
             } else {
                 if (remark !== "" && currentCaller) {
                     // If they add a remark, claim the row if they are logged in
-                    coStatusMap[inv].calledBy = currentCaller;
+                    coStatusMap[fbKey(inv)].calledBy = currentCaller;
                 }
-                coStatusMap[inv].timestamp = new Date().toISOString();
+                coStatusMap[fbKey(inv)].timestamp = new Date().toISOString();
             }
             saveCoStatus(inv);
             updateCoSingleRow(inv);
@@ -4939,10 +4941,10 @@
     function updateCoStatsInPlace() {
         const rows = coCurrentRows || [];
         const total = rows.length;
-        const connected = rows.filter(r => (coStatusMap[r.invoice || ''] || {}).callStatus === 'connected').length;
-        const disconnected = rows.filter(r => (coStatusMap[r.invoice || ''] || {}).callStatus === 'disconnected').length;
-        const interested = rows.filter(r => (coStatusMap[r.invoice || ''] || {}).interest === 'interested').length;
-        const notInterested = rows.filter(r => (coStatusMap[r.invoice || ''] || {}).interest === 'not-interested').length;
+        const connected = rows.filter(r => (coStatusMap[fbKey(r.invoice)] || {}).callStatus === 'connected').length;
+        const disconnected = rows.filter(r => (coStatusMap[fbKey(r.invoice)] || {}).callStatus === 'disconnected').length;
+        const interested = rows.filter(r => (coStatusMap[fbKey(r.invoice)] || {}).interest === 'interested').length;
+        const notInterested = rows.filter(r => (coStatusMap[fbKey(r.invoice)] || {}).interest === 'not-interested').length;
         const notCalled = total - connected - disconnected;
 
         const set = (id, val) => { const el = $(id); if (el) el.textContent = val; };
@@ -5012,13 +5014,13 @@
 
     // Replaces a single row in-place without touching the rest of the table
     function updateCoSingleRow(inv) {
-        const rowEl = document.getElementById('co-row-' + inv);
+        const rowEl = document.getElementById('co-row-' + fbKey(inv));
         if (!rowEl) return;
         const idx = coCurrentRows.findIndex((r, i) => (r.invoice || String(i)) === inv);
         if (idx === -1) return;
 
         // If this row was just claimed by another caller in shared view, animate it out
-        const st = coStatusMap[inv] || {};
+        const st = coStatusMap[fbKey(inv)] || {};
         if (currentCaller && st.calledBy && st.calledBy !== currentCaller) {
             _animateRowClaimed(rowEl, st.calledBy);
             return;
@@ -5031,7 +5033,7 @@
     // Builds HTML for a single table row
     function buildCoRowHTML(r, i) {
         const inv = r.invoice || String(i);
-        const st = coStatusMap[inv] || { callStatus: null, interest: null, calledBy: null, remarks: '' };
+        const st = coStatusMap[fbKey(inv)] || { callStatus: null, interest: null, calledBy: null, remarks: '' };
 
         const rowBg = st.interest === 'bought' ? 'rgba(16, 185, 129, 0.15)'
             : st.interest === 'interested' ? 'rgba(22, 163, 74, 0.08)'
@@ -5122,7 +5124,7 @@
             }
         }
 
-        return `<tr id="co-row-${inv}" style="border-bottom:1px solid var(--border);background:${rowBg};opacity:${rowOpacity};transition:background 0.2s, opacity 0.2s;">
+        return `<tr id="co-row-${fbKey(inv)}" style="border-bottom:1px solid var(--border);background:${rowBg};opacity:${rowOpacity};transition:background 0.2s, opacity 0.2s;">
             <td style="padding:12px 10px;color:var(--text-muted);font-size:0.8rem;">${i + 1}</td>
             <td style="padding:12px 10px;font-family:monospace;font-size:0.82rem;color:var(--text-secondary); width:120px;">${dStr}</td>
             <td style="padding:12px 10px;"><strong style="color:var(--text-primary);font-size:0.9rem;">${r.customerName || '-'}</strong><div style="font-size:0.75rem;color:var(--text-muted)">${r.invoice}</div></td>
@@ -5188,7 +5190,7 @@
         if (missedUnique.length === 0) return;
         const hdr = ['#', 'Invoice No', 'Date', 'Customer Name', 'Customer No', 'Call Status', 'Interest', 'Follow-up Date', 'Called By', 'Remarks', 'Branch', 'Product', 'Sold Price'];
         const data = missedUnique.map((r, i) => {
-            const st = coStatusMap[r.invoice || ''] || {};
+            const st = coStatusMap[fbKey(r.invoice)] || {};
             let dStr = '';
             if (r.invoiceDate) dStr = new Date(r.invoiceDate).toLocaleDateString();
             else if (r.time) dStr = new Date(r.time).toLocaleDateString();
