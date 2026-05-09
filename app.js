@@ -4982,16 +4982,12 @@
                 <div class="caller-card-header">
                     <div class="caller-avatar" style="background:${caller.color};">${caller.name[0]}</div>
                     <div class="caller-name">${caller.name}</div>
-                    <div style="margin-left:auto; font-size:0.7rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Caller</div>
+                    <div style="margin-left:auto; font-size:0.65rem; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">Caller</div>
                 </div>
                 <div class="caller-stats-mini-grid">
                     <div class="mini-stat conn">
                         <span class="mini-stat-label">Connected</span>
                         <span class="mini-stat-val">${stats.conn}</span>
-                    </div>
-                    <div class="mini-stat disc">
-                        <span class="mini-stat-label">Disconnected</span>
-                        <span class="mini-stat-val">${stats.disc}</span>
                     </div>
                     <div class="mini-stat int">
                         <span class="mini-stat-label">Interested</span>

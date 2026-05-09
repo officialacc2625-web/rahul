@@ -1723,99 +1723,90 @@ body {
 /* ========== CALLER PERFORMANCE CARDS ========== */
 .caller-performance-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
     margin-bottom: 24px;
 }
 
 .caller-card {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px;
+    border-radius: 10px;
+    padding: 12px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    gap: 12px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
 }
 
 .caller-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    border-color: rgba(var(--accent-rgb), 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.06);
+    border-color: rgba(var(--accent-rgb), 0.2);
 }
 
 .caller-card-header {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border);
+    gap: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--border-light);
 }
 
 .caller-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    font-size: 1.1rem;
+    font-size: 0.9rem;
     color: #fff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .caller-name {
-    font-weight: 600;
-    font-size: 1.1rem;
+    font-weight: 700;
+    font-size: 0.95rem;
     color: var(--text-primary);
-    letter-spacing: -0.01em;
 }
 
 .caller-stats-mini-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap: 8px;
 }
 
 .mini-stat {
-    padding: 10px;
+    padding: 8px 10px;
     background: var(--bg-input);
-    border-radius: 12px;
-    border: 1px solid var(--border);
+    border-radius: 8px;
+    border: none;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    transition: background 0.2s;
-}
-
-.mini-stat:hover {
-    background: rgba(255,255,255,0.03);
+    gap: 2px;
 }
 
 .mini-stat-label {
-    font-size: 0.7rem;
-    font-weight: 600;
+    font-size: 0.65rem;
+    font-weight: 700;
     color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.03em;
 }
 
 .mini-stat-val {
-    font-size: 1.2rem;
-    font-weight: 700;
+    font-size: 1.15rem;
+    font-weight: 800;
     font-family: 'Outfit', sans-serif;
 }
 
-.mini-stat.conn { border-left: 3px solid #3b82f6; color: #60a5fa; }
-.mini-stat.disc { border-left: 3px solid #9333ea; color: #c084fc; }
-.mini-stat.int  { border-left: 3px solid #10b981; color: #4ade80; }
-.mini-stat.closed { border-left: 3px solid #ef4444; color: #f87171; }
-.mini-stat.followup { border-left: 3px solid #f59e0b; color: #fbbf24; }
+.mini-stat.conn { border-left: 2px solid #3b82f6; color: #3b82f6; }
+.mini-stat.int  { border-left: 2px solid #10b981; color: #10b981; }
+.mini-stat.closed { border-left: 2px solid #ef4444; color: #ef4444; }
+.mini-stat.followup { border-left: 2px solid #f59e0b; color: #f59e0b; }
 
 /* ========== ADVANCED ANALYTICS STYLES ========== */
 .kpi-opportunity {
@@ -1922,88 +1913,7 @@ body {
     cursor: default;
 }
 
-/* ========== CALLER PERFORMANCE ========== */
-.caller-performance-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    margin-bottom: 24px;
-}
 
-.caller-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: var(--shadow-card);
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.caller-card-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.caller-avatar {
-    width: 42px;
-    height: 42px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 1.25rem;
-    font-weight: 700;
-}
-
-.caller-name {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: var(--text-primary);
-}
-
-.caller-stats-mini-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-}
-
-.mini-stat {
-    background: var(--bg-input);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.mini-stat.conn { border-left: 3px solid #3b82f6; }
-.mini-stat.disc { border-left: 3px solid #a855f7; }
-.mini-stat.int { border-left: 3px solid #22c55e; }
-.mini-stat.nint { border-left: 3px solid #ef4444; }
-
-.mini-stat-label {
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-muted);
-}
-
-.mini-stat-val {
-    font-size: 1.4rem;
-    font-weight: 800;
-    color: var(--text-primary);
-}
-
-.mini-stat.conn .mini-stat-val { color: #3b82f6; }
-.mini-stat.disc .mini-stat-val { color: #a855f7; }
-.mini-stat.int .mini-stat-val { color: #22c55e; }
-.mini-stat.nint .mini-stat-val { color: #ef4444; }
 
 /* ========== DYNAMIC KPI ROWS ========== */
 .lc-kpi-row {
