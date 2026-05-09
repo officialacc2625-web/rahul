@@ -4315,9 +4315,9 @@
             renderCustomersOSGPage();
         });
     }
-    document.querySelector('[data-section="customers-osg-section"]').addEventListener('click', () => {
+    document.querySelector('[data-section="customers-osg-section"]').addEventListener('click', async () => {
         // Build month switcher immediately from Firebase, then load statuses & render
-        if (typeof updateMonthSwitcherUI === 'function') updateMonthSwitcherUI();
+        if (typeof updateMonthSwitcherUI === 'function') await updateMonthSwitcherUI();
         // Render page immediately so data shows without waiting for Firebase
         renderCustomersOSGPage();
         // Then load statuses from Firebase and re-render with real-time status data
@@ -4470,7 +4470,7 @@
     window.buildMonthSwitcher = async function () {
         if (typeof firebase === 'undefined') return;
         const localMonths = await getAllMonthsFromDB();
-        firebase.database().ref('customerStatus').once('value').then(snap => {
+        return firebase.database().ref('customerStatus').once('value').then(snap => {
             let keys = Object.keys(snap.val() || {}).filter(k => /^\d{4}-\d{2}$/.test(k));
             localMonths.forEach(m => { if (!keys.includes(m)) keys.push(m); });
             keys.sort().reverse();
@@ -4501,7 +4501,7 @@
     };
 
     // Update the month switcher UI badge
-    window.updateMonthSwitcherUI = function () {
+    window.updateMonthSwitcherUI = async function () {
         const month = window.coActiveMonth || new Date().toISOString().substring(0, 7);
         const [y, m] = month.split('-');
         const label = new Date(y, m - 1, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
@@ -4509,7 +4509,7 @@
         if (badge) badge.textContent = label;
         const el = document.getElementById('coMonthSwitcher');
         if (el) el.value = month;
-        window.buildMonthSwitcher();
+        await window.buildMonthSwitcher();
     };
 
     // Sanitize invoice keys for Firebase (no . # $ [ ] / allowed)
