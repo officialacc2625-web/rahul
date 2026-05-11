@@ -700,6 +700,10 @@
                     staff: r.staff || '',
                     branch: r.branch || '',
                     product: r.product || '',
+                    brand: r.brand || '',
+                    rbm: r.rbm || '',
+                    bdm: r.bdm || '',
+                    invoiceDate: r.invoiceDate || r.time || '',
                     soldPrice: r.soldPrice || 0,
                     qty: r.qty || 0,
                 }));
@@ -3172,6 +3176,148 @@
         });
 
         // --------------------------------------------------------------------------------
+        // DATA PROCESSING FOR SHEET 0: WARRANTY_Overview (All Stores)
+        // --------------------------------------------------------------------------------
+
+        // ---- WARRANTY_Overview summary (OSG + LG-AMC + Samsung totals across ALL stores) ----
+        const w0AllProd   = productData; // All stores, no branch filter
+        const w0InvMeta   = {};
+        w0AllProd.forEach(r => { if (r.invoice) w0InvMeta[r.invoice] = r; });
+
+        // Total sold qty & price from product data (all stores)
+        const w0TotalSoldQty   = w0AllProd.reduce((s, r) => s + (r.qty || 0), 0);
+        const w0TotalSoldPrice = w0AllProd.reduce((s, r) => s + (r.soldPrice || 0), 0);
+
+        // OSG warranty across ALL stores
+        const w0OsgSoldQty   = osgData.reduce((s, r) => s + (r.qty || 0), 0);
+        const w0OsgSoldPrice = osgData.reduce((s, r) => s + (r.soldPrice || 0), 0);
+        const w0OsgQtyConv   = w0TotalSoldQty > 0 ? (w0OsgSoldQty / w0TotalSoldQty) * 100 : 0;
+        const w0OsgValConv   = w0TotalSoldPrice > 0 ? (w0OsgSoldPrice / w0TotalSoldPrice) * 100 : 0;
+
+        // LG-AMC across ALL stores (only LG brand product qty as denominator)
+        const lgAllowedBrands = ['LG'];
+        const w0LgProdQty   = w0AllProd.reduce((s, r) => s + ((r.brand && r.brand.toUpperCase().includes('LG')) ? (r.qty || 0) : 0), 0);
+        const w0LgProdPrice = w0AllProd.reduce((s, r) => s + ((r.brand && r.brand.toUpperCase().includes('LG')) ? (r.soldPrice || 0) : 0), 0);
+        const w0AmcSoldQty   = amcData.reduce((s, r) => s + (r.qty || 0), 0);
+        const w0AmcSoldPrice = amcData.reduce((s, r) => s + (r.soldPrice || 0), 0);
+        const w0AmcQtyConv   = w0LgProdQty > 0 ? (w0AmcSoldQty / w0LgProdQty) * 100 : 0;
+        const w0AmcValConv   = w0LgProdPrice > 0 ? (w0AmcSoldPrice / w0LgProdPrice) * 100 : 0;
+
+        // Samsung across ALL stores
+        const w0SamAllowedCats = ['AC', 'MICROWAVE OVEN', 'REFRIGERATOR', 'WASHING MACHINE'];
+        const w0SamProdQty   = w0AllProd.reduce((s, r) => { const p = (r.product || '').toUpperCase().trim(); return s + ((r.brand && r.brand.toUpperCase().includes('SAMSUNG') && w0SamAllowedCats.includes(p)) ? (r.qty || 0) : 0); }, 0);
+        const w0SamProdPrice = w0AllProd.reduce((s, r) => { const p = (r.product || '').toUpperCase().trim(); return s + ((r.brand && r.brand.toUpperCase().includes('SAMSUNG') && w0SamAllowedCats.includes(p)) ? (r.soldPrice || 0) : 0); }, 0);
+        const w0SamSoldQty   = samsungData.reduce((s, r) => s + (r.qty || 0), 0);
+        const w0SamSoldPrice = samsungData.reduce((s, r) => s + (r.soldPrice || 0), 0);
+        const w0SamQtyConv   = w0SamProdQty > 0 ? (w0SamSoldQty / w0SamProdQty) * 100 : 0;
+        const w0SamValConv   = w0SamProdPrice > 0 ? (w0SamSoldPrice / w0SamProdPrice) * 100 : 0;
+
+        // Total WARRANTY qty & val (OSG + AMC + Samsung)
+        const w0TotalWarrQty   = w0OsgSoldQty + w0AmcSoldQty + w0SamSoldQty;
+        const w0TotalWarrPrice = w0OsgSoldPrice + w0AmcSoldPrice + w0SamSoldPrice;
+
+        const fmt2 = v => parseFloat(v.toFixed(2));
+
+        // ---- OSG-OVERVIEW by product (all stores) ----
+        const osgProdCounts = {}, osgProdPrices = {};
+        const allProdCounts = {}, allProdPrices = {};
+        w0AllProd.forEach(r => {
+            const p = (r.product || 'Unknown').toUpperCase().trim();
+            allProdCounts[p] = (allProdCounts[p] || 0) + (r.qty || 0);
+            allProdPrices[p] = (allProdPrices[p] || 0) + (r.soldPrice || 0);
+        });
+        osgData.forEach(r => {
+            const p = (r.product || 'Unknown').toUpperCase().trim();
+            osgProdCounts[p] = (osgProdCounts[p] || 0) + (r.qty || 0);
+            osgProdPrices[p] = (osgProdPrices[p] || 0) + (r.soldPrice || 0);
+        });
+        const osgProds = [...new Set([...Object.keys(allProdCounts), ...Object.keys(osgProdCounts)])].sort();
+
+        // ---- LG-AMC-OVERVIEW by product (all stores, only LG eligible products) ----
+        const amcProdCounts = {}, lgProdAllCounts = {}, lgProdAllPrices = {};
+        w0AllProd.forEach(r => {
+            if (r.brand && r.brand.toUpperCase().includes('LG')) {
+                const p = (r.product || 'Unknown').toUpperCase().trim();
+                lgProdAllCounts[p] = (lgProdAllCounts[p] || 0) + (r.qty || 0);
+                lgProdAllPrices[p] = (lgProdAllPrices[p] || 0) + (r.soldPrice || 0);
+            }
+        });
+        amcData.forEach(r => {
+            const p = (r.product || 'Unknown').toUpperCase().trim();
+            amcProdCounts[p] = (amcProdCounts[p] || 0) + (r.qty || 0);
+        });
+        const lgProds = [...new Set([...Object.keys(lgProdAllCounts), ...Object.keys(amcProdCounts)])].sort();
+
+        // ---- SAMSUNG-OVERVIEW by product (all stores, only Samsung eligible categories) ----
+        const samProdCounts = {}, samProdAllCounts = {}, samProdAllPrices = {};
+        w0AllProd.forEach(r => {
+            const p = (r.product || 'Unknown').toUpperCase().trim();
+            if (r.brand && r.brand.toUpperCase().includes('SAMSUNG') && w0SamAllowedCats.includes(p)) {
+                samProdAllCounts[p] = (samProdAllCounts[p] || 0) + (r.qty || 0);
+                samProdAllPrices[p] = (samProdAllPrices[p] || 0) + (r.soldPrice || 0);
+            }
+        });
+        samsungData.forEach(r => {
+            const p = (r.product || 'Unknown').toUpperCase().trim();
+            samProdCounts[p] = (samProdCounts[p] || 0) + (r.qty || 0);
+        });
+        const samProds = [...new Set([...Object.keys(samProdAllCounts), ...Object.keys(samProdCounts)])].sort();
+
+        // ---- Build the WARRANTY_Overview AoA (multi-section sheet) ----
+        // Section headers use same dark blue as other sheets
+        const W0_COLS = ['WARRANTY', 'SOLD QTY', 'SOLD PRICE', 'QTY-CONV', 'VALUE-CONV'];
+        const W0_OSG_COLS = ['PRODUCT', 'SOLD QTY', 'SOLD PRICE', 'QTY-CONV', 'VALUE-CONV'];
+
+        const aoa0 = [];
+
+        // --- Block 1: WARRANTY_Overview ---
+        aoa0.push(['WARRANTY OVERVIEW', '', '', '', '']); // Section title row
+        aoa0.push(W0_COLS);
+        aoa0.push(['OSG',     w0OsgSoldQty,   fmt2(w0OsgSoldPrice),   fmt2(w0OsgQtyConv),   fmt2(w0OsgValConv)]);
+        aoa0.push(['LG AMC',  w0AmcSoldQty,   fmt2(w0AmcSoldPrice),   fmt2(w0AmcQtyConv),   fmt2(w0AmcValConv)]);
+        aoa0.push(['SAMSUNG', w0SamSoldQty,   fmt2(w0SamSoldPrice),   fmt2(w0SamQtyConv),   fmt2(w0SamValConv)]);
+        aoa0.push(['TOTAL',   w0TotalWarrQty, fmt2(w0TotalWarrPrice), '', '']);
+        aoa0.push(['', '', '', '', '']); // Spacer
+
+        // --- Block 2: OSG-OVERVIEW ---
+        const osgBlock0 = aoa0.length;
+        aoa0.push(['OSG-OVERVIEW', '', '', '', '']);
+        aoa0.push(W0_OSG_COLS);
+        osgProds.forEach(p => {
+            const sq = osgProdCounts[p] || 0;
+            const sp = osgProdPrices[p] || 0;
+            const tq = allProdCounts[p] || 0;
+            const tp = allProdPrices[p] || 0;
+            aoa0.push([p, sq, fmt2(sp), tq > 0 ? fmt2((sq / tq) * 100) : 0, tp > 0 ? fmt2((sp / tp) * 100) : 0]);
+        });
+        aoa0.push(['', '', '', '', '']); // Spacer
+
+        // --- Block 3: LG_AMC-OVERVIEW ---
+        const lgBlock0 = aoa0.length;
+        aoa0.push(['LG_AMC-OVERVIEW', '', '', '', '']);
+        aoa0.push(W0_OSG_COLS);
+        lgProds.forEach(p => {
+            const sq = amcProdCounts[p] || 0;
+            const tq = lgProdAllCounts[p] || 0;
+            const tp = lgProdAllPrices[p] || 0;
+            const amcVal = amcData.filter(r => (r.product || '').toUpperCase().trim() === p).reduce((s, r) => s + (r.soldPrice || 0), 0);
+            aoa0.push([p, sq, fmt2(amcVal), tq > 0 ? fmt2((sq / tq) * 100) : 0, tp > 0 ? fmt2((amcVal / tp) * 100) : 0]);
+        });
+        aoa0.push(['', '', '', '', '']); // Spacer
+
+        // --- Block 4: SAMSUNG-OVERVIEW ---
+        const samBlock0 = aoa0.length;
+        aoa0.push(['SAMSUNG-OVERVIEW', '', '', '', '']);
+        aoa0.push(W0_OSG_COLS);
+        samProds.forEach(p => {
+            const sq = samProdCounts[p] || 0;
+            const tq = samProdAllCounts[p] || 0;
+            const tp = samProdAllPrices[p] || 0;
+            const samVal = samsungData.filter(r => (r.product || '').toUpperCase().trim() === p).reduce((s, r) => s + (r.soldPrice || 0), 0);
+            aoa0.push([p, sq, fmt2(samVal), tq > 0 ? fmt2((sq / tq) * 100) : 0, tp > 0 ? fmt2((samVal / tp) * 100) : 0]);
+        });
+
+        // --------------------------------------------------------------------------------
         // WRITE TO EXCEL
         // --------------------------------------------------------------------------------
 
@@ -3249,6 +3395,20 @@
             });
         }
 
+        // Sheet 0: WARRANTY_Overview
+        const ws0 = XLSX.utils.aoa_to_sheet(aoa0);
+        ws0['!cols'] = [{ wch: 22 }, { wch: 12 }, { wch: 16 }, { wch: 12 }, { wch: 14 }];
+        if (!ws0['!rows']) ws0['!rows'] = [];
+        aoa0.forEach((_, i) => { ws0['!rows'][i] = { hpt: 20 }; });
+        // Merges for section title rows
+        ws0['!merges'] = [
+            { s: { r: 0, c: 0 }, e: { r: 0, c: 4 } },
+            { s: { r: osgBlock0, c: 0 }, e: { r: osgBlock0, c: 4 } },
+            { s: { r: lgBlock0, c: 0 }, e: { r: lgBlock0, c: 4 } },
+            { s: { r: samBlock0, c: 0 }, e: { r: samBlock0, c: 4 } },
+        ];
+
+        XLSX.utils.book_append_sheet(wb, ws0, 'WARRANTY_Overview');
         XLSX.utils.book_append_sheet(wb, ws1, 'Future_Stores_Overview');
         XLSX.utils.book_append_sheet(wb, ws2, 'Future_Staff_Overview');
         XLSX.utils.book_append_sheet(wb, ws3, 'LG-AMC');
@@ -3273,6 +3433,50 @@
             alignment: { vertical: "center" }
         };
         const numStyle = { alignment: { horizontal: "center", vertical: "center" } };
+
+        // ---- Style WARRANTY_Overview sheet ----
+        const sectionTitleStyle = {
+            fill: { fgColor: { rgb: '0F243E' } },
+            font: { color: { rgb: 'FFFFFF' }, bold: true, sz: 12 },
+            alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+            border: { bottom: { style: 'medium', color: { rgb: '1E40AF' } } }
+        };
+        const subHeaderStyle = {
+            fill: { fgColor: { rgb: '1E3A5F' } },
+            font: { color: { rgb: 'FFD700' }, bold: true, sz: 10 },
+            alignment: { horizontal: 'center', vertical: 'center' }
+        };
+        const totalRowStyle = {
+            fill: { fgColor: { rgb: '0F243E' } },
+            font: { color: { rgb: 'FFFFFF' }, bold: true, sz: 10 },
+            alignment: { horizontal: 'center', vertical: 'center' }
+        };
+        const sectionTitleRows = new Set([0, osgBlock0, lgBlock0, samBlock0]);
+        const subHeaderRows = new Set([1, osgBlock0 + 1, lgBlock0 + 1, samBlock0 + 1]);
+        const totalRow = 5;
+        const w0Range = XLSX.utils.decode_range(ws0['!ref']);
+        let w0IsAlt = false;
+        let w0LastKey = null;
+        for (let R = w0Range.s.r; R <= w0Range.e.r; R++) {
+            for (let C = w0Range.s.c; C <= w0Range.e.c; C++) {
+                const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+                if (!ws0[cellRef]) ws0[cellRef] = { t: 's', v: '' };
+                if (sectionTitleRows.has(R)) {
+                    ws0[cellRef].s = sectionTitleStyle;
+                } else if (subHeaderRows.has(R)) {
+                    ws0[cellRef].s = subHeaderStyle;
+                } else if (R === totalRow) {
+                    ws0[cellRef].s = totalRowStyle;
+                } else {
+                    // Check if this is a spacer row
+                    const rowVal = aoa0[R] ? aoa0[R][0] : '';
+                    if (rowVal === '') { ws0[cellRef].s = { fill: { fgColor: { rgb: 'FFFFFF' } } }; continue; }
+                    // Alternating colors per block row
+                    if (C === 0 && rowVal !== '' && rowVal !== w0LastKey) { w0IsAlt = !w0IsAlt; w0LastKey = rowVal; }
+                    ws0[cellRef].s = { ...(w0IsAlt ? rowStyleAlt : rowStyle), alignment: { horizontal: C === 0 ? 'left' : 'center', vertical: 'center' } };
+                }
+            }
+        }
 
         [ws1, ws2, ws3, ws4].forEach(ws => {
             const range = XLSX.utils.decode_range(ws['!ref']);
