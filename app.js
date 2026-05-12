@@ -3263,58 +3263,57 @@
         });
         const samProds = [...new Set([...Object.keys(samProdAllCounts), ...Object.keys(samProdCounts)])].sort();
 
-        // ---- Build the WARRANTY_Overview AoA (multi-section sheet) ----
-        // Section headers use same dark blue as other sheets
-        const W0_COLS = ['WARRANTY', 'SOLD QTY', 'SOLD PRICE', 'QTY-CONV', 'VALUE-CONV'];
-        const W0_OSG_COLS = ['PRODUCT', 'SOLD QTY', 'SOLD PRICE', 'QTY-CONV', 'VALUE-CONV'];
+        // ---- Build the WARRANTY_Overview AoA (side-by-side layout) ----
+        // Left (A-E): WARRANTY OVERVIEW + OSG-OVERVIEW
+        // Col F: spacer
+        // Right (G-K): SAMSUNG-OVERVIEW + LG_AMC-OVERVIEW
+
+        const block2Start = Math.max(7, 2 + samProds.length + 1);
+        const maxBottom = Math.max(osgProds.length, lgProds.length);
+        const totalW0Rows = block2Start + 2 + maxBottom;
 
         const aoa0 = [];
+        for (let i = 0; i < totalW0Rows; i++) aoa0.push(['','','','','','','','','','','']);
 
-        // --- Block 1: WARRANTY_Overview ---
-        aoa0.push(['WARRANTY OVERVIEW', '', '', '', '']); // Section title row
-        aoa0.push(W0_COLS);
-        aoa0.push(['OSG',     w0OsgSoldQty,   fmt2(w0OsgSoldPrice),   fmt2(w0OsgQtyConv),   fmt2(w0OsgValConv)]);
-        aoa0.push(['LG AMC',  w0AmcSoldQty,   fmt2(w0AmcSoldPrice),   fmt2(w0AmcQtyConv),   fmt2(w0AmcValConv)]);
-        aoa0.push(['SAMSUNG', w0SamSoldQty,   fmt2(w0SamSoldPrice),   fmt2(w0SamQtyConv),   fmt2(w0SamValConv)]);
-        aoa0.push(['TOTAL',   w0TotalWarrQty, fmt2(w0TotalWarrPrice), '', '']);
-        aoa0.push(['', '', '', '', '']); // Spacer
+        // --- TOP LEFT: WARRANTY OVERVIEW (rows 0-5) ---
+        aoa0[0][0] = 'WARRANTY OVERVIEW';
+        aoa0[1][0] = 'WARRANTY'; aoa0[1][1] = 'SOLD QTY'; aoa0[1][2] = 'SOLD PRICE'; aoa0[1][3] = 'QTY-CONV'; aoa0[1][4] = 'VALUE-CONV';
+        aoa0[2][0] = 'OSG';     aoa0[2][1] = w0OsgSoldQty;   aoa0[2][2] = fmt2(w0OsgSoldPrice);   aoa0[2][3] = fmt2(w0OsgQtyConv);   aoa0[2][4] = fmt2(w0OsgValConv);
+        aoa0[3][0] = 'LG AMC';  aoa0[3][1] = w0AmcSoldQty;   aoa0[3][2] = fmt2(w0AmcSoldPrice);   aoa0[3][3] = fmt2(w0AmcQtyConv);   aoa0[3][4] = fmt2(w0AmcValConv);
+        aoa0[4][0] = 'SAMSUNG'; aoa0[4][1] = w0SamSoldQty;   aoa0[4][2] = fmt2(w0SamSoldPrice);   aoa0[4][3] = fmt2(w0SamQtyConv);   aoa0[4][4] = fmt2(w0SamValConv);
+        aoa0[5][0] = 'TOTAL';   aoa0[5][1] = w0TotalWarrQty; aoa0[5][2] = fmt2(w0TotalWarrPrice);
 
-        // --- Block 2: OSG-OVERVIEW ---
-        const osgBlock0 = aoa0.length;
-        aoa0.push(['OSG-OVERVIEW', '', '', '', '']);
-        aoa0.push(W0_OSG_COLS);
-        osgProds.forEach(p => {
-            const sq = osgProdCounts[p] || 0;
-            const sp = osgProdPrices[p] || 0;
-            const tq = allProdCounts[p] || 0;
-            const tp = allProdPrices[p] || 0;
-            aoa0.push([p, sq, fmt2(sp), tq > 0 ? fmt2((sq / tq) * 100) : 0, tp > 0 ? fmt2((sp / tp) * 100) : 0]);
+        // --- TOP RIGHT: SAMSUNG-OVERVIEW (rows 0 onwards) ---
+        aoa0[0][6] = 'SAMSUNG-OVERVIEW';
+        aoa0[1][6] = 'PRODUCT'; aoa0[1][7] = 'SOLD QTY'; aoa0[1][8] = 'SOLD PRICE'; aoa0[1][9] = 'QTY-CONV'; aoa0[1][10] = 'VALUE-CONV';
+        samProds.forEach((p, i) => {
+            const r = 2 + i, sq = samProdCounts[p] || 0, tq = samProdAllCounts[p] || 0, tp = samProdAllPrices[p] || 0;
+            const sv = samsungData.filter(x => (x.product||'').toUpperCase().trim() === p).reduce((s,x) => s + (x.soldPrice||0), 0);
+            aoa0[r][6] = p; aoa0[r][7] = sq; aoa0[r][8] = fmt2(sv);
+            aoa0[r][9] = tq > 0 ? fmt2((sq/tq)*100) : 0; aoa0[r][10] = tp > 0 ? fmt2((sv/tp)*100) : 0;
         });
-        aoa0.push(['', '', '', '', '']); // Spacer
 
-        // --- Block 3: LG_AMC-OVERVIEW ---
-        const lgBlock0 = aoa0.length;
-        aoa0.push(['LG_AMC-OVERVIEW', '', '', '', '']);
-        aoa0.push(W0_OSG_COLS);
-        lgProds.forEach(p => {
-            const sq = amcProdCounts[p] || 0;
-            const tq = lgProdAllCounts[p] || 0;
-            const tp = lgProdAllPrices[p] || 0;
-            const amcVal = amcData.filter(r => (r.product || '').toUpperCase().trim() === p).reduce((s, r) => s + (r.soldPrice || 0), 0);
-            aoa0.push([p, sq, fmt2(amcVal), tq > 0 ? fmt2((sq / tq) * 100) : 0, tp > 0 ? fmt2((amcVal / tp) * 100) : 0]);
+        // --- BOTTOM LEFT: OSG-OVERVIEW (starts at block2Start) ---
+        const osgBlock0 = block2Start;
+        aoa0[osgBlock0][0] = 'OSG-OVERVIEW';
+        aoa0[osgBlock0+1][0] = 'PRODUCT'; aoa0[osgBlock0+1][1] = 'SOLD QTY'; aoa0[osgBlock0+1][2] = 'SOLD PRICE'; aoa0[osgBlock0+1][3] = 'QTY-CONV'; aoa0[osgBlock0+1][4] = 'VALUE-CONV';
+        osgProds.forEach((p, i) => {
+            const r = osgBlock0 + 2 + i, sq = osgProdCounts[p] || 0, sp = osgProdPrices[p] || 0;
+            const tq = allProdCounts[p] || 0, tp = allProdPrices[p] || 0;
+            aoa0[r][0] = p; aoa0[r][1] = sq; aoa0[r][2] = fmt2(sp);
+            aoa0[r][3] = tq > 0 ? fmt2((sq/tq)*100) : 0; aoa0[r][4] = tp > 0 ? fmt2((sp/tp)*100) : 0;
         });
-        aoa0.push(['', '', '', '', '']); // Spacer
 
-        // --- Block 4: SAMSUNG-OVERVIEW ---
-        const samBlock0 = aoa0.length;
-        aoa0.push(['SAMSUNG-OVERVIEW', '', '', '', '']);
-        aoa0.push(W0_OSG_COLS);
-        samProds.forEach(p => {
-            const sq = samProdCounts[p] || 0;
-            const tq = samProdAllCounts[p] || 0;
-            const tp = samProdAllPrices[p] || 0;
-            const samVal = samsungData.filter(r => (r.product || '').toUpperCase().trim() === p).reduce((s, r) => s + (r.soldPrice || 0), 0);
-            aoa0.push([p, sq, fmt2(samVal), tq > 0 ? fmt2((sq / tq) * 100) : 0, tp > 0 ? fmt2((samVal / tp) * 100) : 0]);
+        // --- BOTTOM RIGHT: LG_AMC-OVERVIEW (starts at block2Start) ---
+        const lgBlock0 = block2Start;
+        aoa0[lgBlock0][6] = 'LG_AMC-OVERVIEW';
+        aoa0[lgBlock0+1][6] = 'PRODUCT'; aoa0[lgBlock0+1][7] = 'SOLD QTY'; aoa0[lgBlock0+1][8] = 'SOLD PRICE'; aoa0[lgBlock0+1][9] = 'QTY-CONV'; aoa0[lgBlock0+1][10] = 'VALUE-CONV';
+        lgProds.forEach((p, i) => {
+            const r = lgBlock0 + 2 + i, sq = amcProdCounts[p] || 0;
+            const tq = lgProdAllCounts[p] || 0, tp = lgProdAllPrices[p] || 0;
+            const av = amcData.filter(x => (x.product||'').toUpperCase().trim() === p).reduce((s,x) => s + (x.soldPrice||0), 0);
+            aoa0[r][6] = p; aoa0[r][7] = sq; aoa0[r][8] = fmt2(av);
+            aoa0[r][9] = tq > 0 ? fmt2((sq/tq)*100) : 0; aoa0[r][10] = tp > 0 ? fmt2((av/tp)*100) : 0;
         });
 
         // --------------------------------------------------------------------------------
@@ -3395,17 +3394,20 @@
             });
         }
 
-        // Sheet 0: WARRANTY_Overview
+        // Sheet 0: WARRANTY_Overview (side-by-side)
         const ws0 = XLSX.utils.aoa_to_sheet(aoa0);
-        ws0['!cols'] = [{ wch: 22 }, { wch: 12 }, { wch: 16 }, { wch: 12 }, { wch: 14 }];
+        ws0['!cols'] = [
+            { wch: 22 }, { wch: 12 }, { wch: 16 }, { wch: 12 }, { wch: 14 }, // A-E left
+            { wch: 3 },  // F spacer
+            { wch: 22 }, { wch: 12 }, { wch: 16 }, { wch: 12 }, { wch: 14 }  // G-K right
+        ];
         if (!ws0['!rows']) ws0['!rows'] = [];
         aoa0.forEach((_, i) => { ws0['!rows'][i] = { hpt: 20 }; });
-        // Merges for section title rows
         ws0['!merges'] = [
             { s: { r: 0, c: 0 }, e: { r: 0, c: 4 } },
+            { s: { r: 0, c: 6 }, e: { r: 0, c: 10 } },
             { s: { r: osgBlock0, c: 0 }, e: { r: osgBlock0, c: 4 } },
-            { s: { r: lgBlock0, c: 0 }, e: { r: lgBlock0, c: 4 } },
-            { s: { r: samBlock0, c: 0 }, e: { r: samBlock0, c: 4 } },
+            { s: { r: lgBlock0, c: 6 }, e: { r: lgBlock0, c: 10 } },
         ];
 
         XLSX.utils.book_append_sheet(wb, ws0, 'WARRANTY_Overview');
@@ -3414,66 +3416,56 @@
         XLSX.utils.book_append_sheet(wb, ws3, 'LG-AMC');
         XLSX.utils.book_append_sheet(wb, ws4, 'SAMSUNG');
 
-
         // Apply beautiful styles using xlsx-js-style
         const headerStyle = {
-            fill: { fgColor: { rgb: "0F243E" } }, // Dark blue
+            fill: { fgColor: { rgb: "0F243E" } },
             font: { color: { rgb: "FFFFFF" }, bold: true, sz: 11 },
             alignment: { horizontal: "center", vertical: "center", wrapText: true },
             border: { top: { style: 'thin', color: { rgb: '334155' } }, bottom: { style: 'thin', color: { rgb: '334155' } } }
         };
         const rowStyleAlt = {
-            fill: { fgColor: { rgb: "E2E8F0" } }, // Light blue/gray
+            fill: { fgColor: { rgb: "E2E8F0" } },
             font: { color: { rgb: "0F172A" }, sz: 10 },
             alignment: { vertical: "center" }
         };
         const rowStyle = {
-            fill: { fgColor: { rgb: "F8FAFC" } }, // Lighter
+            fill: { fgColor: { rgb: "F8FAFC" } },
             font: { color: { rgb: "0F172A" }, sz: 10 },
             alignment: { vertical: "center" }
         };
         const numStyle = { alignment: { horizontal: "center", vertical: "center" } };
 
-        // ---- Style WARRANTY_Overview sheet ----
-        const sectionTitleStyle = {
-            fill: { fgColor: { rgb: '0F243E' } },
-            font: { color: { rgb: 'FFFFFF' }, bold: true, sz: 12 },
-            alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
-            border: { bottom: { style: 'medium', color: { rgb: '1E40AF' } } }
-        };
-        const subHeaderStyle = {
-            fill: { fgColor: { rgb: '1E3A5F' } },
-            font: { color: { rgb: 'FFD700' }, bold: true, sz: 10 },
-            alignment: { horizontal: 'center', vertical: 'center' }
-        };
-        const totalRowStyle = {
-            fill: { fgColor: { rgb: '0F243E' } },
-            font: { color: { rgb: 'FFFFFF' }, bold: true, sz: 10 },
-            alignment: { horizontal: 'center', vertical: 'center' }
-        };
-        const sectionTitleRows = new Set([0, osgBlock0, lgBlock0, samBlock0]);
-        const subHeaderRows = new Set([1, osgBlock0 + 1, lgBlock0 + 1, samBlock0 + 1]);
-        const totalRow = 5;
+        // ---- Style WARRANTY_Overview ----
+        const sectionTitleStyle = { fill: { fgColor: { rgb: '0F243E' } }, font: { color: { rgb: 'FFFFFF' }, bold: true, sz: 12 }, alignment: { horizontal: 'center', vertical: 'center' }, border: { bottom: { style: 'medium', color: { rgb: '1E40AF' } } } };
+        const subHeaderStyle = { fill: { fgColor: { rgb: '1E3A5F' } }, font: { color: { rgb: 'FFD700' }, bold: true, sz: 10 }, alignment: { horizontal: 'center', vertical: 'center' } };
+        const totalRowStyle = { fill: { fgColor: { rgb: '0F243E' } }, font: { color: { rgb: 'FFFFFF' }, bold: true, sz: 10 }, alignment: { horizontal: 'center', vertical: 'center' } };
+        const emptyStyle = { fill: { fgColor: { rgb: 'FFFFFF' } } };
+        const leftTitleRows = new Set([0, osgBlock0]);
+        const rightTitleRows = new Set([0, lgBlock0]);
+        const leftHdrRows = new Set([1, osgBlock0 + 1]);
+        const rightHdrRows = new Set([1, lgBlock0 + 1]);
+
         const w0Range = XLSX.utils.decode_range(ws0['!ref']);
-        let w0IsAlt = false;
-        let w0LastKey = null;
         for (let R = w0Range.s.r; R <= w0Range.e.r; R++) {
             for (let C = w0Range.s.c; C <= w0Range.e.c; C++) {
-                const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
-                if (!ws0[cellRef]) ws0[cellRef] = { t: 's', v: '' };
-                if (sectionTitleRows.has(R)) {
-                    ws0[cellRef].s = sectionTitleStyle;
-                } else if (subHeaderRows.has(R)) {
-                    ws0[cellRef].s = subHeaderStyle;
-                } else if (R === totalRow) {
-                    ws0[cellRef].s = totalRowStyle;
-                } else {
-                    // Check if this is a spacer row
-                    const rowVal = aoa0[R] ? aoa0[R][0] : '';
-                    if (rowVal === '') { ws0[cellRef].s = { fill: { fgColor: { rgb: 'FFFFFF' } } }; continue; }
-                    // Alternating colors per block row
-                    if (C === 0 && rowVal !== '' && rowVal !== w0LastKey) { w0IsAlt = !w0IsAlt; w0LastKey = rowVal; }
-                    ws0[cellRef].s = { ...(w0IsAlt ? rowStyleAlt : rowStyle), alignment: { horizontal: C === 0 ? 'left' : 'center', vertical: 'center' } };
+                const ref = XLSX.utils.encode_cell({ r: R, c: C });
+                if (!ws0[ref]) ws0[ref] = { t: 's', v: '' };
+                if (C === 5) { ws0[ref].s = emptyStyle; continue; }
+                const isLeft = C <= 4, isRight = C >= 6;
+                const val = aoa0[R] ? aoa0[R][C] : '';
+                const leftEmpty = aoa0[R] && aoa0[R][0] === '' && aoa0[R][1] === '';
+                const rightEmpty = aoa0[R] && aoa0[R][6] === '' && aoa0[R][7] === '';
+                if (isLeft) {
+                    if (leftTitleRows.has(R)) ws0[ref].s = sectionTitleStyle;
+                    else if (leftHdrRows.has(R)) ws0[ref].s = subHeaderStyle;
+                    else if (R === 5) ws0[ref].s = totalRowStyle;
+                    else if (leftEmpty) ws0[ref].s = emptyStyle;
+                    else { const ri = R < osgBlock0 ? R - 2 : R - (osgBlock0 + 2); ws0[ref].s = { ...(ri % 2 === 1 ? rowStyleAlt : rowStyle), alignment: { horizontal: C === 0 ? 'left' : 'center', vertical: 'center' } }; }
+                } else if (isRight) {
+                    if (rightTitleRows.has(R)) ws0[ref].s = sectionTitleStyle;
+                    else if (rightHdrRows.has(R)) ws0[ref].s = subHeaderStyle;
+                    else if (rightEmpty) ws0[ref].s = emptyStyle;
+                    else { const ri = R < lgBlock0 ? R - 2 : R - (lgBlock0 + 2); ws0[ref].s = { ...(ri % 2 === 1 ? rowStyleAlt : rowStyle), alignment: { horizontal: C === 6 ? 'left' : 'center', vertical: 'center' } }; }
                 }
             }
         }
