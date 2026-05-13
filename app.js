@@ -525,7 +525,7 @@
                             amcData = rows;
                             showFileStatus(statusAMC, file.name, rows.length);
                         } else if (fileType === 'samsung') {
-                            const rows = await parseOSGFile(file);
+                            const rows = await parseSamsungFile(file);
                             samsungData = rows;
                             showFileStatus(statusSamsung, file.name, rows.length);
                         } else if (fileType === 'osg') {
@@ -773,12 +773,54 @@
         });
     }
 
+    // ---- SAMSUNG PRODUCT NAME NORMALIZER ----
+    // Maps raw Samsung Care+ product strings → standard category names
+    // e.g. "Samsung Care+ EW WM Auto TopLoad 1Year" → "WASHING MACHINE"
+    function mapSamsungProductCategory(rawName) {
+        if (!rawName) return rawName;
+        const name = rawName.toUpperCase();
+
+        // Order matters: check more-specific tokens first
+        // Microwave Oven
+        if (/\bMWO\b/.test(name) || name.includes('MICROWAVE')) return 'MICROWAVE OVEN';
+        // Washing Machine (WM, WM Auto, WM Semi, WM F/Load, WM TopLoad, etc.)
+        if (/\bWM\b/.test(name) || name.includes('WASHING MACHINE') || name.includes('WASHER')) return 'WASHING MACHINE';
+        // Refrigerator (Ref, Ref DC, Ref FF, Ref SBS, etc.)
+        if (/\bREF\b/.test(name) || name.includes('REFRIGERATOR') || name.includes('FRIDGE')) return 'REFRIGERATOR';
+        // Air Conditioner
+        if (/\bAC\b/.test(name) || name.includes('AIR CONDITIONER') || name.includes('AIRCONDITIONER')) return 'AC';
+        // TV / Display
+        if (/\bTV\b/.test(name) || name.includes('TELEVISION') || name.includes('MONITOR')) return 'TV';
+
+        // If no abbreviation matched, return as-is (uppercase for consistency)
+        return rawName;
+    }
+
     function parseOSGFile(file) {
         return parseExcel(file, OSG_COL_MAP, (row, mapping) => {
             const r = {};
             r.branch = strVal(row, mapping.branch);
             r.storeCode = strVal(row, mapping.storeCode);
             r.product = strVal(row, mapping.product);
+            r.category = strVal(row, mapping.category);
+            r.brand = strVal(row, mapping.brand);
+            r.soldPrice = num(getVal(row, mapping.soldPrice, 0));
+            r.qty = num(getVal(row, mapping.qty, 0));
+            r.invoice = strVal(row, mapping.invoice);
+            return r;
+        });
+    }
+
+    // Samsung-specific parser: same as OSG but auto-normalizes product names
+    function parseSamsungFile(file) {
+        return parseExcel(file, OSG_COL_MAP, (row, mapping) => {
+            const r = {};
+            r.branch = strVal(row, mapping.branch);
+            r.storeCode = strVal(row, mapping.storeCode);
+            // Normalize the raw product name → standard category
+            const rawProduct = strVal(row, mapping.product);
+            r.product = mapSamsungProductCategory(rawProduct);
+            r.rawProduct = rawProduct;  // keep original for debugging
             r.category = strVal(row, mapping.category);
             r.brand = strVal(row, mapping.brand);
             r.soldPrice = num(getVal(row, mapping.soldPrice, 0));
