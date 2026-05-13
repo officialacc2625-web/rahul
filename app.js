@@ -521,7 +521,7 @@
                             if (typeof updateMonthSwitcherUI === 'function') updateMonthSwitcherUI();
                             showFileStatus(statusProduct, file.name, rows.length);
                         } else if (fileType === 'amc') {
-                            const rows = await parseProductFile(file);
+                            const rows = await parseLGAMCFile(file);
                             amcData = rows;
                             showFileStatus(statusAMC, file.name, rows.length);
                         } else if (fileType === 'samsung') {
@@ -796,6 +796,47 @@
         return rawName;
     }
 
+    // ---- LG-AMC PRODUCT NAME NORMALIZER ----
+    // Maps full LG product names → standard category names.
+    // Audio-related → AUDIO SYSTEM; anything else not in the 6 known categories → SMALL APPLIANCE
+    function mapLGAMCProductCategory(rawName) {
+        if (!rawName) return rawName;
+        const name = rawName.toUpperCase();
+
+        // --- Known major 6 categories first ---
+        // Microwave Oven
+        if (/\bMWO\b/.test(name) || name.includes('MICROWAVE')) return 'MICROWAVE OVEN';
+        // Washing Machine
+        if (/\bWM\b/.test(name) || name.includes('WASHING MACHINE') || name.includes('WASHER')
+            || name.includes('FRONT LOAD') || name.includes('TOP LOAD') || name.includes('FL WM')
+            || name.includes('TL WM') || name.includes('FL DRYER') || name.includes('DRYER')) {
+            // Dryer is laundry but separate — keep as SMALL APPLIANCE unless it's a washer
+            if (name.includes('DRYER') && !name.includes('WASHER') && !name.includes('WASHING')) return 'SMALL APPLIANCE';
+            return 'WASHING MACHINE';
+        }
+        // Refrigerator
+        if (/\bREF\b/.test(name) || name.includes('REFRIGERATOR') || name.includes('FRIDGE')
+            || name.includes('SIDE BY SIDE') || name.includes('SBS') || name.includes('FFR')
+            || name.includes('FROST FREE') || name.includes('DIRECT COOL')) return 'REFRIGERATOR';
+        // Air Conditioner
+        if (/\bAC\b/.test(name) || name.includes('AIR CONDITIONER') || name.includes('SPLIT AC')
+            || name.includes('WINDOW AC') || name.includes('INVERTER AC')) return 'AC';
+        // TV / Display
+        if (/\bTV\b/.test(name) || name.includes('TELEVISION') || name.includes('OLED')
+            || name.includes('QNED') || name.includes('NANOCELL') || name.includes('SMART TV')
+            || name.includes('MONITOR')) return 'TV';
+
+        // --- Audio System ---
+        if (name.includes('SOUND BAR') || name.includes('SOUNDBAR') || name.includes('XBOOM')
+            || name.includes('SPEAKER') || name.includes('HOME THEATER') || name.includes('HOME THEATRE')
+            || name.includes('AUDIO') || name.includes('SUBWOOFER') || name.includes('WOOFER')
+            || name.includes('HI-FI') || name.includes('HIFI') || name.includes('STEREO')) return 'AUDIO SYSTEM';
+
+        // --- Everything else → Small Appliance ---
+        // (Dishwasher, Dryer, Air Purifier, Vacuum, Styler, WashTower, etc.)
+        return 'SMALL APPLIANCE';
+    }
+
     function parseOSGFile(file) {
         return parseExcel(file, OSG_COL_MAP, (row, mapping) => {
             const r = {};
@@ -807,6 +848,45 @@
             r.soldPrice = num(getVal(row, mapping.soldPrice, 0));
             r.qty = num(getVal(row, mapping.qty, 0));
             r.invoice = strVal(row, mapping.invoice);
+            return r;
+        });
+    }
+
+    // LG-AMC-specific parser: same as parseProductFile but auto-normalizes product names
+    function parseLGAMCFile(file) {
+        return parseExcel(file, PRODUCT_COL_MAP, (row, mapping) => {
+            const r = {};
+            r.branch = strVal(row, mapping.branch);
+            r.rbm = strVal(row, mapping.rbm);
+            r.bdm = strVal(row, mapping.bdm);
+            r.staff = strVal(row, mapping.staff);
+            // Normalize the raw LG product name → standard category
+            const rawProduct = strVal(row, mapping.product);
+            r.product = mapLGAMCProductCategory(rawProduct);
+            r.rawProduct = rawProduct;  // keep original for debugging
+            r.category = strVal(row, mapping.category);
+            r.brand = strVal(row, mapping.brand);
+            r.invoice = strVal(row, mapping.invoice);
+            r.customerName = strVal(row, mapping.customerName);
+            r.invoiceDate = getVal(row, mapping.invoiceDate, '');
+            r.time = getVal(row, mapping.time, '');
+            r.customerNo = strVal(row, mapping.customerNo);
+            r.soldPrice = num(getVal(row, mapping.soldPrice, 0));
+            r.taxableVal = num(getVal(row, mapping.taxableVal, 0));
+            r.tax = num(getVal(row, mapping.tax, 0));
+            r.qty = num(getVal(row, mapping.qty, 0));
+            r.discount = num(getVal(row, mapping.discount, 0));
+            r.indDiscount = num(getVal(row, mapping.indDiscount, 0));
+            r.dbdCharge = num(getVal(row, mapping.dbdCharge, 0));
+            r.procCharge = num(getVal(row, mapping.procCharge, 0));
+            r.svcCharge = num(getVal(row, mapping.svcCharge, 0));
+            r.addition = num(getVal(row, mapping.addition, 0));
+            r.deduction = num(getVal(row, mapping.deduction, 0));
+
+            const totalCost = r.taxableVal + r.discount + r.indDiscount + r.dbdCharge + r.procCharge + r.svcCharge + r.deduction;
+            r.revenue = r.soldPrice + r.addition;
+            r.profit = r.revenue - totalCost;
+            r.isProfit = r.profit >= 0;
             return r;
         });
     }
