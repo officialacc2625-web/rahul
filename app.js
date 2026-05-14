@@ -1,4 +1,4 @@
-// ============================================================
+﻿// ============================================================
 // Analytics Portal ” Conversion Reports
 // Dual-file: Product Data + OSG Data
 // Value Conversion = OSG Sold Price / Product Sold Price
@@ -6131,7 +6131,9 @@ window.coCalWidget = {
             };
         });
     }
-};// ============================================================
+};
+
+// ============================================================
 // AI Business Agent Integration (Nova AI)
 // ============================================================
 (function initAIAssistant() {
@@ -6143,63 +6145,50 @@ window.coCalWidget = {
     const closeAiSettingsModal = document.getElementById('closeAiSettingsModal');
     const aiApiKeyInput = document.getElementById('aiApiKeyInput');
     const saveAiKeyBtn = document.getElementById('saveAiKeyBtn');
-    
     const aiChatInput = document.getElementById('aiChatInput');
     const aiChatSendBtn = document.getElementById('aiChatSendBtn');
     const aiChatMessages = document.getElementById('aiChatMessages');
 
-    let chatHistory = [];
+    if (!aiChatBtn) return; // Guard: exit if AI UI not in DOM
 
-    // Load API Key
-    const storedApiKey = localStorage.getItem('nova_ai_api_key') || '';
-    if (storedApiKey) {
-        aiApiKeyInput.value = storedApiKey;
-    }
+    // Load stored API Key
+    var storedKey = localStorage.getItem('nova_ai_api_key') || '';
+    if (storedKey && aiApiKeyInput) aiApiKeyInput.value = storedKey;
 
-    // Toggles
-    aiChatBtn.addEventListener('click', () => {
+    // Toggle chat window
+    aiChatBtn.addEventListener('click', function() {
         aiChatWindow.classList.toggle('hidden');
-        if (!aiChatWindow.classList.contains('hidden')) {
-            aiChatInput.focus();
-        }
+        if (!aiChatWindow.classList.contains('hidden') && aiChatInput) aiChatInput.focus();
     });
+    aiCloseBtn.addEventListener('click', function() { aiChatWindow.classList.add('hidden'); });
 
-    aiCloseBtn.addEventListener('click', () => {
-        aiChatWindow.classList.add('hidden');
-    });
-
-    aiSettingsBtn.addEventListener('click', () => {
-        aiSettingsModal.style.display = 'flex';
-    });
-
-    closeAiSettingsModal.addEventListener('click', () => {
-        aiSettingsModal.style.display = 'none';
-    });
-
-    saveAiKeyBtn.addEventListener('click', () => {
-        const key = aiApiKeyInput.value.trim();
+    // Settings modal
+    aiSettingsBtn.addEventListener('click', function() { aiSettingsModal.style.display = 'flex'; });
+    closeAiSettingsModal.addEventListener('click', function() { aiSettingsModal.style.display = 'none'; });
+    saveAiKeyBtn.addEventListener('click', function() {
+        var key = aiApiKeyInput.value.trim();
         if (key) {
             localStorage.setItem('nova_ai_api_key', key);
-            alert('API Key saved successfully!');
+            alert('API Key saved!');
             aiSettingsModal.style.display = 'none';
         } else {
             alert('Please enter a valid API key.');
         }
     });
 
-    // Simple markdown to HTML parser for AI responses
-    function parseAIMarkdown(text) {
-        let html = text.replace(/\*\*(.*?)\*\*/g, '<strong>\</strong>');
-        html = html.replace(/\*(.*?)\*/g, '<em>\</em>');
+    // Simple markdown parser for AI responses
+    function parseMarkdown(text) {
+        var html = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
         html = html.replace(/\n/g, '<br>');
         return html;
     }
 
     function addMessage(text, sender) {
-        const div = document.createElement('div');
+        var div = document.createElement('div');
         div.className = 'ai-message ' + sender;
         if (sender === 'assistant') {
-            div.innerHTML = parseAIMarkdown(text);
+            div.innerHTML = parseMarkdown(text);
         } else {
             div.textContent = text;
         }
@@ -6208,7 +6197,7 @@ window.coCalWidget = {
     }
 
     function showTypingIndicator() {
-        const div = document.createElement('div');
+        var div = document.createElement('div');
         div.className = 'ai-typing-indicator';
         div.id = 'aiTypingIndicator';
         div.innerHTML = '<div class="ai-typing-dot"></div><div class="ai-typing-dot"></div><div class="ai-typing-dot"></div>';
@@ -6217,118 +6206,93 @@ window.coCalWidget = {
     }
 
     function removeTypingIndicator() {
-        const ind = document.getElementById('aiTypingIndicator');
+        var ind = document.getElementById('aiTypingIndicator');
         if (ind) ind.remove();
     }
 
-    // Gather dashboard context
-    function buildDashboardContext() {
-        // Extract basic KPI totals from DOM or raw data
-        const kpiQtyStr = document.getElementById('kpiQty')?.textContent || '0';
-        const kpiRevenueStr = document.getElementById('kpiRevenue')?.textContent || '0';
-        const kpiOsgQtyStr = document.getElementById('kpiOsgQty')?.textContent || '0';
-        const kpiOsgRevenueStr = document.getElementById('kpiOsgRevenue')?.textContent || '0';
-        const kpiQtyConvStr = document.getElementById('kpiQtyConv')?.textContent || '0%';
-        const kpiValConvStr = document.getElementById('kpiValConv')?.textContent || '0%';
+    // Build business context from live DOM KPIs
+    function buildContext() {
+        var pQty = (document.getElementById('kpiQty') || {}).textContent || 'N/A';
+        var pRev = (document.getElementById('kpiRevenue') || {}).textContent || 'N/A';
+        var oQty = (document.getElementById('kpiOsgQty') || {}).textContent || 'N/A';
+        var oRev = (document.getElementById('kpiOsgRevenue') || {}).textContent || 'N/A';
+        var qConv = (document.getElementById('kpiQtyConv') || {}).textContent || 'N/A';
+        var vConv = (document.getElementById('kpiValConv') || {}).textContent || 'N/A';
+        var amcQty = (document.getElementById('kpiAmcTotal') || {}).textContent || 'N/A';
+        var amcConv = (document.getElementById('kpiAmcConv') || {}).textContent || 'N/A';
 
-        // Extract LG AMC data if available
-        const amcTotalQty = document.getElementById('kpiAmcTotal')?.textContent || '0';
-        const amcConv = document.getElementById('kpiAmcConv')?.textContent || '0%';
-
-        // Get top 5 branches by volume or worst conversion to give AI flavor
-        let branchSummary = "Branch Data Summary:\\n";
-        if (typeof branchStats !== 'undefined' && branchStats.length > 0) {
-            const sorted = [...branchStats].sort((a,b) => b.tPQty - a.tPQty).slice(0, 5);
-            branchSummary += sorted.map(b => 
-                \- \: \ Total Products, OSG Conv Qty: \%\
-            ).join("\\n");
-        }
-
-        const context = \
-You are Nova AI, the business intelligence agent for this retail Analytics Portal.
-The user is viewing a dashboard with the following real-time filtered metrics:
-- Total Products Sold: \
-- Total Revenue: \
-- Total OSG Sold: \
-- Total OSG Revenue: \
-- Overall Quantity Conversion: \
-- Overall Value Conversion: \
-- LG AMC Quantities: \
-- LG AMC Conversion: \
-
-\
-
-Your job is to answer questions about this data clearly and professionally. If the user asks for suggestions on how to improve conversions, provide actionable business advice (e.g., staff training, incentives, monitoring specific branches). Keep responses concise and use markdown formatting for readability.
-\;
-        return context.trim();
+        return 'You are Nova AI, a retail business intelligence analyst for an Indian electronics retail analytics portal. ' +
+            'The live dashboard data right now is: ' +
+            'Total Products Sold: ' + pQty + ', ' +
+            'Total Revenue: ' + pRev + ', ' +
+            'OSG Qty Sold: ' + oQty + ', ' +
+            'OSG Revenue: ' + oRev + ', ' +
+            'Qty Conversion Rate: ' + qConv + ', ' +
+            'Value Conversion Rate: ' + vConv + ', ' +
+            'LG AMC Qty: ' + amcQty + ', ' +
+            'LG AMC Conversion: ' + amcConv + '. ' +
+            'Answer questions about this data clearly and concisely using markdown formatting. ' +
+            'Provide actionable suggestions when asked about improvements or losses. ' +
+            'Keep answers under 200 words unless detail is specifically requested.';
     }
 
     // Call Gemini API
     async function sendMessageToAI(userMessage) {
-        const apiKey = localStorage.getItem('nova_ai_api_key');
+        var apiKey = localStorage.getItem('nova_ai_api_key');
         if (!apiKey) {
-            addMessage("I need a Google Gemini API Key to work. Please click the ⚙️ settings icon to add it.", "error");
+            addMessage('I need a Gemini API Key to work. Click the \u2699\ufe0f Settings icon above to add it.', 'error');
             return;
         }
-
         addMessage(userMessage, 'user');
         aiChatInput.value = '';
         showTypingIndicator();
 
-        const context = buildDashboardContext();
-        
-        // Prepare Gemini prompt structure
-        const promptData = {
-            contents: [
-                {
-                    role: "user",
-                    parts: [{ text: context + "\\n\\nUser Question: " + userMessage }]
-                }
-            ],
-            generationConfig: {
-                temperature: 0.7,
-                maxOutputTokens: 500
-            }
+        var systemContext = buildContext();
+        var payload = {
+            contents: [{
+                role: 'user',
+                parts: [{ text: systemContext + '\n\nUser question: ' + userMessage }]
+            }],
+            generationConfig: { temperature: 0.7, maxOutputTokens: 500 }
         };
 
+        var endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey;
+
         try {
-            const response = await fetch(\https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=\\, {
+            var response = await fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(promptData)
+                body: JSON.stringify(payload)
             });
-
             removeTypingIndicator();
-
             if (!response.ok) {
-                const errData = await response.json();
-                addMessage("API Error: " + (errData.error?.message || response.statusText), "error");
+                var errData = await response.json();
+                addMessage('API Error: ' + ((errData.error && errData.error.message) || response.statusText), 'error');
                 return;
             }
-
-            const data = await response.json();
-            const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
+            var data = await response.json();
+            var aiText = data.candidates && data.candidates[0] && data.candidates[0].content &&
+                         data.candidates[0].content.parts && data.candidates[0].content.parts[0] &&
+                         data.candidates[0].content.parts[0].text;
             if (aiText) {
                 addMessage(aiText, 'assistant');
             } else {
-                addMessage("Sorry, I could not generate a response.", "error");
+                addMessage('Sorry, I could not generate a response.', 'error');
             }
-        } catch (error) {
+        } catch (err) {
             removeTypingIndicator();
-            addMessage("Network Error: " + error.message, "error");
+            addMessage('Network Error: ' + err.message, 'error');
         }
     }
 
-    // Events
-    aiChatSendBtn.addEventListener('click', () => {
-        const msg = aiChatInput.value.trim();
+    aiChatSendBtn.addEventListener('click', function() {
+        var msg = aiChatInput.value.trim();
         if (msg) sendMessageToAI(msg);
     });
 
-    aiChatInput.addEventListener('keypress', (e) => {
+    aiChatInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
-            const msg = aiChatInput.value.trim();
+            var msg = aiChatInput.value.trim();
             if (msg) sendMessageToAI(msg);
         }
     });
