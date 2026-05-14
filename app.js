@@ -6273,7 +6273,7 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
             generationConfig: { temperature: 0.7, maxOutputTokens: 500 }
         };
 
-        var endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey;
+        var endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=' + apiKey;
 
         try {
             var response = await fetch(endpoint, {
