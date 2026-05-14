@@ -782,7 +782,8 @@
 
         // Order matters: check more-specific tokens first
         // Microwave Oven
-        if (/\bMWO\b/.test(name) || name.includes('MICROWAVE')) return 'MICROWAVE OVEN';
+        if (/\bMWO\b/.test(name) || name.includes('MICROWAVE') || /\bOVEN\b/.test(name)
+            || name.includes('CONVECTION OVEN')) return 'MICROWAVE OVEN';
         // Washing Machine (WM, WM Auto, WM Semi, WM F/Load, WM TopLoad, etc.)
         if (/\bWM\b/.test(name) || name.includes('WASHING MACHINE') || name.includes('WASHER')) return 'WASHING MACHINE';
         // Refrigerator (Ref, Ref DC, Ref FF, Ref SBS, etc.)
@@ -804,8 +805,9 @@
         const name = rawName.toUpperCase();
 
         // --- Known major 6 categories first ---
-        // Microwave Oven
-        if (/\bMWO\b/.test(name) || name.includes('MICROWAVE')) return 'MICROWAVE OVEN';
+        // Microwave Oven (includes LG Oven Convection, etc.)
+        if (/\bMWO\b/.test(name) || name.includes('MICROWAVE') || /\bOVEN\b/.test(name)
+            || name.includes('CONVECTION')) return 'MICROWAVE OVEN';
         // Washing Machine
         if (/\bWM\b/.test(name) || name.includes('WASHING MACHINE') || name.includes('WASHER')
             || name.includes('FRONT LOAD') || name.includes('TOP LOAD') || name.includes('FL WM')
