@@ -3541,28 +3541,32 @@
         XLSX.utils.book_append_sheet(wb, ws4, 'SAMSUNG');
 
         // Apply beautiful styles using xlsx-js-style
+        const fullBorder = { top: { style: 'thin', color: { rgb: '000000' } }, bottom: { style: 'thin', color: { rgb: '000000' } }, left: { style: 'thin', color: { rgb: '000000' } }, right: { style: 'thin', color: { rgb: '000000' } } };
+        
         const headerStyle = {
             fill: { fgColor: { rgb: "0F243E" } },
             font: { color: { rgb: "FFFFFF" }, bold: true, sz: 11 },
             alignment: { horizontal: "center", vertical: "center", wrapText: true },
-            border: { top: { style: 'thin', color: { rgb: '334155' } }, bottom: { style: 'thin', color: { rgb: '334155' } } }
+            border: fullBorder
         };
         const rowStyleAlt = {
             fill: { fgColor: { rgb: "E2E8F0" } },
             font: { color: { rgb: "0F172A" }, sz: 10 },
-            alignment: { vertical: "center" }
+            alignment: { vertical: "center" },
+            border: fullBorder
         };
         const rowStyle = {
             fill: { fgColor: { rgb: "F8FAFC" } },
             font: { color: { rgb: "0F172A" }, sz: 10 },
-            alignment: { vertical: "center" }
+            alignment: { vertical: "center" },
+            border: fullBorder
         };
         const numStyle = { alignment: { horizontal: "center", vertical: "center" } };
 
         // ---- Style WARRANTY_Overview ----
-        const sectionTitleStyle = { fill: { fgColor: { rgb: '0F243E' } }, font: { color: { rgb: 'FFFFFF' }, bold: true, sz: 12 }, alignment: { horizontal: 'center', vertical: 'center' }, border: { bottom: { style: 'medium', color: { rgb: '1E40AF' } } } };
-        const subHeaderStyle = { fill: { fgColor: { rgb: '1E3A5F' } }, font: { color: { rgb: 'FFD700' }, bold: true, sz: 10 }, alignment: { horizontal: 'center', vertical: 'center' } };
-        const totalRowStyle = { fill: { fgColor: { rgb: '0F243E' } }, font: { color: { rgb: 'FFFFFF' }, bold: true, sz: 10 }, alignment: { horizontal: 'center', vertical: 'center' } };
+        const sectionTitleStyle = { fill: { fgColor: { rgb: '0F243E' } }, font: { color: { rgb: 'FFFFFF' }, bold: true, sz: 12 }, alignment: { horizontal: 'center', vertical: 'center' }, border: fullBorder };
+        const subHeaderStyle = { fill: { fgColor: { rgb: '1E3A5F' } }, font: { color: { rgb: 'FFD700' }, bold: true, sz: 10 }, alignment: { horizontal: 'center', vertical: 'center' }, border: fullBorder };
+        const totalRowStyle = { fill: { fgColor: { rgb: '0F243E' } }, font: { color: { rgb: 'FFFFFF' }, bold: true, sz: 10 }, alignment: { horizontal: 'center', vertical: 'center' }, border: fullBorder };
         const emptyStyle = { fill: { fgColor: { rgb: 'FFFFFF' } } };
         const leftTitleRows = new Set([0, osgBlock0]);
         const rightTitleRows = new Set([0, lgBlock0]);
