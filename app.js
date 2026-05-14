@@ -6273,9 +6273,25 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
             generationConfig: { temperature: 0.7, maxOutputTokens: 500 }
         };
 
-        var endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=' + apiKey;
-
         try {
+            // Auto-detect the correct model for this specific API key
+            var modelsRes = await fetch('https://generativelanguage.googleapis.com/v1beta/models?key=' + apiKey);
+            var modelsData = await modelsRes.json();
+            
+            var targetModel = 'gemini-1.5-flash'; // Fallback
+            if (modelsData && modelsData.models) {
+                var validModels = modelsData.models.filter(function(m) {
+                    return m.name.includes('gemini') && m.supportedGenerationMethods.includes('generateContent');
+                });
+                if (validModels.length > 0) {
+                    // Try to prefer flash, otherwise take the first available
+                    var flashModel = validModels.find(function(m) { return m.name.includes('flash'); });
+                    targetModel = flashModel ? flashModel.name.split('/')[1] : validModels[0].name.split('/')[1];
+                }
+            }
+
+            var endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' + targetModel + ':generateContent?key=' + apiKey;
+
             var response = await fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
