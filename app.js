@@ -811,21 +811,23 @@
         // Washing Machine
         if (/\bWM\b/.test(name) || name.includes('WASHING MACHINE') || name.includes('WASHER')
             || name.includes('FRONT LOAD') || name.includes('TOP LOAD') || name.includes('FL WM')
-            || name.includes('TL WM') || name.includes('FL DRYER') || name.includes('DRYER')) {
+            || name.includes('TL WM') || name.includes('F/L') || name.includes('T/L') 
+            || /\bSA\b/.test(name) || name.includes('SEMI') || name.includes('FL DRYER') || name.includes('DRYER')) {
             // Dryer is laundry but separate — keep as SMALL APPLIANCE unless it's a washer
             if (name.includes('DRYER') && !name.includes('WASHER') && !name.includes('WASHING')) return 'SMALL APPLIANCE';
             return 'WASHING MACHINE';
         }
         // Refrigerator
         if (/\bREF\b/.test(name) || name.includes('REFRIGERATOR') || name.includes('FRIDGE')
-            || name.includes('SIDE BY SIDE') || name.includes('SBS') || name.includes('FFR')
-            || name.includes('FROST FREE') || name.includes('DIRECT COOL')) return 'REFRIGERATOR';
+            || name.includes('SIDE BY SIDE') || /\bSBS\b/.test(name) || /\bFFR\b/.test(name) || /\bFF\b/.test(name)
+            || name.includes('FROST FREE') || name.includes('DIRECT COOL') || /\bDC\b/.test(name)) return 'REFRIGERATOR';
         // Air Conditioner
-        if (/\bAC\b/.test(name) || name.includes('AIR CONDITIONER') || name.includes('SPLIT AC')
-            || name.includes('WINDOW AC') || name.includes('INVERTER AC')) return 'AC';
+        if (/\bAC\b/.test(name) || name.includes('AIR CONDITIONER') || name.includes('SPLIT')
+            || name.includes('WINDOW') || name.includes('INVERTER AC')) return 'AC';
         // TV / Display
         if (/\bTV\b/.test(name) || name.includes('TELEVISION') || name.includes('OLED')
             || name.includes('QNED') || name.includes('NANOCELL') || name.includes('SMART TV')
+            || /\bLED\b/.test(name) || /\bUHD\b/.test(name) || /\bFHD\b/.test(name) || /\bHD\b/.test(name)
             || name.includes('MONITOR')) return 'TV';
 
         // --- Audio System ---
