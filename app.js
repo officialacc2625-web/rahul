@@ -3651,19 +3651,28 @@
                     // Get header to check if this is a percentage column
                     const hdrRow = (ws === ws1) ? 1 : 0;
                     const hdrRef = XLSX.utils.encode_cell({ r: hdrRow, c: C });
-                    const isPctCol = ws[hdrRef] && ws[hdrRef].v && String(ws[hdrRef].v).includes('%');
+                    const hdrVal = ws[hdrRef] && ws[hdrRef].v ? String(ws[hdrRef].v).toUpperCase() : '';
+                    const isPctCol = hdrVal.includes('%') || hdrVal.includes('CONV');
+                    const isCurrencyCol = hdrVal.includes('PRICE') || hdrVal.includes('REVENUE') || hdrVal.includes('TAX') || hdrVal.includes('PROFIT') || hdrVal.includes('VALUE');
 
                     // Center align numbers and apply color coding for percentages
                     if (ws[cellRef].t === 'n') {
                         let finalNumStyle = { ...style, ...numStyle };
+                        
                         if (isPctCol) {
+                            finalNumStyle.z = '0.00"%"'; // Native percentage formatting without changing math
                             const val = ws[cellRef].v;
                             if (val < 5) { // Needs Attention (Red)
                                 finalNumStyle = { ...finalNumStyle, font: { color: { rgb: "991B1B" }, bold: true }, fill: { fgColor: { rgb: "FEE2E2" } } };
                             } else if (val > 10) { // Excellent (Green)
                                 finalNumStyle = { ...finalNumStyle, font: { color: { rgb: "166534" }, bold: true }, fill: { fgColor: { rgb: "DCFCE7" } } };
                             }
+                        } else if (isCurrencyCol) {
+                            finalNumStyle.z = '"₹"#,##0.00'; // Native Indian Rupee currency formatting
+                        } else {
+                            finalNumStyle.z = '#,##0'; // Standard integer formatting with commas
                         }
+                        
                         ws[cellRef].s = finalNumStyle;
                     }
                     // Center align text for BDM, Branch, Staff
