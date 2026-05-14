@@ -1,4 +1,4 @@
-const CACHE_NAME = 'myg-portal-v101';
+const CACHE_NAME = 'myg-portal-v102';
 const SHELL_ASSETS = [
   './manifest.json',
   './icons/icon-192x192.png',
