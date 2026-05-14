@@ -1730,6 +1730,39 @@
         setTimeout(renderLowConvPage, 50);
     });
 
+    // ---- AI GOD MODE DATA EXPORTER ----
+    window.getGodModeContextData = function() {
+        var catMap = {};
+        var branchMap = {};
+        
+        productData.forEach(r => {
+            var c = r.category || 'Unknown';
+            var b = r.branch || 'Unknown';
+            if (!catMap[c]) catMap[c] = { pQty: 0, oQty: 0 };
+            if (!branchMap[b]) branchMap[b] = { pQty: 0, oQty: 0 };
+            catMap[c].pQty += r.qty || 0;
+            branchMap[b].pQty += r.qty || 0;
+        });
+
+        osgData.forEach(r => {
+            var c = r.category || 'Unknown';
+            // Try to resolve branch from OSG file, or fallback to unknown
+            var b = r.branch || 'Unknown';
+            if (!catMap[c]) catMap[c] = { pQty: 0, oQty: 0 };
+            if (!branchMap[b]) branchMap[b] = { pQty: 0, oQty: 0 };
+            catMap[c].oQty += r.qty || 0;
+            branchMap[b].oQty += r.qty || 0;
+        });
+
+        var staffStats = window.portalStaffStats || [];
+
+        return {
+            Categories: Object.keys(catMap).map(k => ({ Category: k, ProductsSold: catMap[k].pQty, OsgSold: catMap[k].oQty, ConvPercent: (catMap[k].pQty>0 ? (catMap[k].oQty/catMap[k].pQty*100).toFixed(1) : 0) })),
+            Branches: Object.keys(branchMap).map(k => ({ Branch: k, ProductsSold: branchMap[k].pQty, OsgSold: branchMap[k].oQty, ConvPercent: (branchMap[k].pQty>0 ? (branchMap[k].oQty/branchMap[k].pQty*100).toFixed(1) : 0) })),
+            Staff: staffStats.map(s => ({ StaffName: s.name, Branch: s.branch, ProductsSold: s.pQty, OsgSold: s.oQty, ConvPercent: s.qtyConv.toFixed(1) }))
+        };
+    };
+
     // ---- LOW CONV STAFF LOGIC ----
     function buildStaffStats() {
         // Build invoice → staff lookup from ALL product data (unfiltered)
@@ -6240,20 +6273,13 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
         var amcQty = (document.getElementById('kpiAmcTotal') || {}).textContent || 'N/A';
         var amcConv = (document.getElementById('kpiAmcConv') || {}).textContent || 'N/A';
 
-        var staffContext = '';
-        if (window.portalStaffStats) {
-            var stats = [].concat(window.portalStaffStats);
-            stats.sort(function(a,b){ return b.qtyConv - a.qtyConv; });
-            var top = stats.filter(function(s){ return s.pQty >= 3 && s.qtyConv > 0; }).slice(0,3);
-            
-            stats.sort(function(a,b){ return a.qtyConv - b.qtyConv; });
-            var bottom = stats.filter(function(s){ return s.pQty >= 3 && s.qtyConv < 15; }).slice(0,3);
-            
-            if (top.length > 0) {
-                staffContext += ' Top 3 Staff: ' + top.map(function(s){ return s.name + ' (' + s.qtyConv.toFixed(1) + '% conv, ' + s.pQty + ' sales)'; }).join(', ') + '.';
-            }
-            if (bottom.length > 0) {
-                staffContext += ' Bottom 3 Staff (Needs Coaching): ' + bottom.map(function(s){ return s.name + ' (' + s.qtyConv.toFixed(1) + '% conv, ' + s.pQty + ' sales)'; }).join(', ') + '.';
+        var extendedContext = '';
+        if (window.getGodModeContextData) {
+            try {
+                var fullData = window.getGodModeContextData();
+                extendedContext = '\n\nDETAILED AGGREGATE DATA (Use this to answer specific questions about staff, branches, or categories):\n' + JSON.stringify(fullData);
+            } catch (e) {
+                console.error("Failed to build god mode context", e);
             }
         }
 
@@ -6267,7 +6293,7 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
             'Value Conversion Rate: ' + vConv + ', ' +
             'LG AMC Qty: ' + amcQty + ', ' +
             'LG AMC Conversion: ' + amcConv + '. ' +
-            staffContext + ' ' +
+            extendedContext + '\n\n' +
             'Answer questions about this data clearly and concisely using markdown formatting. ' +
             'Provide actionable suggestions when asked about improvements or losses. ' +
             'Keep answers under 200 words unless detail is specifically requested.';
