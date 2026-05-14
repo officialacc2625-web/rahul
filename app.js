@@ -1756,7 +1756,7 @@
         const allStaff = new Set([...Object.keys(pByStaff), ...Object.keys(oByStaff)]);
         allStaff.delete('Unknown');
 
-        return Array.from(allStaff).map(name => {
+        const finalStats = Array.from(allStaff).map(name => {
             const pInfo = pByStaff[name] || { branch: '', rbm: '', bdm: '', rows: [] };
             const oRows = oByStaff[name] || [];
             const pQty = pInfo.rows.reduce((s, r) => s + r.qty, 0);
@@ -1767,6 +1767,8 @@
             const valConv = pRev > 0 ? (oRev / pRev) * 100 : 0;
             return { name, branch: pInfo.branch, rbm: pInfo.rbm, bdm: pInfo.bdm, pQty, oQty, pRev, oRev, qtyConv, valConv };
         });
+        window.portalStaffStats = finalStats;
+        return finalStats;
     }
 
     function renderLowConvPage() {
@@ -6238,6 +6240,23 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
         var amcQty = (document.getElementById('kpiAmcTotal') || {}).textContent || 'N/A';
         var amcConv = (document.getElementById('kpiAmcConv') || {}).textContent || 'N/A';
 
+        var staffContext = '';
+        if (window.portalStaffStats) {
+            var stats = [].concat(window.portalStaffStats);
+            stats.sort(function(a,b){ return b.qtyConv - a.qtyConv; });
+            var top = stats.filter(function(s){ return s.pQty >= 3 && s.qtyConv > 0; }).slice(0,3);
+            
+            stats.sort(function(a,b){ return a.qtyConv - b.qtyConv; });
+            var bottom = stats.filter(function(s){ return s.pQty >= 3 && s.qtyConv < 15; }).slice(0,3);
+            
+            if (top.length > 0) {
+                staffContext += ' Top 3 Staff: ' + top.map(function(s){ return s.name + ' (' + s.qtyConv.toFixed(1) + '% conv, ' + s.pQty + ' sales)'; }).join(', ') + '.';
+            }
+            if (bottom.length > 0) {
+                staffContext += ' Bottom 3 Staff (Needs Coaching): ' + bottom.map(function(s){ return s.name + ' (' + s.qtyConv.toFixed(1) + '% conv, ' + s.pQty + ' sales)'; }).join(', ') + '.';
+            }
+        }
+
         return 'You are Nova AI, a retail business intelligence analyst for an Indian electronics retail analytics portal. ' +
             'The live dashboard data right now is: ' +
             'Total Products Sold: ' + pQty + ', ' +
@@ -6248,6 +6267,7 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
             'Value Conversion Rate: ' + vConv + ', ' +
             'LG AMC Qty: ' + amcQty + ', ' +
             'LG AMC Conversion: ' + amcConv + '. ' +
+            staffContext + ' ' +
             'Answer questions about this data clearly and concisely using markdown formatting. ' +
             'Provide actionable suggestions when asked about improvements or losses. ' +
             'Keep answers under 200 words unless detail is specifically requested.';
