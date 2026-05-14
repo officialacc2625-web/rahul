@@ -6153,7 +6153,7 @@ window.coCalWidget = {
 // ============================================================
 // AI Business Agent Integration (Nova AI)
 // ============================================================
-(function initAIAssistant() {
+document.addEventListener('DOMContentLoaded', function initAIAssistant() {
     const aiChatBtn = document.getElementById('aiChatBtn');
     const aiChatWindow = document.getElementById('aiChatWindow');
     const aiCloseBtn = document.getElementById('aiCloseBtn');
@@ -6314,4 +6314,4 @@ window.coCalWidget = {
         }
     });
 
-})();
+});
