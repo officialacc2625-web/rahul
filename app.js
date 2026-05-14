@@ -809,7 +809,7 @@
         if (/\bMWO\b/.test(name) || name.includes('MICROWAVE') || /\bOVEN\b/.test(name)
             || name.includes('CONVECTION')) return 'MICROWAVE OVEN';
         // Washing Machine
-        if (/\bWM\b/.test(name) || name.includes('WASHING MACHINE') || name.includes('WASHER')
+        if (/\bWM\b/.test(name) || name.includes('WASHING MACHINE') || name.includes('WASHER') || name.includes('WASH')
             || name.includes('FRONT LOAD') || name.includes('TOP LOAD') || name.includes('FL WM')
             || name.includes('TL WM') || name.includes('F/L') || name.includes('T/L') 
             || /\bSA\b/.test(name) || name.includes('SEMI') || name.includes('FL DRYER') || name.includes('DRYER')) {
