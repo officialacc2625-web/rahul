@@ -6131,4 +6131,206 @@ window.coCalWidget = {
             };
         });
     }
-};
+};// ============================================================
+// AI Business Agent Integration (Nova AI)
+// ============================================================
+(function initAIAssistant() {
+    const aiChatBtn = document.getElementById('aiChatBtn');
+    const aiChatWindow = document.getElementById('aiChatWindow');
+    const aiCloseBtn = document.getElementById('aiCloseBtn');
+    const aiSettingsBtn = document.getElementById('aiSettingsBtn');
+    const aiSettingsModal = document.getElementById('aiSettingsModal');
+    const closeAiSettingsModal = document.getElementById('closeAiSettingsModal');
+    const aiApiKeyInput = document.getElementById('aiApiKeyInput');
+    const saveAiKeyBtn = document.getElementById('saveAiKeyBtn');
+    
+    const aiChatInput = document.getElementById('aiChatInput');
+    const aiChatSendBtn = document.getElementById('aiChatSendBtn');
+    const aiChatMessages = document.getElementById('aiChatMessages');
+
+    let chatHistory = [];
+
+    // Load API Key
+    const storedApiKey = localStorage.getItem('nova_ai_api_key') || '';
+    if (storedApiKey) {
+        aiApiKeyInput.value = storedApiKey;
+    }
+
+    // Toggles
+    aiChatBtn.addEventListener('click', () => {
+        aiChatWindow.classList.toggle('hidden');
+        if (!aiChatWindow.classList.contains('hidden')) {
+            aiChatInput.focus();
+        }
+    });
+
+    aiCloseBtn.addEventListener('click', () => {
+        aiChatWindow.classList.add('hidden');
+    });
+
+    aiSettingsBtn.addEventListener('click', () => {
+        aiSettingsModal.style.display = 'flex';
+    });
+
+    closeAiSettingsModal.addEventListener('click', () => {
+        aiSettingsModal.style.display = 'none';
+    });
+
+    saveAiKeyBtn.addEventListener('click', () => {
+        const key = aiApiKeyInput.value.trim();
+        if (key) {
+            localStorage.setItem('nova_ai_api_key', key);
+            alert('API Key saved successfully!');
+            aiSettingsModal.style.display = 'none';
+        } else {
+            alert('Please enter a valid API key.');
+        }
+    });
+
+    // Simple markdown to HTML parser for AI responses
+    function parseAIMarkdown(text) {
+        let html = text.replace(/\*\*(.*?)\*\*/g, '<strong>\</strong>');
+        html = html.replace(/\*(.*?)\*/g, '<em>\</em>');
+        html = html.replace(/\n/g, '<br>');
+        return html;
+    }
+
+    function addMessage(text, sender) {
+        const div = document.createElement('div');
+        div.className = 'ai-message ' + sender;
+        if (sender === 'assistant') {
+            div.innerHTML = parseAIMarkdown(text);
+        } else {
+            div.textContent = text;
+        }
+        aiChatMessages.appendChild(div);
+        aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+    }
+
+    function showTypingIndicator() {
+        const div = document.createElement('div');
+        div.className = 'ai-typing-indicator';
+        div.id = 'aiTypingIndicator';
+        div.innerHTML = '<div class="ai-typing-dot"></div><div class="ai-typing-dot"></div><div class="ai-typing-dot"></div>';
+        aiChatMessages.appendChild(div);
+        aiChatMessages.scrollTop = aiChatMessages.scrollHeight;
+    }
+
+    function removeTypingIndicator() {
+        const ind = document.getElementById('aiTypingIndicator');
+        if (ind) ind.remove();
+    }
+
+    // Gather dashboard context
+    function buildDashboardContext() {
+        // Extract basic KPI totals from DOM or raw data
+        const kpiQtyStr = document.getElementById('kpiQty')?.textContent || '0';
+        const kpiRevenueStr = document.getElementById('kpiRevenue')?.textContent || '0';
+        const kpiOsgQtyStr = document.getElementById('kpiOsgQty')?.textContent || '0';
+        const kpiOsgRevenueStr = document.getElementById('kpiOsgRevenue')?.textContent || '0';
+        const kpiQtyConvStr = document.getElementById('kpiQtyConv')?.textContent || '0%';
+        const kpiValConvStr = document.getElementById('kpiValConv')?.textContent || '0%';
+
+        // Extract LG AMC data if available
+        const amcTotalQty = document.getElementById('kpiAmcTotal')?.textContent || '0';
+        const amcConv = document.getElementById('kpiAmcConv')?.textContent || '0%';
+
+        // Get top 5 branches by volume or worst conversion to give AI flavor
+        let branchSummary = "Branch Data Summary:\\n";
+        if (typeof branchStats !== 'undefined' && branchStats.length > 0) {
+            const sorted = [...branchStats].sort((a,b) => b.tPQty - a.tPQty).slice(0, 5);
+            branchSummary += sorted.map(b => 
+                \- \: \ Total Products, OSG Conv Qty: \%\
+            ).join("\\n");
+        }
+
+        const context = \
+You are Nova AI, the business intelligence agent for this retail Analytics Portal.
+The user is viewing a dashboard with the following real-time filtered metrics:
+- Total Products Sold: \
+- Total Revenue: \
+- Total OSG Sold: \
+- Total OSG Revenue: \
+- Overall Quantity Conversion: \
+- Overall Value Conversion: \
+- LG AMC Quantities: \
+- LG AMC Conversion: \
+
+\
+
+Your job is to answer questions about this data clearly and professionally. If the user asks for suggestions on how to improve conversions, provide actionable business advice (e.g., staff training, incentives, monitoring specific branches). Keep responses concise and use markdown formatting for readability.
+\;
+        return context.trim();
+    }
+
+    // Call Gemini API
+    async function sendMessageToAI(userMessage) {
+        const apiKey = localStorage.getItem('nova_ai_api_key');
+        if (!apiKey) {
+            addMessage("I need a Google Gemini API Key to work. Please click the ⚙️ settings icon to add it.", "error");
+            return;
+        }
+
+        addMessage(userMessage, 'user');
+        aiChatInput.value = '';
+        showTypingIndicator();
+
+        const context = buildDashboardContext();
+        
+        // Prepare Gemini prompt structure
+        const promptData = {
+            contents: [
+                {
+                    role: "user",
+                    parts: [{ text: context + "\\n\\nUser Question: " + userMessage }]
+                }
+            ],
+            generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 500
+            }
+        };
+
+        try {
+            const response = await fetch(\https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=\\, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(promptData)
+            });
+
+            removeTypingIndicator();
+
+            if (!response.ok) {
+                const errData = await response.json();
+                addMessage("API Error: " + (errData.error?.message || response.statusText), "error");
+                return;
+            }
+
+            const data = await response.json();
+            const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+            if (aiText) {
+                addMessage(aiText, 'assistant');
+            } else {
+                addMessage("Sorry, I could not generate a response.", "error");
+            }
+        } catch (error) {
+            removeTypingIndicator();
+            addMessage("Network Error: " + error.message, "error");
+        }
+    }
+
+    // Events
+    aiChatSendBtn.addEventListener('click', () => {
+        const msg = aiChatInput.value.trim();
+        if (msg) sendMessageToAI(msg);
+    });
+
+    aiChatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            const msg = aiChatInput.value.trim();
+            if (msg) sendMessageToAI(msg);
+        }
+    });
+
+})();
