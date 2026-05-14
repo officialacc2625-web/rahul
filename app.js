@@ -3598,11 +3598,21 @@
             }
         }
 
+        // Add Freeze Panes and Auto-Filters
+        ws1['!views'] = [{ state: 'frozen', ySplit: 2 }];
+        ws2['!views'] = [{ state: 'frozen', ySplit: 1 }];
+        ws3['!views'] = [{ state: 'frozen', ySplit: 1 }];
+        ws4['!views'] = [{ state: 'frozen', ySplit: 1 }];
+
         [ws1, ws2, ws3, ws4].forEach(ws => {
             const range = XLSX.utils.decode_range(ws['!ref']);
             const keyCol = (ws === ws1) ? 1 : 2; // Toggle color by Branch for ws1, by Staff for others
             let isAlt = false;
             let lastKey = null;
+
+            // Apply Auto-Filter
+            const hdrRow = (ws === ws1) ? 1 : 0;
+            ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: hdrRow, c: range.s.c }, e: range.e }) };
 
             // Set row heights
             if (!ws['!rows']) ws['!rows'] = [];
@@ -3637,9 +3647,24 @@
                     if (!ws[cellRef]) ws[cellRef] = { t: 's', v: '' };
 
                     ws[cellRef].s = { ...style };
-                    // Center align numbers
+                    
+                    // Get header to check if this is a percentage column
+                    const hdrRow = (ws === ws1) ? 1 : 0;
+                    const hdrRef = XLSX.utils.encode_cell({ r: hdrRow, c: C });
+                    const isPctCol = ws[hdrRef] && ws[hdrRef].v && String(ws[hdrRef].v).includes('%');
+
+                    // Center align numbers and apply color coding for percentages
                     if (ws[cellRef].t === 'n') {
-                        ws[cellRef].s = { ...style, ...numStyle };
+                        let finalNumStyle = { ...style, ...numStyle };
+                        if (isPctCol) {
+                            const val = ws[cellRef].v;
+                            if (val < 5) { // Needs Attention (Red)
+                                finalNumStyle = { ...finalNumStyle, font: { color: { rgb: "991B1B" }, bold: true }, fill: { fgColor: { rgb: "FEE2E2" } } };
+                            } else if (val > 10) { // Excellent (Green)
+                                finalNumStyle = { ...finalNumStyle, font: { color: { rgb: "166534" }, bold: true }, fill: { fgColor: { rgb: "DCFCE7" } } };
+                            }
+                        }
+                        ws[cellRef].s = finalNumStyle;
                     }
                     // Center align text for BDM, Branch, Staff
                     if (C <= 2) {
