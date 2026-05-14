@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 // Analytics Portal ” Conversion Reports
 // Dual-file: Product Data + OSG Data
 // Value Conversion = OSG Sold Price / Product Sold Price
@@ -836,8 +836,25 @@
             || name.includes('AUDIO') || name.includes('SUBWOOFER') || name.includes('WOOFER')
             || name.includes('HI-FI') || name.includes('HIFI') || name.includes('STEREO')) return 'AUDIO SYSTEM';
 
+        // --- Water Purifier ---
+        if (/\bWP\b/.test(name) || name.includes('WATER PURIFIER') || name.includes('PURIFIER')
+            || /\bRO\b/.test(name) || name.includes('WATER PURIF')) return 'WATER PURIFIER';
+
+        // --- Dishwasher ---
+        if (/\bDW\b/.test(name) || name.includes('DISHWASHER') || name.includes('DISH WASHER')) return 'DISHWASHER';
+
+        // --- Air Purifier ---
+        if (name.includes('AIR PURIFIER') || name.includes('AIR PURIF') || /\bAP\b/.test(name)) return 'AIR PURIFIER';
+
+        // --- Vacuum Cleaner ---
+        if (name.includes('VACUUM') || name.includes('VAC CLEANER') || name.includes('CORDZERO')
+            || name.includes('CORDLESS STICK')) return 'VACUUM CLEANER';
+
+        // --- Laptop ---
+        if (name.includes('LAPTOP') || name.includes('GRAM') || name.includes('NOTEBOOK')) return 'LAPTOP';
+
         // --- Everything else → Small Appliance ---
-        // (Dishwasher, Dryer, Air Purifier, Vacuum, Styler, WashTower, etc.)
+        // (Styler, WashTower, other niche products)
         return 'SMALL APPLIANCE';
     }
 
