@@ -3721,17 +3721,29 @@
                         let finalNumStyle = { ...style, ...numStyle };
                         
                         if (isPctCol) {
-                            finalNumStyle.z = '0.00"%"'; // Native percentage formatting without changing math
+                            finalNumStyle.z = '0"%"'; // Round off, no decimals
                             const val = ws[cellRef].v;
-                            if (val < 5) { // Needs Attention (Red)
+                            let greenThresh = 10, yellowThresh = 5;
+
+                            if (hdrVal.includes('VAL CONV')) {
+                                greenThresh = 2; yellowThresh = 1;
+                            } else if (hdrVal.includes('LG-AMC QTY CONV') || hdrVal.includes('SAMSUNG QTY CONV')) {
+                                greenThresh = 15; yellowThresh = 10;
+                            } else if (hdrVal.includes('OSG QTY CONV') || hdrVal.includes('QTY CONV')) {
+                                greenThresh = 10; yellowThresh = 5;
+                            }
+
+                            if (val < yellowThresh) { // Red
                                 finalNumStyle = { ...finalNumStyle, font: { color: { rgb: "991B1B" }, bold: true }, fill: { fgColor: { rgb: "FEE2E2" } } };
-                            } else if (val > 10) { // Excellent (Green)
+                            } else if (val >= greenThresh) { // Green
                                 finalNumStyle = { ...finalNumStyle, font: { color: { rgb: "166534" }, bold: true }, fill: { fgColor: { rgb: "DCFCE7" } } };
+                            } else { // Yellow
+                                finalNumStyle = { ...finalNumStyle, font: { color: { rgb: "9A3412" }, bold: true }, fill: { fgColor: { rgb: "FEF08A" } } };
                             }
                         } else if (isCurrencyCol) {
-                            finalNumStyle.z = '"₹"#,##0.00'; // Native Indian Rupee currency formatting
+                            finalNumStyle.z = '"₹"#,##0'; // Native Indian Rupee currency formatting, no decimals
                         } else {
-                            finalNumStyle.z = '#,##0'; // Standard integer formatting with commas
+                            finalNumStyle.z = '#,##0'; // Standard integer formatting with commas, no decimals
                         }
                         
                         ws[cellRef].s = finalNumStyle;
@@ -5660,14 +5672,48 @@
                 if (R === 0) {
                     ws[cell_ref].s = headerStyle;
                 } else {
-                    const baseStyle = R % 2 === 0 ? { ...altRowStyle } : { ...cellStyle };
-                    // Center align numeric columns
-                    const h = headers[C].toLowerCase();
-                    if (h.includes('rank') || h.includes('%') || h.includes('qty') || h.includes('count')) {
-                        ws[cell_ref].s = { ...baseStyle, alignment: { horizontal: 'center', vertical: 'center' } };
+                    let baseStyle = R % 2 === 0 ? { ...altRowStyle } : { ...cellStyle };
+                    const h = headers[C].toUpperCase();
+                    
+                    if (ws[cell_ref].t === 'n') {
+                        let isPctCol = h.includes('%') || h.includes('CONV');
+                        let isCurrencyCol = h.includes('PRICE') || h.includes('REVENUE') || h.includes('TAX') || h.includes('PROFIT') || h.includes('VALUE');
+                        
+                        baseStyle.alignment = { horizontal: 'center', vertical: 'center' };
+
+                        if (isPctCol) {
+                            baseStyle.z = '0"%"'; // No decimals
+                            const val = ws[cell_ref].v;
+                            let greenThresh = 10, yellowThresh = 5;
+
+                            if (h.includes('VAL CONV')) {
+                                greenThresh = 2; yellowThresh = 1;
+                            } else if (h.includes('LG-AMC QTY CONV') || h.includes('SAMSUNG QTY CONV')) {
+                                greenThresh = 15; yellowThresh = 10;
+                            } else if (h.includes('OSG QTY CONV') || h.includes('QTY CONV')) {
+                                greenThresh = 10; yellowThresh = 5;
+                            }
+
+                            if (val < yellowThresh) {
+                                baseStyle = { ...baseStyle, font: { color: { rgb: "991B1B" }, bold: true }, fill: { fgColor: { rgb: "FEE2E2" } } };
+                            } else if (val >= greenThresh) {
+                                baseStyle = { ...baseStyle, font: { color: { rgb: "166534" }, bold: true }, fill: { fgColor: { rgb: "DCFCE7" } } };
+                            } else {
+                                baseStyle = { ...baseStyle, font: { color: { rgb: "9A3412" }, bold: true }, fill: { fgColor: { rgb: "FEF08A" } } };
+                            }
+                        } else if (isCurrencyCol) {
+                            baseStyle.z = '"₹"#,##0'; // No decimals
+                        } else {
+                            baseStyle.z = '#,##0'; // Commas, no decimals
+                        }
                     } else {
-                        ws[cell_ref].s = { ...baseStyle, alignment: { vertical: 'center' } };
+                        if (h.includes('RANK') || h.includes('QTY') || h.includes('COUNT')) {
+                            baseStyle.alignment = { horizontal: 'center', vertical: 'center' };
+                        } else {
+                            baseStyle.alignment = { vertical: 'center' };
+                        }
                     }
+                    ws[cell_ref].s = baseStyle;
                 }
             }
         }
