@@ -913,6 +913,9 @@
             r.product = mapLGAMCProductCategory(rawProduct);
             r.rawProduct = rawProduct;  // keep original for debugging
             r.category = normalizeProductCategory(strVal(row, mapping.category));
+            r.brand = strVal(row, mapping.brand);
+            r.invoice = strVal(row, mapping.invoice);
+            r.customerName = strVal(row, mapping.customerName);
             r.invoiceDate = getVal(row, mapping.invoiceDate, '');
             r.time = getVal(row, mapping.time, '');
             r.customerNo = strVal(row, mapping.customerNo);
