@@ -813,8 +813,8 @@
             || name.includes('FRONT LOAD') || name.includes('TOP LOAD') || name.includes('FL WM')
             || name.includes('TL WM') || name.includes('F/L') || name.includes('T/L') 
             || /\bSA\b/.test(name) || name.includes('SEMI') || name.includes('FL DRYER') || name.includes('DRYER')) {
-            // Dryer is laundry but separate — keep as SMALL APPLIANCE unless it's a washer
-            if (name.includes('DRYER') && !name.includes('WASHER') && !name.includes('WASHING')) return 'SMALL APPLIANCE';
+            // Dryer is laundry but separate — return DRYER
+            if (name.includes('DRYER') && !name.includes('WASHER') && !name.includes('WASHING')) return 'DRYER';
             return 'WASHING MACHINE';
         }
         // Refrigerator
@@ -836,19 +836,21 @@
             || name.includes('AUDIO') || name.includes('SUBWOOFER') || name.includes('WOOFER')
             || name.includes('HI-FI') || name.includes('HIFI') || name.includes('STEREO')) return 'AUDIO SYSTEM';
 
-        // --- Water Purifier ---
+        // --- Home Appliance (Chimney, Hob, Vacuum, Water Purifier/Heater) ---
         if (/\bWP\b/.test(name) || name.includes('WATER PURIFIER') || name.includes('PURIFIER')
-            || /\bRO\b/.test(name) || name.includes('WATER PURIF')) return 'WATER PURIFIER';
+            || /\bRO\b/.test(name) || name.includes('WATER PURIF')
+            || name.includes('VACUUM') || name.includes('VACCUM') || name.includes('VAC CLEANER')
+            || name.includes('CORDZERO') || name.includes('CORDLESS STICK') || name.includes('ROBO')
+            || name.includes('CHIMNEY') || /\bHOB\b/.test(name) || name.includes('INDUCTION')
+            || name.includes('WATER HEATER') || name.includes('GEYSER')) {
+            return 'HOME APPLIANCE';
+        }
 
-        // --- Dishwasher ---
-        if (/\bDW\b/.test(name) || name.includes('DISHWASHER') || name.includes('DISH WASHER')) return 'DISHWASHER';
+        // --- Dish Washer ---
+        if (/\bDW\b/.test(name) || name.includes('DISHWASHER') || name.includes('DISH WASHER')) return 'DISH WASHER';
 
         // --- Air Purifier ---
         if (name.includes('AIR PURIFIER') || name.includes('AIR PURIF') || /\bAP\b/.test(name)) return 'AIR PURIFIER';
-
-        // --- Vacuum Cleaner ---
-        if (name.includes('VACUUM') || name.includes('VAC CLEANER') || name.includes('CORDZERO')
-            || name.includes('CORDLESS STICK')) return 'VACUUM CLEANER';
 
         // --- Laptop ---
         if (name.includes('LAPTOP') || name.includes('GRAM') || name.includes('NOTEBOOK')) return 'LAPTOP';
