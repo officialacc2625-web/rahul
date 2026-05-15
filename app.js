@@ -3622,7 +3622,83 @@
             { s: { r: lgBlock0, c: 6 }, e: { r: lgBlock0, c: 10 } },
         ];
 
+        // --------------------------------------------------------------------------------
+        // DATA PROCESSING FOR RBM_Overview
+        // --------------------------------------------------------------------------------
+        const rbmStatsMap = {};
+        filteredStats.forEach(staff => {
+            const rbm = staff.rbm || 'Unknown';
+            if (!rbmStatsMap[rbm]) {
+                rbmStatsMap[rbm] = {
+                    pQty: 0, pRev: 0, oQty: 0, oRev: 0,
+                    lgPQty: 0, lgPRev: 0, amcQty: 0, amcRev: 0,
+                    samPQty: 0, samPRev: 0, samQty: 0, samRev: 0
+                };
+            }
+            rbmStatsMap[rbm].pQty += staff.pQty || 0;
+            rbmStatsMap[rbm].oQty += staff.oQty || 0;
+            rbmStatsMap[rbm].pRev += staff.pRev || 0;
+            rbmStatsMap[rbm].oRev += staff.oRev || 0;
+
+            if (staff.products) {
+                staff.products.forEach(p => {
+                    rbmStatsMap[rbm].lgPQty += p.lgProdQty || 0;
+                    rbmStatsMap[rbm].lgPRev += p.lgProdRev || 0;
+                    rbmStatsMap[rbm].amcQty += p.amcQty || 0;
+                    rbmStatsMap[rbm].amcRev += p.amcRev || 0;
+
+                    rbmStatsMap[rbm].samPQty += p.samProdQty || 0;
+                    rbmStatsMap[rbm].samPRev += p.samProdRev || 0;
+                    rbmStatsMap[rbm].samQty += p.samQty || 0;
+                    rbmStatsMap[rbm].samRev += p.samRev || 0;
+                });
+            }
+        });
+
+        const rbmNames = Object.keys(rbmStatsMap).sort();
+        const aoaRbm = [];
+        
+        // Block 1
+        aoaRbm.push(['RBM', 'OSG', '', 'LG-AMC', '', 'SAMSUNG', '']);
+        aoaRbm.push(['', 'QTY', 'SALE', 'QTY', 'SALE', 'QTY', 'SALE']);
+        rbmNames.forEach(rbm => {
+            const r = rbmStatsMap[rbm];
+            aoaRbm.push([rbm, r.oQty, fmt2(r.oRev), r.amcQty, fmt2(r.amcRev), r.samQty, fmt2(r.samRev)]);
+        });
+
+        const block2RowIdxRbm = aoaRbm.length + 1; // 1 empty row
+        aoaRbm.push(['','','','','','','']);
+        
+        // Block 2
+        aoaRbm.push(['RBM', 'OSG', '', 'LG-AMC', '', 'SAMSUNG', '']);
+        aoaRbm.push(['', 'VAL CONV', 'QTY CONV', 'VAL CONV', 'QTY CONV', 'VAL CONV', 'QTY CONV']);
+        rbmNames.forEach(rbm => {
+            const r = rbmStatsMap[rbm];
+            const osgQtyConv = r.pQty > 0 ? (r.oQty / r.pQty) * 100 : 0;
+            const osgValConv = r.pRev > 0 ? (r.oRev / r.pRev) * 100 : 0;
+            const amcQtyConv = r.lgPQty > 0 ? (r.amcQty / r.lgPQty) * 100 : 0;
+            const amcValConv = r.lgPRev > 0 ? (r.amcRev / r.lgPRev) * 100 : 0;
+            const samQtyConv = r.samPQty > 0 ? (r.samQty / r.samPQty) * 100 : 0;
+            const samValConv = r.samPRev > 0 ? (r.samRev / r.samPRev) * 100 : 0;
+            
+            aoaRbm.push([rbm, fmt2(osgValConv), fmt2(osgQtyConv), fmt2(amcValConv), fmt2(amcQtyConv), fmt2(samValConv), fmt2(samQtyConv)]);
+        });
+
+        const wsRbm = XLSX.utils.aoa_to_sheet(aoaRbm);
+        wsRbm['!cols'] = [{ wch: 15 }, { wch: 12 }, { wch: 14 }, { wch: 12 }, { wch: 14 }, { wch: 12 }, { wch: 14 }];
+        if (!wsRbm['!rows']) wsRbm['!rows'] = [];
+        aoaRbm.forEach((_, i) => { wsRbm['!rows'][i] = { hpt: 20 }; });
+        wsRbm['!merges'] = [
+            { s: { r: 0, c: 1 }, e: { r: 0, c: 2 } },
+            { s: { r: 0, c: 3 }, e: { r: 0, c: 4 } },
+            { s: { r: 0, c: 5 }, e: { r: 0, c: 6 } },
+            { s: { r: block2RowIdxRbm, c: 1 }, e: { r: block2RowIdxRbm, c: 2 } },
+            { s: { r: block2RowIdxRbm, c: 3 }, e: { r: block2RowIdxRbm, c: 4 } },
+            { s: { r: block2RowIdxRbm, c: 5 }, e: { r: block2RowIdxRbm, c: 6 } }
+        ];
+
         XLSX.utils.book_append_sheet(wb, ws0, 'WARRANTY_Overview');
+        XLSX.utils.book_append_sheet(wb, wsRbm, 'RBM_Overview');
         XLSX.utils.book_append_sheet(wb, ws1, 'Future_Stores_Overview');
         XLSX.utils.book_append_sheet(wb, ws2, 'Future_Staff_Overview');
         XLSX.utils.book_append_sheet(wb, ws3, 'LG-AMC');
@@ -3685,6 +3761,26 @@
                 }
             }
         }
+
+        // ---- Style RBM_Overview ----
+        const rRange = XLSX.utils.decode_range(wsRbm['!ref']);
+        for (let R = rRange.s.r; R <= rRange.e.r; R++) {
+            for (let C = rRange.s.c; C <= rRange.e.c; C++) {
+                const ref = XLSX.utils.encode_cell({ r: R, c: C });
+                if (!wsRbm[ref]) wsRbm[ref] = { t: 's', v: '' };
+                const isTitle = (R === 0 || R === block2RowIdxRbm);
+                const isSubHdr = (R === 1 || R === block2RowIdxRbm + 1);
+                const isEmpty = (R === block2RowIdxRbm - 1);
+                if (isTitle) wsRbm[ref].s = sectionTitleStyle;
+                else if (isSubHdr) wsRbm[ref].s = subHeaderStyle;
+                else if (isEmpty) wsRbm[ref].s = emptyStyle;
+                else {
+                    const ri = R < block2RowIdxRbm ? R - 2 : R - (block2RowIdxRbm + 2);
+                    wsRbm[ref].s = { ...(ri % 2 === 1 ? rowStyleAlt : rowStyle), alignment: { horizontal: C === 0 ? 'left' : 'center', vertical: 'center' } };
+                }
+            }
+        }
+        wsRbm['!views'] = [{ state: 'frozen', ySplit: 2 }];
 
         // Add Freeze Panes and Auto-Filters
         ws1['!views'] = [{ state: 'frozen', ySplit: 2 }];
