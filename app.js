@@ -746,7 +746,7 @@
             r.bdm = strVal(row, mapping.bdm);
             r.staff = strVal(row, mapping.staff);
             r.product = strVal(row, mapping.product);
-            r.category = strVal(row, mapping.category);
+            r.category = normalizeProductCategory(strVal(row, mapping.category));
             r.brand = strVal(row, mapping.brand);
             r.invoice = strVal(row, mapping.invoice);
             r.customerName = strVal(row, mapping.customerName);
@@ -795,6 +795,31 @@
 
         // If no abbreviation matched, return as-is (uppercase for consistency)
         return rawName;
+    }
+
+    // ---- UNIVERSAL CATEGORY NORMALIZER (for Product & OSG files) ----
+    // Maps raw category column values → one of the 9 standard categories
+    function normalizeProductCategory(raw) {
+        if (!raw) return raw;
+        const c = raw.toUpperCase().trim();
+        if (c.includes('MICROWAVE') || c.includes('MWO') || c.includes('OVEN')) return 'MICROWAVE OVEN';
+        if (c.includes('WASHING MACHINE') || c.includes('WASHER') || /\bWM\b/.test(c)) return 'WASHING MACHINE';
+        if (c.includes('DRYER')) return 'DRYER';
+        if (c.includes('REFRIGERATOR') || c.includes('FRIDGE') || c.includes('FROST FREE')
+            || c.includes('DIRECT COOL') || c.includes('SIDE BY SIDE') || /\bREF\b/.test(c)) return 'REFRIGERATOR';
+        if (c.includes('AIR CONDITIONER') || c.includes('SPLIT') || c.includes('WINDOW AC')
+            || /\bAC\b/.test(c)) return 'AC';
+        if (c.includes('TELEVISION') || c.includes('TV') || c.includes('LED') || c.includes('OLED')
+            || c.includes('MONITOR') || c.includes('DISPLAY')) return 'TV';
+        if (c.includes('AUDIO') || c.includes('SOUND') || c.includes('SPEAKER')
+            || c.includes('HOME THEATER') || c.includes('HOME THEATRE')) return 'AUDIO SYSTEM';
+        if (c.includes('CHIMNEY') || c.includes('HOB') || c.includes('INDUCTION')
+            || c.includes('VACUUM') || c.includes('VACCUM') || c.includes('WATER PURIFIER')
+            || c.includes('PURIFIER') || c.includes('WATER HEATER') || c.includes('GEYSER')
+            || c.includes('HOME APPLIANCE')) return 'HOME APPLIANCE';
+        if (c.includes('DISH WASHER') || c.includes('DISHWASHER')) return 'DISH WASHER';
+        // Return the original if not matched — keeps custom categories intact
+        return raw;
     }
 
     // ---- LG-AMC PRODUCT NAME NORMALIZER ----
@@ -866,7 +891,7 @@
             r.branch = strVal(row, mapping.branch);
             r.storeCode = strVal(row, mapping.storeCode);
             r.product = strVal(row, mapping.product);
-            r.category = strVal(row, mapping.category);
+            r.category = normalizeProductCategory(strVal(row, mapping.category));
             r.brand = strVal(row, mapping.brand);
             r.soldPrice = num(getVal(row, mapping.soldPrice, 0));
             r.qty = num(getVal(row, mapping.qty, 0));
@@ -887,10 +912,7 @@
             const rawProduct = strVal(row, mapping.product);
             r.product = mapLGAMCProductCategory(rawProduct);
             r.rawProduct = rawProduct;  // keep original for debugging
-            r.category = strVal(row, mapping.category);
-            r.brand = strVal(row, mapping.brand);
-            r.invoice = strVal(row, mapping.invoice);
-            r.customerName = strVal(row, mapping.customerName);
+            r.category = normalizeProductCategory(strVal(row, mapping.category));
             r.invoiceDate = getVal(row, mapping.invoiceDate, '');
             r.time = getVal(row, mapping.time, '');
             r.customerNo = strVal(row, mapping.customerNo);
@@ -924,7 +946,7 @@
             const rawProduct = strVal(row, mapping.product);
             r.product = mapSamsungProductCategory(rawProduct);
             r.rawProduct = rawProduct;  // keep original for debugging
-            r.category = strVal(row, mapping.category);
+            r.category = normalizeProductCategory(strVal(row, mapping.category));
             r.brand = strVal(row, mapping.brand);
             r.soldPrice = num(getVal(row, mapping.soldPrice, 0));
             r.qty = num(getVal(row, mapping.qty, 0));
