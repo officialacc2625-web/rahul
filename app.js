@@ -6621,10 +6621,16 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
             $('fcKpiGrid').style.display = 'block';
         }
 
-        document.querySelector('[data-section="forecast-section"]').addEventListener('click', () => {
-            setTimeout(renderForecastPage, 80);
-        });
-        $('btnForecastCalc').addEventListener('click', renderForecastPage);
+        // Expose globally so onclick attribute in HTML can call it
+        window.renderForecastPage = renderForecastPage;
+
+        // Nav click — auto-render when switching to this page
+        var fcNavBtn = document.querySelector('[data-section="forecast-section"]');
+        if (fcNavBtn) fcNavBtn.addEventListener('click', function() { setTimeout(renderForecastPage, 100); });
+
+        // Calculate button — use getElementById directly (most reliable)
+        var fcCalcBtn = document.getElementById('btnForecastCalc');
+        if (fcCalcBtn) fcCalcBtn.addEventListener('click', renderForecastPage);
     })();
 
     // ============================================================
