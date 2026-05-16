@@ -1833,13 +1833,18 @@
             });
         }
 
+        var sortedStaff = staffStats.filter(s => s.pQty > 0).sort((a, b) => b.qtyConv - a.qtyConv);
+        var bestStaff = sortedStaff.slice(0, 15);
+        var worstStaff = sortedStaff.slice(-15).reverse();
+
         return {
             Brands: Object.keys(brandMap).map(k => ({ Brand: k, ProductsSold: brandMap[k].pQty, OsgSold: brandMap[k].oQty, ConvPercent: (brandMap[k].pQty>0 ? (brandMap[k].oQty/brandMap[k].pQty*100).toFixed(1) : 0) })),
             Categories: Object.keys(catMap).map(k => ({ Category: k, ProductsSold: catMap[k].pQty, OsgSold: catMap[k].oQty, ConvPercent: (catMap[k].pQty>0 ? (catMap[k].oQty/catMap[k].pQty*100).toFixed(1) : 0) })),
             Branches: Object.keys(branchMap).map(k => ({ Branch: k, ProductsSold: branchMap[k].pQty, OsgSold: branchMap[k].oQty, ConvPercent: (branchMap[k].pQty>0 ? (branchMap[k].oQty/branchMap[k].pQty*100).toFixed(1) : 0) })),
             RBMs: Object.keys(rbmMap).map(k => ({ RBM: k, ProductsSold: rbmMap[k].pQty, OsgSold: rbmMap[k].oQty, ConvPercent: (rbmMap[k].pQty>0 ? (rbmMap[k].oQty/rbmMap[k].pQty*100).toFixed(1) : 0) })),
             BDMs: Object.keys(bdmMap).map(k => ({ BDM: k, ProductsSold: bdmMap[k].pQty, OsgSold: bdmMap[k].oQty, ConvPercent: (bdmMap[k].pQty>0 ? (bdmMap[k].oQty/bdmMap[k].pQty*100).toFixed(1) : 0) })),
-            Staff: staffStats.map(s => ({ StaffName: s.name, Branch: s.branch, ProductsSold: s.pQty, OsgSold: s.oQty, ConvPercent: s.qtyConv.toFixed(1) })),
+            Top15_Best_Staff: bestStaff.map(s => ({ StaffName: s.name, Branch: s.branch, ProductsSold: s.pQty, OsgSold: s.oQty, ConvPercent: s.qtyConv.toFixed(1) })),
+            Top15_Worst_Staff: worstStaff.map(s => ({ StaffName: s.name, Branch: s.branch, ProductsSold: s.pQty, OsgSold: s.oQty, ConvPercent: s.qtyConv.toFixed(1) })),
             MissingCRM_Count: missingFollowups,
             CRM_Callers: callerStats
         };
