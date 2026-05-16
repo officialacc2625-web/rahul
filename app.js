@@ -6552,7 +6552,8 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
             'deepseek-ai/deepseek-r1'
         ];
 
-        var endpoint = 'https://integrate.api.nvidia.com/v1/chat/completions';
+        // Route through a CORS proxy because NVIDIA NIM explicitly blocks direct browser fetch requests
+        var endpoint = 'https://corsproxy.io/?' + encodeURIComponent('https://integrate.api.nvidia.com/v1/chat/completions');
         var aiText = null;
         var lastErr = null;
 
