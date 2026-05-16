@@ -6475,9 +6475,13 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
             const daysPassed = Math.min(parseInt($('fcDaysPassed').value) || 0, totalDays);
             const daysLeft   = Math.max(totalDays - daysPassed, 0);
 
+            // Use filtered data if available, otherwise fall back to full dataset
+            const activeProd = filteredProduct.length > 0 ? filteredProduct : productData;
+            const activeOSG  = filteredOSG.length > 0 ? filteredOSG : osgData;
+
             // Current stats
-            const totalPQty = filteredProduct.reduce((s, r) => s + r.qty, 0);
-            const totalOQty = filteredOSG.reduce((s, r) => s + r.qty, 0);
+            const totalPQty = activeProd.reduce((s, r) => s + r.qty, 0);
+            const totalOQty = activeOSG.reduce((s, r) => s + r.qty, 0);
             const currentConv = totalPQty > 0 ? (totalOQty / totalPQty) * 100 : 0;
 
             // How many OSG units are needed to hit the target?
@@ -6567,12 +6571,12 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
 
             // RBM breakdown table
             const rbmMap = {};
-            filteredProduct.forEach(r => {
+            activeProd.forEach(r => {
                 if (!r.rbm) return;
                 if (!rbmMap[r.rbm]) rbmMap[r.rbm] = { pQty: 0, oQty: 0 };
                 rbmMap[r.rbm].pQty += r.qty;
             });
-            filteredOSG.forEach(r => {
+            activeOSG.forEach(r => {
                 const match = productData.find(p => p.invoice === r.invoice);
                 const rbm = match ? match.rbm : null;
                 if (rbm && rbmMap[rbm]) rbmMap[rbm].oQty += r.qty;
