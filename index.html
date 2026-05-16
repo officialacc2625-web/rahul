@@ -116,6 +116,16 @@
                 </svg>
                 <span>Top Staff</span>
             </a>
+            <a href="#" class="nav-item" data-section="forecast-section" id="nav-forecast">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="url(#navGrad)" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="20" x2="18" y2="10" />
+                    <line x1="12" y1="20" x2="12" y2="4" />
+                    <line x1="6" y1="20" x2="6" y2="14" />
+                    <polyline points="2 20 22 20" />
+                </svg>
+                <span>Target & Forecast</span>
+            </a>
             <a href="#" class="nav-item" data-section="future-section" id="nav-future">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="url(#navGrad)" stroke-width="2.5"
                     stroke-linecap="round" stroke-linejoin="round">
@@ -709,6 +719,69 @@
                             <p>Generate reports first, then visit this page.</p>
                         </div>
                     </div>
+                </div>
+            </div>
+        </section>
+        <!-- Target & Forecast Section -->
+        <section class="content-section" id="forecast-section">
+            <div class="lowconv-container">
+                <div style="display:flex;align-items:center;gap:14px;margin-bottom:28px;flex-wrap:wrap;">
+                    <div style="width:44px;height:44px;background:linear-gradient(135deg,#6366f1,#4f46e5);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><polyline points="2 20 22 20"/></svg>
+                    </div>
+                    <div>
+                        <h2 style="font-size:1.4rem;font-weight:800;color:var(--text-primary);margin:0 0 2px 0;">Target &amp; Run-Rate Forecast</h2>
+                        <p style="font-size:0.85rem;color:var(--text-muted);margin:0;">Set your monthly conversion target and see exactly how many OSG sales you need each day to hit it.</p>
+                    </div>
+                </div>
+                <!-- Target Input Card -->
+                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:24px;">
+                    <h3 style="font-size:0.95rem;font-weight:700;color:var(--text-primary);margin:0 0 16px 0;letter-spacing:0.3px;">&#9881;&#65039; Configure Monthly Target</h3>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;">
+                        <div class="lowconv-control-group" style="margin:0;">
+                            <label for="fcTargetConv">Target Qty Conv %</label>
+                            <input type="number" id="fcTargetConv" value="60" min="1" max="100" step="0.5" style="font-size:1rem;font-weight:700;color:#6366f1;">
+                        </div>
+                        <div class="lowconv-control-group" style="margin:0;">
+                            <label for="fcTotalDays">Working Days in Month</label>
+                            <input type="number" id="fcTotalDays" value="26" min="1" max="31" step="1">
+                        </div>
+                        <div class="lowconv-control-group" style="margin:0;">
+                            <label for="fcDaysPassed">Days Passed So Far</label>
+                            <input type="number" id="fcDaysPassed" value="16" min="0" max="31" step="1">
+                        </div>
+                        <div style="display:flex;align-items:flex-end;">
+                            <button class="btn-apply-filter" id="btnForecastCalc" style="width:100%;justify-content:center;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                                Calculate Forecast
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- KPI Results -->
+                <div id="fcKpiGrid" style="display:none;">
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px;" id="fcKpiCards"></div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
+                        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:24px;display:flex;flex-direction:column;align-items:center;">
+                            <h3 style="font-size:0.9rem;font-weight:700;color:var(--text-muted);margin:0 0 16px 0;text-transform:uppercase;letter-spacing:0.5px;">Conversion Progress</h3>
+                            <div style="position:relative;width:200px;height:200px;">
+                                <canvas id="fcDonutChart"></canvas>
+                                <div id="fcDonutLabel" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;"></div>
+                            </div>
+                        </div>
+                        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:24px;">
+                            <h3 style="font-size:0.9rem;font-weight:700;color:var(--text-muted);margin:0 0 20px 0;text-transform:uppercase;letter-spacing:0.5px;">Daily OSG Quota Required</h3>
+                            <div id="fcQuotaDetails"></div>
+                        </div>
+                    </div>
+                    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:24px;">
+                        <h3 style="font-size:0.95rem;font-weight:700;color:var(--text-primary);margin:0 0 16px 0;">&#128202; RBM-Wise Target Gap Analysis</h3>
+                        <div id="fcRbmTable"></div>
+                    </div>
+                </div>
+                <div id="fcNoData" style="text-align:center;padding:60px;color:var(--text-muted);">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:16px;opacity:0.4;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><polyline points="2 20 22 20"/></svg>
+                    <p>Upload data and generate reports first, then configure your target above.</p>
                 </div>
             </div>
         </section>

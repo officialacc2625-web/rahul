@@ -6456,6 +6456,176 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
             alert('Please enter a valid API key.');
         }
     });
+    // ============================================================
+    // ---- TARGET & FORECAST ENGINE ----
+    // ============================================================
+    (function initForecast() {
+        let fcDonutChartInstance = null;
+
+        function renderForecastPage() {
+            if (productData.length === 0) {
+                $('fcKpiGrid').style.display = 'none';
+                $('fcNoData').style.display = 'block';
+                return;
+            }
+            $('fcNoData').style.display = 'none';
+
+            const targetConv = parseFloat($('fcTargetConv').value) || 60;
+            const totalDays  = parseInt($('fcTotalDays').value) || 26;
+            const daysPassed = Math.min(parseInt($('fcDaysPassed').value) || 0, totalDays);
+            const daysLeft   = Math.max(totalDays - daysPassed, 0);
+
+            // Current stats
+            const totalPQty = filteredProduct.reduce((s, r) => s + r.qty, 0);
+            const totalOQty = filteredOSG.reduce((s, r) => s + r.qty, 0);
+            const currentConv = totalPQty > 0 ? (totalOQty / totalPQty) * 100 : 0;
+
+            // How many OSG units are needed to hit the target?
+            const targetOQty = Math.ceil((targetConv / 100) * totalPQty);
+            const osgGap = Math.max(targetOQty - totalOQty, 0);
+            const dailyRequired = daysLeft > 0 ? Math.ceil(osgGap / daysLeft) : 0;
+
+            // Status colour
+            const onTrack = currentConv >= targetConv;
+            const statusColor = onTrack ? '#10b981' : (currentConv >= targetConv * 0.8 ? '#f59e0b' : '#ef4444');
+            const statusLabel = onTrack ? '🎯 On Target!' : (daysLeft === 0 ? '⛔ Month Ended' : '⚠️ Behind Target');
+
+            // KPI cards
+            const kpiDefs = [
+                { label: 'Current Conv %', value: currentConv.toFixed(1) + '%', color: statusColor },
+                { label: 'Target Conv %',  value: targetConv.toFixed(1) + '%',  color: '#6366f1' },
+                { label: 'OSG Gap',        value: osgGap + ' units',             color: '#ef4444' },
+                { label: 'Days Remaining', value: daysLeft + ' days',            color: '#3b82f6' },
+                { label: 'Daily Quota',    value: dailyRequired + ' OSG/day',    color: '#f97316' },
+                { label: 'Status',         value: statusLabel,                   color: statusColor },
+            ];
+            $('fcKpiCards').innerHTML = kpiDefs.map(k => `
+                <div style="background:var(--bg-card);border:1px solid var(--border);border-top:4px solid ${k.color};border-radius:12px;padding:18px 16px;">
+                    <div style="font-size:0.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">${k.label}</div>
+                    <div style="font-size:1.35rem;font-weight:800;color:${k.color};">${k.value}</div>
+                </div>`).join('');
+
+            // Donut chart
+            if (fcDonutChartInstance) { fcDonutChartInstance.destroy(); fcDonutChartInstance = null; }
+            const donutCtx = document.getElementById('fcDonutChart');
+            if (donutCtx) {
+                const achieved = Math.min(currentConv, targetConv);
+                const remaining = Math.max(targetConv - currentConv, 0);
+                const overshoot = Math.max(currentConv - targetConv, 0);
+                fcDonutChartInstance = new Chart(donutCtx.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        datasets: [{
+                            data: onTrack ? [targetConv, overshoot, 100 - currentConv] : [achieved, remaining, 100 - targetConv],
+                            backgroundColor: onTrack
+                                ? ['#10b981', '#6ee7b7', 'rgba(255,255,255,0.05)']
+                                : ['#6366f1', '#ef4444', 'rgba(255,255,255,0.05)'],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        cutout: '75%', responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false }, tooltip: { enabled: false } }
+                    }
+                });
+                $('fcDonutLabel').innerHTML = `
+                    <div style="font-size:1.6rem;font-weight:900;color:${statusColor};">${currentConv.toFixed(1)}%</div>
+                    <div style="font-size:0.7rem;color:var(--text-muted);font-weight:600;">of ${targetConv}% target</div>`;
+            }
+
+            // Daily quota detail panel
+            $('fcQuotaDetails').innerHTML = `
+                <div style="margin-bottom:14px;">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                        <span style="font-size:0.85rem;color:var(--text-muted);">OSG Sold so far</span>
+                        <span style="font-weight:700;color:var(--text-primary);">${totalOQty.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                        <span style="font-size:0.85rem;color:var(--text-muted);">OSG Needed for ${targetConv}%</span>
+                        <span style="font-weight:700;color:#6366f1;">${targetOQty.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;margin-bottom:16px;">
+                        <span style="font-size:0.85rem;color:var(--text-muted);">OSG Gap Remaining</span>
+                        <span style="font-weight:700;color:#ef4444;">${osgGap.toLocaleString('en-IN')}</span>
+                    </div>
+                </div>
+                <div style="background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);border-radius:10px;padding:14px;text-align:center;">
+                    <div style="font-size:0.75rem;color:#6366f1;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Daily Target</div>
+                    <div style="font-size:2.2rem;font-weight:900;color:${daysLeft > 0 ? '#f97316' : '#ef4444'};">${daysLeft > 0 ? dailyRequired : 'N/A'}</div>
+                    <div style="font-size:0.8rem;color:var(--text-muted);">OSG units/day over ${daysLeft} remaining days</div>
+                </div>
+                <div style="margin-top:14px;">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                        <span style="font-size:0.8rem;color:var(--text-muted);">Monthly Progress</span>
+                        <span style="font-size:0.8rem;font-weight:700;color:var(--text-primary);">${Math.round(Math.min(currentConv/targetConv,1)*100)}%</span>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.07);border-radius:8px;height:8px;overflow:hidden;">
+                        <div style="height:100%;border-radius:8px;background:${statusColor};width:${Math.min(currentConv/targetConv*100,100).toFixed(1)}%;transition:width 0.6s ease;"></div>
+                    </div>
+                </div>`;
+
+            // RBM breakdown table
+            const rbmMap = {};
+            filteredProduct.forEach(r => {
+                if (!r.rbm) return;
+                if (!rbmMap[r.rbm]) rbmMap[r.rbm] = { pQty: 0, oQty: 0 };
+                rbmMap[r.rbm].pQty += r.qty;
+            });
+            filteredOSG.forEach(r => {
+                const match = productData.find(p => p.invoice === r.invoice);
+                const rbm = match ? match.rbm : null;
+                if (rbm && rbmMap[rbm]) rbmMap[rbm].oQty += r.qty;
+            });
+
+            const rbmRows = Object.keys(rbmMap).map(rbm => {
+                const { pQty, oQty } = rbmMap[rbm];
+                const conv = pQty > 0 ? (oQty / pQty) * 100 : 0;
+                const rbmTargetOQty = Math.ceil((targetConv / 100) * pQty);
+                const rbmGap = Math.max(rbmTargetOQty - oQty, 0);
+                const rbmDaily = daysLeft > 0 ? Math.ceil(rbmGap / daysLeft) : 0;
+                const isOnTrack = conv >= targetConv;
+                return { rbm, pQty, oQty, conv, rbmGap, rbmDaily, isOnTrack };
+            }).sort((a, b) => b.conv - a.conv);
+
+            $('fcRbmTable').innerHTML = `
+                <div class="table-wrapper" style="overflow:auto;">
+                    <table class="data-table" style="min-width:600px;">
+                        <thead><tr>
+                            <th>RBM</th>
+                            <th style="text-align:right;">Products Sold</th>
+                            <th style="text-align:right;">OSG Sold</th>
+                            <th style="text-align:right;">Conv %</th>
+                            <th style="text-align:right;">OSG Gap</th>
+                            <th style="text-align:right;">OSG/Day Needed</th>
+                            <th style="text-align:center;">Status</th>
+                        </tr></thead>
+                        <tbody>
+                            ${rbmRows.map((r, i) => `<tr style="background:${i%2===0?'transparent':'rgba(255,255,255,0.02)'};">
+                                <td style="font-weight:600;color:var(--text-primary);">${r.rbm}</td>
+                                <td style="text-align:right;">${r.pQty.toLocaleString('en-IN')}</td>
+                                <td style="text-align:right;">${r.oQty.toLocaleString('en-IN')}</td>
+                                <td style="text-align:right;font-weight:700;color:${r.isOnTrack?'#10b981':'#ef4444'};">${r.conv.toFixed(1)}%</td>
+                                <td style="text-align:right;color:${r.rbmGap>0?'#ef4444':'#10b981'};font-weight:600;">${r.rbmGap > 0 ? r.rbmGap.toLocaleString('en-IN') : '✓ Done'}</td>
+                                <td style="text-align:right;font-weight:700;color:${r.rbmDaily>0?'#f97316':'#10b981'};">${r.rbmDaily > 0 ? r.rbmDaily : '-'}</td>
+                                <td style="text-align:center;"><span style="padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:700;background:${r.isOnTrack?'rgba(16,185,129,0.12)':'rgba(239,68,68,0.12)'};color:${r.isOnTrack?'#10b981':'#ef4444'};">${r.isOnTrack?'On Track':'Behind'}</span></td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>`;
+
+            $('fcKpiGrid').style.display = 'block';
+        }
+
+        document.querySelector('[data-section="forecast-section"]').addEventListener('click', () => {
+            setTimeout(renderForecastPage, 80);
+        });
+        $('btnForecastCalc').addEventListener('click', renderForecastPage);
+    })();
+
+    // ============================================================
+    // ---- AI CHAT ----
+    // ============================================================
 
     // Simple markdown parser for AI responses
     function parseMarkdown(text) {
