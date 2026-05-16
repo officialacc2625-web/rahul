@@ -6513,7 +6513,7 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
     async function sendMessageToAI(userMessage) {
         var apiKey = localStorage.getItem('nova_ai_api_key');
         if (!apiKey) {
-            addMessage('I need an NVIDIA NIM API Key to work. Click the ⚙️ Settings icon above to add it.', 'error');
+            addMessage('I need an OpenRouter API Key to work. Click the ⚙️ Settings icon above to add it.', 'error');
             return;
         }
         addMessage(userMessage, 'user');
@@ -6546,14 +6546,15 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
             max_tokens: 2000
         };
 
+        // OpenRouter.ai - Single key, 60+ models, natively supports browser CORS
         var models = [
-            'meta/llama-3.1-70b-instruct',
-            'moonshotai/kimi-k2.6',
-            'deepseek-ai/deepseek-r1'
+            'meta-llama/llama-3.1-70b-instruct:free',
+            'microsoft/phi-3-medium-128k-instruct:free',
+            'mistralai/mistral-7b-instruct:free'
         ];
 
-        // Use direct NVIDIA NIM endpoint (NVIDIA supports CORS, proxy is blocked by corporate firewalls)
-        var endpoint = 'https://integrate.api.nvidia.com/v1/chat/completions';
+        // Use direct OpenRouter endpoint (supports Access-Control-Allow-Origin: *)
+        var endpoint = 'https://openrouter.ai/api/v1/chat/completions';
         var aiText = null;
         var lastErr = null;
 
