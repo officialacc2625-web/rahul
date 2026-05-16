@@ -6548,13 +6548,8 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
         // Deep Search integration
         var isDeepSearch = document.getElementById('aiDeepSearchToggle') && document.getElementById('aiDeepSearchToggle').checked;
         if (isDeepSearch) {
-            var rawOsg = osgData.map(r => {
-                var match = productData.find(p => p.invoice === r.invoice);
-                return { invoice: r.invoice, staff: match ? match.staff : 'Unknown', brand: r.brand, cat: r.category, qty: r.qty, rev: r.rev };
-            });
             var rawData = {
-                products: productData.map(r => ({ invoice: r.invoice, date: r.date, staff: r.staff, branch: r.branch, rbm: r.rbm, brand: r.brand, cat: r.category, qty: r.qty, rev: r.rev })),
-                osg: rawOsg,
+                Full_Staff_Stats: typeof window.portalStaffStats !== 'undefined' ? window.portalStaffStats : [],
                 missingCRM: typeof missedUnique !== 'undefined' ? missedUnique : [],
                 crmLogs: typeof coStatusMap !== 'undefined' ? coStatusMap : {}
             };
