@@ -1762,29 +1762,47 @@
         var catMap = {};
         var branchMap = {};
         var brandMap = {};
+        var rbmMap = {};
+        var bdmMap = {};
         
         productData.forEach(r => {
             var c = r.category || 'Unknown';
             var b = r.branch || 'Unknown';
             var br = r.brand || 'Unknown';
+            var rbm = r.rbm || 'Unknown';
+            var bdm = r.bdm || 'Unknown';
+
             if (!catMap[c]) catMap[c] = { pQty: 0, oQty: 0 };
             if (!branchMap[b]) branchMap[b] = { pQty: 0, oQty: 0 };
             if (!brandMap[br]) brandMap[br] = { pQty: 0, oQty: 0 };
+            if (!rbmMap[rbm]) rbmMap[rbm] = { pQty: 0, oQty: 0 };
+            if (!bdmMap[bdm]) bdmMap[bdm] = { pQty: 0, oQty: 0 };
+
             catMap[c].pQty += r.qty || 0;
             branchMap[b].pQty += r.qty || 0;
             brandMap[br].pQty += r.qty || 0;
+            rbmMap[rbm].pQty += r.qty || 0;
+            bdmMap[bdm].pQty += r.qty || 0;
         });
 
         osgData.forEach(r => {
             var c = r.category || 'Unknown';
             var b = r.branch || 'Unknown';
             var br = r.brand || 'Unknown';
+            var rbm = r.rbm || 'Unknown';
+            var bdm = r.bdm || 'Unknown';
+
             if (!catMap[c]) catMap[c] = { pQty: 0, oQty: 0 };
             if (!branchMap[b]) branchMap[b] = { pQty: 0, oQty: 0 };
             if (!brandMap[br]) brandMap[br] = { pQty: 0, oQty: 0 };
+            if (!rbmMap[rbm]) rbmMap[rbm] = { pQty: 0, oQty: 0 };
+            if (!bdmMap[bdm]) bdmMap[bdm] = { pQty: 0, oQty: 0 };
+
             catMap[c].oQty += r.qty || 0;
             branchMap[b].oQty += r.qty || 0;
             brandMap[br].oQty += r.qty || 0;
+            rbmMap[rbm].oQty += r.qty || 0;
+            bdmMap[bdm].oQty += r.qty || 0;
         });
 
         var staffStats = window.portalStaffStats;
@@ -1796,11 +1814,16 @@
             }
         }
 
+        var missingFollowups = typeof missedUnique !== 'undefined' ? missedUnique.length : 0;
+
         return {
             Brands: Object.keys(brandMap).map(k => ({ Brand: k, ProductsSold: brandMap[k].pQty, OsgSold: brandMap[k].oQty, ConvPercent: (brandMap[k].pQty>0 ? (brandMap[k].oQty/brandMap[k].pQty*100).toFixed(1) : 0) })),
             Categories: Object.keys(catMap).map(k => ({ Category: k, ProductsSold: catMap[k].pQty, OsgSold: catMap[k].oQty, ConvPercent: (catMap[k].pQty>0 ? (catMap[k].oQty/catMap[k].pQty*100).toFixed(1) : 0) })),
             Branches: Object.keys(branchMap).map(k => ({ Branch: k, ProductsSold: branchMap[k].pQty, OsgSold: branchMap[k].oQty, ConvPercent: (branchMap[k].pQty>0 ? (branchMap[k].oQty/branchMap[k].pQty*100).toFixed(1) : 0) })),
-            Staff: staffStats.map(s => ({ StaffName: s.name, Branch: s.branch, ProductsSold: s.pQty, OsgSold: s.oQty, ConvPercent: s.qtyConv.toFixed(1) }))
+            RBMs: Object.keys(rbmMap).map(k => ({ RBM: k, ProductsSold: rbmMap[k].pQty, OsgSold: rbmMap[k].oQty, ConvPercent: (rbmMap[k].pQty>0 ? (rbmMap[k].oQty/rbmMap[k].pQty*100).toFixed(1) : 0) })),
+            BDMs: Object.keys(bdmMap).map(k => ({ BDM: k, ProductsSold: bdmMap[k].pQty, OsgSold: bdmMap[k].oQty, ConvPercent: (bdmMap[k].pQty>0 ? (bdmMap[k].oQty/bdmMap[k].pQty*100).toFixed(1) : 0) })),
+            Staff: staffStats.map(s => ({ StaffName: s.name, Branch: s.branch, ProductsSold: s.pQty, OsgSold: s.oQty, ConvPercent: s.qtyConv.toFixed(1) })),
+            MissingCRM_Count: missingFollowups
         };
     };
 
@@ -6455,12 +6478,14 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
         var vConv = (document.getElementById('kpiValConv') || {}).textContent || 'N/A';
         var amcQty = (document.getElementById('kpiAmcTotal') || {}).textContent || 'N/A';
         var amcConv = (document.getElementById('kpiAmcConv') || {}).textContent || 'N/A';
+        var samQty = (document.getElementById('kpiSamsungTotal') || {}).textContent || 'N/A';
+        var samConv = (document.getElementById('kpiSamsungConv') || {}).textContent || 'N/A';
 
         var extendedContext = '';
         if (window.getGodModeContextData) {
             try {
                 var fullData = window.getGodModeContextData();
-                extendedContext = '\n\nDETAILED AGGREGATE DATA (Use this to answer specific questions about staff, branches, or categories):\n' + JSON.stringify(fullData);
+                extendedContext = '\n\nDETAILED AGGREGATE DATA (Use this to answer specific questions about staff, branches, RBMs, BDMs, missing CRM counts, or categories):\n' + JSON.stringify(fullData);
             } catch (e) {
                 console.error("Failed to build god mode context", e);
             }
@@ -6475,7 +6500,9 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
             'Qty Conversion Rate: ' + qConv + ', ' +
             'Value Conversion Rate: ' + vConv + ', ' +
             'LG AMC Qty: ' + amcQty + ', ' +
-            'LG AMC Conversion: ' + amcConv + '. ' +
+            'LG AMC Conversion: ' + amcConv + ', ' +
+            'Samsung Qty: ' + samQty + ', ' +
+            'Samsung Conversion: ' + samConv + '. ' +
             extendedContext + '\n\n' +
             'Answer questions about this data clearly and concisely using markdown formatting. ' +
             'Provide actionable suggestions when asked about improvements or losses. ' +
