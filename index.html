@@ -1346,9 +1346,23 @@
                 Hello! I am your AI Business Analyst. I have access to all your currently uploaded dashboard data. How can I help you today?
             </div>
         </div>
-        <div class="ai-chat-input-area">
-            <input type="text" id="aiChatInput" placeholder="Ask about sales, losses, or conversions..." autocomplete="off">
-            <button id="aiChatSendBtn">➤</button>
+        <div class="ai-chat-input-area" style="flex-direction: column; gap: 8px;">
+            <div style="display: flex; gap: 8px; width: 100%;">
+                <input type="text" id="aiChatInput" placeholder="Ask about sales, losses, or conversions..." autocomplete="off" style="flex: 1;">
+                <button id="aiChatSendBtn">➤</button>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; padding: 0 4px;">
+                <label class="switch" style="position: relative; display: inline-block; width: 34px; height: 20px;">
+                    <input type="checkbox" id="aiDeepSearchToggle" style="opacity: 0; width: 0; height: 0;">
+                    <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px;"></span>
+                </label>
+                <span style="font-size: 0.8rem; color: #64748b; font-weight: 500;">Deep Search (Full Dataset)</span>
+                <style>
+                    .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+                    input:checked + .slider { background-color: #10b981; }
+                    input:checked + .slider:before { transform: translateX(14px); }
+                </style>
+            </div>
         </div>
     </div>
 
@@ -1361,10 +1375,10 @@
             </div>
             <div class="modal-body">
                 <div class="form-group" style="margin-bottom:15px;">
-                    <label style="font-weight:600; font-size:0.9rem; color:#334155;">Google Gemini API Key:</label>
-                    <input type="password" id="aiApiKeyInput" placeholder="AIzaSy..." style="width:100%; padding:10px; margin-top:5px; border:1px solid #CBD5E1; border-radius:6px; font-size:14px;">
+                    <label style="font-weight:600; font-size:0.9rem; color:#334155;">NVIDIA NIM API Key:</label>
+                    <input type="password" id="aiApiKeyInput" placeholder="nvapi-..." style="width:100%; padding:10px; margin-top:5px; border:1px solid #CBD5E1; border-radius:6px; font-size:14px;">
                     <p style="font-size:12px; color:#64748B; margin-top:10px; line-height:1.4;">
-                        Get a free key from <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#2563EB;">Google AI Studio</a>. This key is saved securely in your browser's local storage and is never sent to any backend server.
+                        Get a free key from <a href="https://build.nvidia.com/" target="_blank" style="color:#2563EB;">NVIDIA NIM</a>. This key is saved securely in your browser's local storage and is never sent to any backend server.
                     </p>
                 </div>
                 <button id="saveAiKeyBtn" class="btn btn-primary" style="width:100%;">Save Key</button>

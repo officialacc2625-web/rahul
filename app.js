@@ -6509,11 +6509,11 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
             'Keep answers under 200 words unless detail is specifically requested.';
     }
 
-    // Call Gemini API
+    // Call NVIDIA NIM API with Fallback
     async function sendMessageToAI(userMessage) {
         var apiKey = localStorage.getItem('nova_ai_api_key');
         if (!apiKey) {
-            addMessage('I need a Gemini API Key to work. Click the \u2699\ufe0f Settings icon above to add it.', 'error');
+            addMessage('I need an NVIDIA NIM API Key to work. Click the ⚙️ Settings icon above to add it.', 'error');
             return;
         }
         addMessage(userMessage, 'user');
@@ -6521,56 +6521,77 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
         showTypingIndicator();
 
         var systemContext = buildContext();
+        
+        // Deep Search integration
+        var isDeepSearch = document.getElementById('aiDeepSearchToggle') && document.getElementById('aiDeepSearchToggle').checked;
+        if (isDeepSearch) {
+            var rawOsg = osgData.map(r => {
+                var match = productData.find(p => p.invoice === r.invoice);
+                return { invoice: r.invoice, staff: match ? match.staff : 'Unknown', brand: r.brand, cat: r.category, qty: r.qty, rev: r.rev };
+            });
+            var rawData = {
+                products: productData.map(r => ({ invoice: r.invoice, date: r.date, staff: r.staff, branch: r.branch, rbm: r.rbm, brand: r.brand, cat: r.category, qty: r.qty, rev: r.rev })),
+                osg: rawOsg,
+                missingCRM: typeof missedUnique !== 'undefined' ? missedUnique : []
+            };
+            systemContext += '\n\nDEEP SEARCH RAW DATASET (USE THIS FOR EXACT INVOICES OR STAFF LOOKUPS):\n' + JSON.stringify(rawData);
+        }
+
         var payload = {
-            contents: [{
-                role: 'user',
-                parts: [{ text: systemContext + '\n\nUser question: ' + userMessage }]
-            }],
-            generationConfig: { temperature: 0.7, maxOutputTokens: 500 }
+            messages: [
+                { role: 'system', content: systemContext },
+                { role: 'user', content: userMessage }
+            ],
+            temperature: 0.2,
+            max_tokens: 2000
         };
 
-        try {
-            // Auto-detect the correct model for this specific API key
-            var modelsRes = await fetch('https://generativelanguage.googleapis.com/v1beta/models?key=' + apiKey);
-            var modelsData = await modelsRes.json();
-            
-            var targetModel = 'gemini-1.5-flash'; // Fallback
-            if (modelsData && modelsData.models) {
-                var validModels = modelsData.models.filter(function(m) {
-                    return m.name.includes('gemini') && m.supportedGenerationMethods.includes('generateContent');
+        var models = [
+            'deepseek-ai/deepseek-r1',
+            'moonshotai/kimi-k2.6',
+            'meta/llama-3.1-70b-instruct'
+        ];
+
+        var endpoint = 'https://integrate.api.nvidia.com/v1/chat/completions';
+        var aiText = null;
+        var lastErr = null;
+
+        for (let i = 0; i < models.length; i++) {
+            payload.model = models[i];
+            try {
+                var response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + apiKey
+                    },
+                    body: JSON.stringify(payload)
                 });
-                if (validModels.length > 0) {
-                    // Try to prefer flash, otherwise take the first available
-                    var flashModel = validModels.find(function(m) { return m.name.includes('flash'); });
-                    targetModel = flashModel ? flashModel.name.split('/')[1] : validModels[0].name.split('/')[1];
+                
+                if (response.ok) {
+                    var data = await response.json();
+                    if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
+                        aiText = data.choices[0].message.content;
+                        // Successfully got response, break fallback loop
+                        break;
+                    }
+                } else {
+                    var errData = await response.json();
+                    lastErr = (errData.error && errData.error.message) || response.statusText || response.status;
+                    console.warn(`Model ${models[i]} failed: ${lastErr}. Falling back...`);
                 }
+            } catch (err) {
+                lastErr = err.message;
+                console.warn(`Network error with ${models[i]}: ${lastErr}. Falling back...`);
             }
+        }
 
-            var endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' + targetModel + ':generateContent?key=' + apiKey;
-
-            var response = await fetch(endpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            removeTypingIndicator();
-            if (!response.ok) {
-                var errData = await response.json();
-                addMessage('API Error: ' + ((errData.error && errData.error.message) || response.statusText), 'error');
-                return;
-            }
-            var data = await response.json();
-            var aiText = data.candidates && data.candidates[0] && data.candidates[0].content &&
-                         data.candidates[0].content.parts && data.candidates[0].content.parts[0] &&
-                         data.candidates[0].content.parts[0].text;
-            if (aiText) {
-                addMessage(aiText, 'assistant');
-            } else {
-                addMessage('Sorry, I could not generate a response.', 'error');
-            }
-        } catch (err) {
-            removeTypingIndicator();
-            addMessage('Network Error: ' + err.message, 'error');
+        removeTypingIndicator();
+        
+        if (aiText) {
+            addMessage(aiText, 'assistant');
+        } else {
+            addMessage('API Error across all models: ' + (lastErr || 'Unknown error'), 'error');
         }
     }
 
