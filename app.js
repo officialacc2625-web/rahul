@@ -1787,7 +1787,14 @@
             brandMap[br].oQty += r.qty || 0;
         });
 
-        var staffStats = window.portalStaffStats || [];
+        var staffStats = window.portalStaffStats;
+        if (!staffStats || staffStats.length === 0) {
+            try {
+                staffStats = buildStaffStats();
+            } catch(e) {
+                staffStats = [];
+            }
+        }
 
         return {
             Brands: Object.keys(brandMap).map(k => ({ Brand: k, ProductsSold: brandMap[k].pQty, OsgSold: brandMap[k].oQty, ConvPercent: (brandMap[k].pQty>0 ? (brandMap[k].oQty/brandMap[k].pQty*100).toFixed(1) : 0) })),
