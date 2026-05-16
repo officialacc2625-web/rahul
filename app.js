@@ -6582,7 +6582,7 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
         for (let i = 0; i < models.length; i++) {
             payload.model = models[i];
             var controller = new AbortController();
-            var timeoutId = setTimeout(function() { controller.abort(); }, 15000); // 15s timeout
+            var timeoutId = setTimeout(function() { controller.abort(); }, 45000); // 45s timeout to allow free models to process large context
             try {
                 var response = await fetch(endpoint, {
                     method: 'POST',
