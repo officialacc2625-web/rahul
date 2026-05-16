@@ -6547,10 +6547,11 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
         };
 
         // OpenRouter.ai - Single key, 60+ models, natively supports browser CORS
+        // 'openrouter/auto' automatically picks the best available free model
         var models = [
-            'meta-llama/llama-3.1-70b-instruct:free',
-            'microsoft/phi-3-medium-128k-instruct:free',
-            'mistralai/mistral-7b-instruct:free'
+            'meta-llama/llama-3.3-70b-instruct:free',
+            'google/gemma-3-27b-it:free',
+            'deepseek/deepseek-r1-0528:free'
         ];
 
         // Use direct OpenRouter endpoint (supports Access-Control-Allow-Origin: *)
