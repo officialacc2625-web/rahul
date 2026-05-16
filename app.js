@@ -6547,9 +6547,9 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
         };
 
         var models = [
-            'deepseek-ai/deepseek-r1',
+            'meta/llama-3.1-70b-instruct',
             'moonshotai/kimi-k2.6',
-            'meta/llama-3.1-70b-instruct'
+            'deepseek-ai/deepseek-r1'
         ];
 
         var endpoint = 'https://integrate.api.nvidia.com/v1/chat/completions';
@@ -6558,6 +6558,8 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
 
         for (let i = 0; i < models.length; i++) {
             payload.model = models[i];
+            var controller = new AbortController();
+            var timeoutId = setTimeout(function() { controller.abort(); }, 15000); // 15s timeout
             try {
                 var response = await fetch(endpoint, {
                     method: 'POST',
@@ -6565,8 +6567,10 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
                         'Content-Type': 'application/json',
                         'Authorization': 'Bearer ' + apiKey
                     },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify(payload),
+                    signal: controller.signal
                 });
+                clearTimeout(timeoutId);
                 
                 if (response.ok) {
                     var data = await response.json();
@@ -6581,7 +6585,8 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
                     console.warn(`Model ${models[i]} failed: ${lastErr}. Falling back...`);
                 }
             } catch (err) {
-                lastErr = err.message;
+                if (typeof timeoutId !== 'undefined') clearTimeout(timeoutId);
+                lastErr = err.name === 'AbortError' ? 'Request timed out after 15 seconds' : err.message;
                 console.warn(`Network error with ${models[i]}: ${lastErr}. Falling back...`);
             }
         }
