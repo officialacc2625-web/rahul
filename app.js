@@ -1816,6 +1816,23 @@
 
         var missingFollowups = typeof missedUnique !== 'undefined' ? missedUnique.length : 0;
 
+        var callerStats = {};
+        if (typeof CO_CALLERS !== 'undefined') {
+            CO_CALLERS.forEach(c => callerStats[c.name] = { totalCalls: 0, connected: 0, disconnected: 0, interested: 0, bought: 0 });
+        }
+        if (typeof coStatusMap !== 'undefined') {
+            Object.values(coStatusMap).forEach(st => {
+                if (st.calledBy) {
+                    if (!callerStats[st.calledBy]) callerStats[st.calledBy] = { totalCalls: 0, connected: 0, disconnected: 0, interested: 0, bought: 0 };
+                    callerStats[st.calledBy].totalCalls++;
+                    if (st.callStatus === 'connected') callerStats[st.calledBy].connected++;
+                    if (st.callStatus === 'disconnected') callerStats[st.calledBy].disconnected++;
+                    if (st.interest === 'interested') callerStats[st.calledBy].interested++;
+                    if (st.interest === 'bought') callerStats[st.calledBy].bought++;
+                }
+            });
+        }
+
         return {
             Brands: Object.keys(brandMap).map(k => ({ Brand: k, ProductsSold: brandMap[k].pQty, OsgSold: brandMap[k].oQty, ConvPercent: (brandMap[k].pQty>0 ? (brandMap[k].oQty/brandMap[k].pQty*100).toFixed(1) : 0) })),
             Categories: Object.keys(catMap).map(k => ({ Category: k, ProductsSold: catMap[k].pQty, OsgSold: catMap[k].oQty, ConvPercent: (catMap[k].pQty>0 ? (catMap[k].oQty/catMap[k].pQty*100).toFixed(1) : 0) })),
@@ -1823,7 +1840,8 @@
             RBMs: Object.keys(rbmMap).map(k => ({ RBM: k, ProductsSold: rbmMap[k].pQty, OsgSold: rbmMap[k].oQty, ConvPercent: (rbmMap[k].pQty>0 ? (rbmMap[k].oQty/rbmMap[k].pQty*100).toFixed(1) : 0) })),
             BDMs: Object.keys(bdmMap).map(k => ({ BDM: k, ProductsSold: bdmMap[k].pQty, OsgSold: bdmMap[k].oQty, ConvPercent: (bdmMap[k].pQty>0 ? (bdmMap[k].oQty/bdmMap[k].pQty*100).toFixed(1) : 0) })),
             Staff: staffStats.map(s => ({ StaffName: s.name, Branch: s.branch, ProductsSold: s.pQty, OsgSold: s.oQty, ConvPercent: s.qtyConv.toFixed(1) })),
-            MissingCRM_Count: missingFollowups
+            MissingCRM_Count: missingFollowups,
+            CRM_Callers: callerStats
         };
     };
 
@@ -6532,7 +6550,8 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
             var rawData = {
                 products: productData.map(r => ({ invoice: r.invoice, date: r.date, staff: r.staff, branch: r.branch, rbm: r.rbm, brand: r.brand, cat: r.category, qty: r.qty, rev: r.rev })),
                 osg: rawOsg,
-                missingCRM: typeof missedUnique !== 'undefined' ? missedUnique : []
+                missingCRM: typeof missedUnique !== 'undefined' ? missedUnique : [],
+                crmLogs: typeof coStatusMap !== 'undefined' ? coStatusMap : {}
             };
             systemContext += '\n\nDEEP SEARCH RAW DATASET (USE THIS FOR EXACT INVOICES OR STAFF LOOKUPS):\n' + JSON.stringify(rawData);
         }
