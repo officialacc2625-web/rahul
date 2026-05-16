@@ -1843,8 +1843,8 @@
             Branches: Object.keys(branchMap).map(k => ({ Branch: k, ProductsSold: branchMap[k].pQty, OsgSold: branchMap[k].oQty, ConvPercent: (branchMap[k].pQty>0 ? (branchMap[k].oQty/branchMap[k].pQty*100).toFixed(1) : 0) })),
             RBMs: Object.keys(rbmMap).map(k => ({ RBM: k, ProductsSold: rbmMap[k].pQty, OsgSold: rbmMap[k].oQty, ConvPercent: (rbmMap[k].pQty>0 ? (rbmMap[k].oQty/rbmMap[k].pQty*100).toFixed(1) : 0) })),
             BDMs: Object.keys(bdmMap).map(k => ({ BDM: k, ProductsSold: bdmMap[k].pQty, OsgSold: bdmMap[k].oQty, ConvPercent: (bdmMap[k].pQty>0 ? (bdmMap[k].oQty/bdmMap[k].pQty*100).toFixed(1) : 0) })),
-            Top15_Best_Staff: bestStaff.map(s => ({ StaffName: s.name, Branch: s.branch, ProductsSold: s.pQty, OsgSold: s.oQty, ConvPercent: s.qtyConv.toFixed(1) })),
-            Top15_Worst_Staff: worstStaff.map(s => ({ StaffName: s.name, Branch: s.branch, ProductsSold: s.pQty, OsgSold: s.oQty, ConvPercent: s.qtyConv.toFixed(1) })),
+            Top15_Best_Staff: bestStaff.map(s => ({ StaffName: s.name, Branch: s.branch, ProductsSold: s.pQty, Total_Revenue: s.pRev, OsgSold: s.oQty, OSG_Revenue: s.oRev, ConvPercent: s.qtyConv.toFixed(1) })),
+            Top15_Worst_Staff: worstStaff.map(s => ({ StaffName: s.name, Branch: s.branch, ProductsSold: s.pQty, Total_Revenue: s.pRev, OsgSold: s.oQty, OSG_Revenue: s.oRev, ConvPercent: s.qtyConv.toFixed(1) })),
             MissingCRM_Count: missingFollowups,
             CRM_Callers: callerStats
         };
@@ -6548,8 +6548,20 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
         // Deep Search integration
         var isDeepSearch = document.getElementById('aiDeepSearchToggle') && document.getElementById('aiDeepSearchToggle').checked;
         if (isDeepSearch) {
+            var allStaffData = typeof window.portalStaffStats !== 'undefined' ? window.portalStaffStats : [];
             var rawData = {
-                Full_Staff_Stats: typeof window.portalStaffStats !== 'undefined' ? window.portalStaffStats : [],
+                Full_Staff_Stats: allStaffData.map(s => ({
+                    StaffName: s.name,
+                    Branch: s.branch,
+                    RBM: s.rbm,
+                    BDM: s.bdm,
+                    Total_Products_Sold: s.pQty,
+                    Total_Sold_Price_Revenue: s.pRev,
+                    OSG_Products_Sold: s.oQty,
+                    OSG_Sold_Price_Revenue: s.oRev,
+                    Qty_Conversion_Percent: s.qtyConv ? s.qtyConv.toFixed(1) : 0,
+                    Value_Conversion_Percent: s.valConv ? s.valConv.toFixed(1) : 0
+                })),
                 missingCRM: typeof missedUnique !== 'undefined' ? missedUnique : [],
                 crmLogs: typeof coStatusMap !== 'undefined' ? coStatusMap : {}
             };
