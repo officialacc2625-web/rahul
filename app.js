@@ -6460,6 +6460,7 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
     // ---- TARGET & FORECAST ENGINE ----
     // ============================================================
     (function initForecast() {
+        const $ = id => document.getElementById(id);
         let fcDonutChartInstance = null;
 
         function renderForecastPage() {
