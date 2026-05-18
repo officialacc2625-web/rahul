@@ -6465,13 +6465,14 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
 
         function renderForecastPage() {
             try {
-                // Use allData to check if any data is loaded, as productData might be empty if only AMC was loaded
-                if (typeof allData === 'undefined' || allData.length === 0) {
-                    $('fcKpiGrid').style.display = 'none';
-                    $('fcNoData').style.display = 'block';
-                    return;
-                }
+                // FORCE RENDER for debugging
                 $('fcNoData').style.display = 'none';
+
+                let debugMsg = "renderForecastPage called.\n";
+                debugMsg += "allData: " + (typeof allData !== 'undefined' ? allData.length : 'undef') + "\n";
+                debugMsg += "productData: " + (typeof productData !== 'undefined' ? productData.length : 'undef') + "\n";
+                debugMsg += "osgData: " + (typeof osgData !== 'undefined' ? osgData.length : 'undef');
+                alert(debugMsg);
 
                 const targetConv = parseFloat($('fcTargetConv').value) || 60;
                 const totalDays  = parseInt($('fcTotalDays').value) || 26;
