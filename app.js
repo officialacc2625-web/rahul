@@ -6287,10 +6287,9 @@
         if (tableSam && tableSam.querySelector('tbody')) tableSam.querySelector('tbody').innerHTML = samHtml;
     }
 
+    // Main IIFE continues...
 
-})();
-
-// ---- CUSTOM CALENDAR WIDGET ----
+    // ---- CUSTOM CALENDAR WIDGET ----
 window.coCalWidget = {
     _createDOM() {
         if (document.getElementById('coCustomCal')) return;
@@ -6465,14 +6464,16 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
 
         function renderForecastPage() {
             try {
-                // FORCE RENDER for debugging
-                $('fcNoData').style.display = 'none';
-
-                let debugMsg = "renderForecastPage called.\n";
-                debugMsg += "allData: " + (typeof allData !== 'undefined' ? allData.length : 'undef') + "\n";
-                debugMsg += "productData: " + (typeof productData !== 'undefined' ? productData.length : 'undef') + "\n";
-                debugMsg += "osgData: " + (typeof osgData !== 'undefined' ? osgData.length : 'undef');
-                alert(debugMsg);
+                // Use allData to check if any data is loaded, as productData might be empty if only AMC was loaded
+                if (typeof allData === 'undefined' || allData.length === 0) {
+                    const kg = document.getElementById('fcKpiGrid');
+                    if (kg) kg.style.display = 'none';
+                    const nd = document.getElementById('fcNoData');
+                    if (nd) nd.style.display = 'block';
+                    return;
+                }
+                const nd = document.getElementById('fcNoData');
+                if (nd) nd.style.display = 'none';
 
                 const targetConv = parseFloat($('fcTargetConv').value) || 60;
                 const totalDays  = parseInt($('fcTotalDays').value) || 26;
@@ -6850,3 +6851,6 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
     });
 
 });
+
+// End of Main IIFE
+})();
