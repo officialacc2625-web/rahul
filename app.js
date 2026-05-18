@@ -6628,7 +6628,17 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
                 $('fcKpiGrid').style.display = 'block';
             } catch (err) {
                 console.error("Forecast Error:", err);
-                alert("Forecast Error: " + err.message + "\nLine: " + (err.lineNumber || 'Unknown'));
+                const nd = document.getElementById('fcNoData');
+                if (nd) {
+                    nd.innerHTML = `<div style="color:var(--text-primary);padding:30px;background:rgba(239,68,68,0.1);border:1px solid #ef4444;border-radius:12px;text-align:left;">
+                        <h3 style="color:#ef4444;margin:0 0 10px 0;">Runtime Error</h3>
+                        <p style="margin:0;font-family:monospace;font-size:0.9rem;">${err.message}</p>
+                        <pre style="margin-top:10px;font-size:0.75rem;color:var(--text-muted);white-space:pre-wrap;">${err.stack}</pre>
+                    </div>`;
+                    nd.style.display = 'block';
+                }
+                const kg = document.getElementById('fcKpiGrid');
+                if (kg) kg.style.display = 'none';
             }
         }
 
