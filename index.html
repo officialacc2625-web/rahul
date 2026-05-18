@@ -25,6 +25,12 @@
 
 
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    <script>
+        // Fallback: if jsDelivr failed to load XLSX, try unpkg
+        if (typeof XLSX === 'undefined') {
+            document.write('<script src="https://unpkg.com/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"><\/script>');
+        }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
@@ -1254,7 +1260,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
 
-    <script src="app.js?v=136"></script>
+    <script src="app.js?v=137"></script>
 
     <!-- PWA Service Worker + Install Banner -->
     <script>

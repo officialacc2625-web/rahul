@@ -1,4 +1,4 @@
-const CACHE_NAME = 'myg-portal-v136';
+const CACHE_NAME = 'myg-portal-v137';
 const SHELL_ASSETS = [
   './manifest.json',
   './icons/icon-192x192.png',
@@ -27,11 +27,14 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
-  // Network-first for: Firebase, app.js, index.html, style.css (all critical files)
+  // Network-first for: Firebase, CDN libraries, app.js, index.html, style.css
   if (
     url.hostname.includes('firebase') ||
     url.hostname.includes('firebaseio') ||
     url.hostname.includes('googleapis') ||
+    url.hostname.includes('jsdelivr.net') ||
+    url.hostname.includes('cdnjs.cloudflare.com') ||
+    url.hostname.includes('unpkg.com') ||
     url.pathname.includes('app.js') ||
     url.pathname.includes('style.css') ||
     url.pathname.endsWith('/') ||

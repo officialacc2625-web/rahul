@@ -963,6 +963,17 @@
         const isCSV = file.name.toLowerCase().endsWith('.csv');
         if (isCSV) return parseCSVFile(file, colMap, rowMapper);
 
+        // Guard: XLSX library must be loaded from CDN
+        if (typeof XLSX === 'undefined') {
+            return Promise.reject(new Error(
+                'The XLSX library failed to load.\n\n' +
+                '✅ Fix: Check your internet connection and reload the page.\n' +
+                '   The library loads from cdn.jsdelivr.net on first use.\n\n' +
+                '💡 Alternative: Convert your file to CSV first:\n' +
+                '   python convert.py "your_file.xlsx"'
+            ));
+        }
+
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -5066,6 +5077,11 @@
             console.log('[IndexedDB] Loaded data for month:', month);
         } else {
             console.warn('[IndexedDB] No local data found for month', month);
+            productData = [];
+            osgData = [];
+            amcData = [];
+            samsungData = [];
+            allData = [];
         }
 
         isCoStatusLive = false; // Force re-subscribe
