@@ -3455,36 +3455,42 @@
         // DATA PROCESSING FOR SHEET 0: WARRANTY_Overview (All Stores)
         // --------------------------------------------------------------------------------
 
-        // ---- WARRANTY_Overview summary (OSG + LG-AMC + Samsung totals across ALL stores) ----
-        const w0AllProd   = productData; // All stores, no branch filter
+        // ---- WARRANTY_Overview summary (filtered by selRBM/selBDM/selBranch — matches other sheets) ----
+        const w0AllProd   = fProduct; // Use the same filtered product data as other sheets
+        const w0InvSet    = new Set(w0AllProd.map(r => r.invoice).filter(Boolean));
         const w0InvMeta   = {};
         w0AllProd.forEach(r => { if (r.invoice) w0InvMeta[r.invoice] = r; });
 
-        // Total sold qty & price from product data (all stores)
+        // Total sold qty & price from filtered product data
         const w0TotalSoldQty   = w0AllProd.reduce((s, r) => s + (r.qty || 0), 0);
         const w0TotalSoldPrice = w0AllProd.reduce((s, r) => s + (r.soldPrice || 0), 0);
 
-        // OSG warranty across ALL stores
-        const w0OsgSoldQty   = osgData.reduce((s, r) => s + (r.qty || 0), 0);
-        const w0OsgSoldPrice = osgData.reduce((s, r) => s + (r.soldPrice || 0), 0);
+        // Filter OSG/AMC/Samsung to only invoices in the filtered product set
+        const w0OsgData = osgData.filter(r => !r.invoice || w0InvSet.has(r.invoice));
+        const w0AmcDataF = amcData.filter(r => !r.invoice || w0InvSet.has(r.invoice));
+        const w0SamData = samsungData.filter(r => !r.invoice || w0InvSet.has(r.invoice));
+
+        // OSG warranty across filtered stores
+        const w0OsgSoldQty   = w0OsgData.reduce((s, r) => s + (r.qty || 0), 0);
+        const w0OsgSoldPrice = w0OsgData.reduce((s, r) => s + (r.soldPrice || 0), 0);
         const w0OsgQtyConv   = w0TotalSoldQty > 0 ? (w0OsgSoldQty / w0TotalSoldQty) * 100 : 0;
         const w0OsgValConv   = w0TotalSoldPrice > 0 ? (w0OsgSoldPrice / w0TotalSoldPrice) * 100 : 0;
 
-        // LG-AMC across ALL stores (only LG brand product qty as denominator)
+        // LG-AMC across filtered stores (only LG brand product qty as denominator)
         const lgAllowedBrands = ['LG'];
         const w0LgProdQty   = w0AllProd.reduce((s, r) => s + ((r.brand && r.brand.toUpperCase().includes('LG')) ? (r.qty || 0) : 0), 0);
         const w0LgProdPrice = w0AllProd.reduce((s, r) => s + ((r.brand && r.brand.toUpperCase().includes('LG')) ? (r.soldPrice || 0) : 0), 0);
-        const w0AmcSoldQty   = amcData.reduce((s, r) => s + (r.qty || 0), 0);
-        const w0AmcSoldPrice = amcData.reduce((s, r) => s + (r.soldPrice || 0), 0);
+        const w0AmcSoldQty   = w0AmcDataF.reduce((s, r) => s + (r.qty || 0), 0);
+        const w0AmcSoldPrice = w0AmcDataF.reduce((s, r) => s + (r.soldPrice || 0), 0);
         const w0AmcQtyConv   = w0LgProdQty > 0 ? (w0AmcSoldQty / w0LgProdQty) * 100 : 0;
         const w0AmcValConv   = w0LgProdPrice > 0 ? (w0AmcSoldPrice / w0LgProdPrice) * 100 : 0;
 
-        // Samsung across ALL stores
+        // Samsung across filtered stores
         const w0SamAllowedCats = ['AC', 'MICROWAVE OVEN', 'REFRIGERATOR', 'WASHING MACHINE'];
         const w0SamProdQty   = w0AllProd.reduce((s, r) => { const p = (r.product || '').toUpperCase().trim(); return s + ((r.brand && r.brand.toUpperCase().includes('SAMSUNG') && w0SamAllowedCats.includes(p)) ? (r.qty || 0) : 0); }, 0);
         const w0SamProdPrice = w0AllProd.reduce((s, r) => { const p = (r.product || '').toUpperCase().trim(); return s + ((r.brand && r.brand.toUpperCase().includes('SAMSUNG') && w0SamAllowedCats.includes(p)) ? (r.soldPrice || 0) : 0); }, 0);
-        const w0SamSoldQty   = samsungData.reduce((s, r) => s + (r.qty || 0), 0);
-        const w0SamSoldPrice = samsungData.reduce((s, r) => s + (r.soldPrice || 0), 0);
+        const w0SamSoldQty   = w0SamData.reduce((s, r) => s + (r.qty || 0), 0);
+        const w0SamSoldPrice = w0SamData.reduce((s, r) => s + (r.soldPrice || 0), 0);
         const w0SamQtyConv   = w0SamProdQty > 0 ? (w0SamSoldQty / w0SamProdQty) * 100 : 0;
         const w0SamValConv   = w0SamProdPrice > 0 ? (w0SamSoldPrice / w0SamProdPrice) * 100 : 0;
 
@@ -3494,7 +3500,7 @@
 
         const fmt2 = v => parseFloat(v.toFixed(2));
 
-        // ---- OSG-OVERVIEW by product (all stores) ----
+        // ---- OSG-OVERVIEW by product (filtered stores) ----
         const osgProdCounts = {}, osgProdPrices = {};
         const allProdCounts = {}, allProdPrices = {};
         w0AllProd.forEach(r => {
@@ -3502,14 +3508,14 @@
             allProdCounts[p] = (allProdCounts[p] || 0) + (r.qty || 0);
             allProdPrices[p] = (allProdPrices[p] || 0) + (r.soldPrice || 0);
         });
-        osgData.forEach(r => {
+        w0OsgData.forEach(r => {
             const p = (r.product || 'Unknown').toUpperCase().trim();
             osgProdCounts[p] = (osgProdCounts[p] || 0) + (r.qty || 0);
             osgProdPrices[p] = (osgProdPrices[p] || 0) + (r.soldPrice || 0);
         });
         const osgProds = [...new Set([...Object.keys(allProdCounts), ...Object.keys(osgProdCounts)])].sort();
 
-        // ---- LG-AMC-OVERVIEW by product (all stores, only LG eligible products) ----
+        // ---- LG-AMC-OVERVIEW by product (filtered stores, only LG eligible products) ----
         const amcProdCounts = {}, lgProdAllCounts = {}, lgProdAllPrices = {};
         w0AllProd.forEach(r => {
             if (r.brand && r.brand.toUpperCase().includes('LG')) {
@@ -3518,13 +3524,13 @@
                 lgProdAllPrices[p] = (lgProdAllPrices[p] || 0) + (r.soldPrice || 0);
             }
         });
-        amcData.forEach(r => {
+        w0AmcDataF.forEach(r => {
             const p = (r.product || 'Unknown').toUpperCase().trim();
             amcProdCounts[p] = (amcProdCounts[p] || 0) + (r.qty || 0);
         });
         const lgProds = [...new Set([...Object.keys(lgProdAllCounts), ...Object.keys(amcProdCounts)])].sort();
 
-        // ---- SAMSUNG-OVERVIEW by product (all stores, only Samsung eligible categories) ----
+        // ---- SAMSUNG-OVERVIEW by product (filtered stores, only Samsung eligible categories) ----
         const samProdCounts = {}, samProdAllCounts = {}, samProdAllPrices = {};
         w0AllProd.forEach(r => {
             const p = (r.product || 'Unknown').toUpperCase().trim();
@@ -3533,7 +3539,7 @@
                 samProdAllPrices[p] = (samProdAllPrices[p] || 0) + (r.soldPrice || 0);
             }
         });
-        samsungData.forEach(r => {
+        w0SamData.forEach(r => {
             const p = (r.product || 'Unknown').toUpperCase().trim();
             samProdCounts[p] = (samProdCounts[p] || 0) + (r.qty || 0);
         });
