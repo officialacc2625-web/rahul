@@ -3469,10 +3469,17 @@
         const w0TotalSoldQty   = w0AllProd.reduce((s, r) => s + (r.qty || 0), 0);
         const w0TotalSoldPrice = w0AllProd.reduce((s, r) => s + (r.soldPrice || 0), 0);
 
-        // Filter OSG/AMC/Samsung to only invoices in the filtered product set
+        // Filter OSG/Samsung to only invoices in the filtered product set (since they don't have RBM columns)
         const w0OsgData = osgData.filter(r => !r.invoice || w0InvSet.has(r.invoice));
-        const w0AmcDataF = amcData.filter(r => !r.invoice || w0InvSet.has(r.invoice));
         const w0SamData = samsungData.filter(r => !r.invoice || w0InvSet.has(r.invoice));
+
+        // LG-AMC data already has RBM/BDM/Branch mapped from its own Excel file, so filter it directly
+        // to avoid dropping valid sales due to invoice mismatches with the Product data.
+        const w0AmcDataF = amcData.filter(r => 
+            (!selRBM || r.rbm === selRBM) &&
+            (!selBDM || r.bdm === selBDM) &&
+            (!selBranch || r.branch === selBranch)
+        );
 
         // OSG warranty across filtered stores
         const w0OsgSoldQty   = w0OsgData.reduce((s, r) => s + (r.qty || 0), 0);
