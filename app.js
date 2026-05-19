@@ -3517,6 +3517,24 @@
 
         const fmt2 = v => parseFloat(v.toFixed(2));
 
+        // ---- Generate Global Product Lists to Ensure Consistent Table Shapes ----
+        const globalOsgProds = new Set();
+        const globalLgProds = new Set();
+        
+        productData.forEach(r => {
+            const p = (r.product || 'Unknown').toUpperCase().trim();
+            globalOsgProds.add(p);
+            if (r.brand && r.brand.toUpperCase().includes('LG')) {
+                globalLgProds.add(p);
+            }
+        });
+        osgData.forEach(r => globalOsgProds.add((r.product || 'Unknown').toUpperCase().trim()));
+        amcData.forEach(r => globalLgProds.add((r.product || 'Unknown').toUpperCase().trim()));
+        
+        const osgProds = [...globalOsgProds].sort();
+        const lgProds = [...globalLgProds].sort();
+        const samProds = [...w0SamAllowedCats].sort();
+
         // ---- OSG-OVERVIEW by product (filtered stores) ----
         const osgProdCounts = {}, osgProdPrices = {};
         const allProdCounts = {}, allProdPrices = {};
@@ -3530,7 +3548,6 @@
             osgProdCounts[p] = (osgProdCounts[p] || 0) + (r.qty || 0);
             osgProdPrices[p] = (osgProdPrices[p] || 0) + (r.soldPrice || 0);
         });
-        const osgProds = [...new Set([...Object.keys(allProdCounts), ...Object.keys(osgProdCounts)])].sort();
 
         // ---- LG-AMC-OVERVIEW by product (filtered stores, only LG eligible products) ----
         const amcProdCounts = {}, lgProdAllCounts = {}, lgProdAllPrices = {};
@@ -3545,7 +3562,6 @@
             const p = (r.product || 'Unknown').toUpperCase().trim();
             amcProdCounts[p] = (amcProdCounts[p] || 0) + (r.qty || 0);
         });
-        const lgProds = [...new Set([...Object.keys(lgProdAllCounts), ...Object.keys(amcProdCounts)])].sort();
 
         // ---- SAMSUNG-OVERVIEW by product (filtered stores, only Samsung eligible categories) ----
         const samProdCounts = {}, samProdAllCounts = {}, samProdAllPrices = {};
@@ -3560,7 +3576,6 @@
             const p = (r.product || 'Unknown').toUpperCase().trim();
             samProdCounts[p] = (samProdCounts[p] || 0) + (r.qty || 0);
         });
-        const samProds = [...new Set([...Object.keys(samProdAllCounts), ...Object.keys(samProdCounts)])].sort();
 
         // ---- Build the WARRANTY_Overview AoA (side-by-side layout) ----
         // Left (A-E): WARRANTY OVERVIEW + OSG-OVERVIEW
