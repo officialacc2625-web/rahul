@@ -3570,7 +3570,7 @@
         aoa0[1][6] = 'PRODUCT'; aoa0[1][7] = 'SOLD QTY'; aoa0[1][8] = 'SOLD PRICE'; aoa0[1][9] = 'QTY-CONV'; aoa0[1][10] = 'VALUE-CONV';
         samProds.forEach((p, i) => {
             const r = 2 + i, sq = samProdCounts[p] || 0, tq = samProdAllCounts[p] || 0, tp = samProdAllPrices[p] || 0;
-            const sv = samsungData.filter(x => (x.product||'').toUpperCase().trim() === p).reduce((s,x) => s + (x.soldPrice||0), 0);
+            const sv = w0SamData.filter(x => (x.product||'').toUpperCase().trim() === p).reduce((s,x) => s + (x.soldPrice||0), 0);
             aoa0[r][6] = p; aoa0[r][7] = sq; aoa0[r][8] = fmt2(sv);
             aoa0[r][9] = tq > 0 ? fmt2((sq/tq)*100) : 0; aoa0[r][10] = tp > 0 ? fmt2((sv/tp)*100) : 0;
         });
@@ -3593,7 +3593,7 @@
         lgProds.forEach((p, i) => {
             const r = lgBlock0 + 2 + i, sq = amcProdCounts[p] || 0;
             const tq = lgProdAllCounts[p] || 0, tp = lgProdAllPrices[p] || 0;
-            const av = amcData.filter(x => (x.product||'').toUpperCase().trim() === p).reduce((s,x) => s + (x.soldPrice||0), 0);
+            const av = w0AmcDataF.filter(x => (x.product||'').toUpperCase().trim() === p).reduce((s,x) => s + (x.soldPrice||0), 0);
             aoa0[r][6] = p; aoa0[r][7] = sq; aoa0[r][8] = fmt2(av);
             aoa0[r][9] = tq > 0 ? fmt2((sq/tq)*100) : 0; aoa0[r][10] = tp > 0 ? fmt2((av/tp)*100) : 0;
         });
