@@ -3455,8 +3455,12 @@
         // DATA PROCESSING FOR SHEET 0: WARRANTY_Overview (All Stores)
         // --------------------------------------------------------------------------------
 
-        // ---- WARRANTY_Overview summary (filtered by selRBM/selBDM/selBranch — matches other sheets) ----
-        const w0AllProd   = fProduct; // Use the same filtered product data as other sheets
+        // ---- WARRANTY_Overview summary (across ALL stores, but respects RBM/BDM/Branch filters) ----
+        const w0AllProd = productData.filter(r => 
+            (!selRBM || r.rbm === selRBM) &&
+            (!selBDM || r.bdm === selBDM) &&
+            (!selBranch || r.branch === selBranch)
+        );
         const w0InvSet    = new Set(w0AllProd.map(r => r.invoice).filter(Boolean));
         const w0InvMeta   = {};
         w0AllProd.forEach(r => { if (r.invoice) w0InvMeta[r.invoice] = r; });
