@@ -2469,10 +2469,7 @@
 
         const amcByStaff = {};
         amcData.forEach(r => {
-            let s = null;
-            if (r.staff && r.staff !== 'Unknown') s = r.staff;
-            else if (r.invoice) s = invoiceStaff[r.invoice] || null;
-            
+            const s = r.invoice ? (invoiceStaff[r.invoice] || null) : null;
             if (!s) return;
             if (!amcByStaff[s]) amcByStaff[s] = [];
             amcByStaff[s].push(r);
@@ -3261,11 +3258,8 @@
             }
         });
         amcData.forEach(r => {
-            let meta = null;
-            if (r.invoice && invMeta[r.invoice]) meta = invMeta[r.invoice];
-            else if (r.branch && r.bdm) meta = { branch: r.branch, bdm: r.bdm };
-
-            if (meta) {
+            if (r.invoice && invMeta[r.invoice]) {
+                const meta = invMeta[r.invoice];
                 const key = meta.bdm + '|' + meta.branch;
                 if (branchGroups[key]) branchGroups[key].aRows.push(r);
             }
