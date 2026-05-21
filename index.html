@@ -34,6 +34,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 
 <body>
@@ -140,6 +141,31 @@
                 </svg>
                 <span>Future Stores</span>
             </a>
+            <a href="#" class="nav-item" data-section="pincode-section" id="nav-pincode">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="url(#navGrad)" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                </svg>
+                <span>Pincode Analytics</span>
+            </a>
+            <a href="#" class="nav-item" data-section="product-analytics-section" id="nav-product-analytics">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="url(#navGrad)" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+                    <circle cx="6" cy="12" r="2" fill="url(#navGrad)"/>
+                    <circle cx="12" cy="2" r="2" fill="url(#navGrad)"/>
+                    <circle cx="18" cy="8" r="2" fill="url(#navGrad)"/>
+                </svg>
+                <span>Product Analytics</span>
+            </a>
+            <a href="#" class="nav-item" data-section="trends-section" id="nav-trends">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="url(#navGrad)" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                </svg>
+                <span>Trends &amp; History</span>
+            </a>
 
         </nav>
         <div class="sidebar-footer">
@@ -182,6 +208,15 @@
                         <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
                     </svg>
                     Share Dashboard
+                </button>
+                <button class="btn-primary" id="btnPdfReport" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9); display:none;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                    PDF Report
                 </button>
                 <button class="btn-reset" id="btnReset" title="Clear all data">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1139,6 +1174,204 @@
             </div>
         </section>
 
+        <!-- PINCODE SECTION -->
+        <section id="pincode-section" class="content-section">
+            <div class="section-header">
+                <div>
+                    <h2>Pincode Analytics <span style="font-size:0.9rem; color:#f97316;">&bull; Geo-Targeting</span></h2>
+                    <p>Identify top-performing neighborhoods by sales and warranty conversion.</p>
+                </div>
+            </div>
+
+            <div class="card fade-in" style="animation-delay: 0.1s;">
+                <div class="card-header">
+                    <h3>Pincode Overview</h3>
+                    <div class="header-actions">
+                        <button class="btn btn-primary" onclick="exportTableToCSV('pincodeTable', 'Pincode_Analytics.csv')">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="7 10 12 15 17 10" />
+                                <line x1="12" y1="15" x2="12" y2="3" />
+                            </svg>
+                            Export
+                        </button>
+                    </div>
+                </div>
+                <div class="table-wrapper" id="pincodeTableWrapper">
+                    <table class="data-table" id="pincodeTable">
+                        <thead>
+                            <tr>
+                                <th>Pincode</th>
+                                <th>Area Name</th>
+                                <th class="text-right">Total Product Qty</th>
+                                <th class="text-right">Product Rev (₹)</th>
+                                <th class="text-right">OSG Qty</th>
+                                <th class="text-right">OSG %</th>
+                                <th class="text-right">LG-AMC Qty</th>
+                                <th class="text-right">LG-AMC %</th>
+                                <th class="text-right">Samsung Qty</th>
+                                <th class="text-right">Samsung %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+                    </table>
+                    <div class="no-data-msg" id="pincodeNoData">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                            <circle cx="12" cy="10" r="3" />
+                        </svg>
+                        <p>Generate reports first to view Pincode Analytics.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PRODUCT ANALYTICS SECTION -->
+        <section id="product-analytics-section" class="content-section">
+            <div class="section-header">
+                <div>
+                    <h2>Product Analytics <span style="font-size:0.9rem; color:#f97316;">&bull; Trends &amp; Intelligence</span></h2>
+                    <p>Identify your best-selling products and categories with warranty conversion insights.</p>
+                </div>
+            </div>
+
+            <!-- KPI Strip -->
+            <div class="kpi-grid" style="margin-bottom:1.5rem;">
+                <div class="kpi-card" style="border-top:4px solid #f97316;">
+                    <div class="kpi-icon" style="color:#f97316;">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                    </div>
+                    <div class="kpi-content">
+                        <span class="kpi-label">Total Products Sold</span>
+                        <span class="kpi-value" id="prodKpiTotalQty" style="color:#f97316;">0</span>
+                    </div>
+                </div>
+                <div class="kpi-card" style="border-top:4px solid #3b82f6;">
+                    <div class="kpi-icon" style="color:#3b82f6;">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </div>
+                    <div class="kpi-content">
+                        <span class="kpi-label">Total Revenue</span>
+                        <span class="kpi-value" id="prodKpiTotalRev" style="color:#3b82f6;">&#8377;0</span>
+                    </div>
+                </div>
+                <div class="kpi-card" style="border-top:4px solid #10b981;">
+                    <div class="kpi-icon" style="color:#10b981;">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    </div>
+                    <div class="kpi-content">
+                        <span class="kpi-label">Unique Categories</span>
+                        <span class="kpi-value" id="prodKpiCategories" style="color:#10b981;">0</span>
+                    </div>
+                </div>
+                <div class="kpi-card" style="border-top:4px solid #8b5cf6;">
+                    <div class="kpi-icon" style="color:#8b5cf6;">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                    </div>
+                    <div class="kpi-content">
+                        <span class="kpi-label">Avg OSG Conv%</span>
+                        <span class="kpi-value" id="prodKpiAvgConv" style="color:#8b5cf6;">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem; margin-bottom:1.5rem;">
+                <div class="card fade-in">
+                    <div class="card-header"><h3>Top 10 Categories by Revenue</h3></div>
+                    <div style="padding:1rem; height:300px; position:relative;">
+                        <canvas id="prodRevChart"></canvas>
+                    </div>
+                </div>
+                <div class="card fade-in" style="animation-delay:0.1s;">
+                    <div class="card-header"><h3>Category Sales Share (Qty)</h3></div>
+                    <div style="padding:1rem; height:300px; position:relative;">
+                        <canvas id="prodShareChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- OSG Conversion Bar Chart -->
+            <div class="card fade-in" style="animation-delay:0.2s; margin-bottom:1.5rem;">
+                <div class="card-header"><h3>OSG Warranty Conversion by Category (%)</h3></div>
+                <div style="padding:1rem; height:260px; position:relative;">
+                    <canvas id="prodConvChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Detailed Product Table -->
+            <div class="card fade-in" style="animation-delay:0.3s;">
+                <div class="card-header">
+                    <h3>Product Category Breakdown</h3>
+                    <div class="header-actions">
+                        <button class="btn btn-primary" onclick="exportTableToCSV('prodDetailTable','Product_Analytics.csv')">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Export
+                        </button>
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table" id="prodDetailTable">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th class="text-right">Product Qty</th>
+                                <th class="text-right">Revenue (&#8377;)</th>
+                                <th class="text-right">OSG Qty</th>
+                                <th class="text-right">OSG Conv%</th>
+                                <th class="text-right">LG-AMC Qty</th>
+                                <th class="text-right">AMC Conv%</th>
+                                <th class="text-right">Avg Sell Price</th>
+                            </tr>
+                        </thead>
+                        <tbody id="prodDetailTbody">
+                        </tbody>
+                    </table>
+                    <div class="no-data-msg" id="prodNoData" style="display:none;">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                        <p>Upload data to view Product Analytics.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TRENDS & HISTORY SECTION -->
+        <section id="trends-section" class="content-section">
+            <div class="section-header">
+                <div>
+                    <h2>Trends &amp; History <span style="font-size:0.9rem; color:#f97316;">&bull; Month-over-Month</span></h2>
+                    <p>Track your warranty conversion performance and sales over time.</p>
+                </div>
+                <div class="header-actions" style="display:flex; gap:10px; align-items:center;">
+                    <input type="month" id="trendMonthSelect" class="search-input" style="width:160px; padding:8px 12px; border-radius:6px; border:1px solid var(--border); background:var(--bg-lighter); color:var(--text-main);">
+                    <button class="btn btn-primary" id="btnSaveTrendMonth">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                            <polyline points="17 21 17 13 7 13 7 21"/>
+                            <polyline points="7 3 7 8 15 8"/>
+                        </svg>
+                        Save Current Month
+                    </button>
+                    <button class="btn btn-outline" id="btnClearTrends" style="border-color:#ef4444; color:#ef4444;">Clear DB</button>
+                </div>
+            </div>
+
+            <div class="card fade-in">
+                <div class="card-header"><h3>OSG Warranty Conversion Trend (%)</h3></div>
+                <div style="padding:1rem; height:320px; position:relative;">
+                    <canvas id="trendConvChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card fade-in" style="animation-delay:0.1s; margin-top:1.5rem;">
+                <div class="card-header"><h3>Total Revenue Trend (₹)</h3></div>
+                <div style="padding:1rem; height:320px; position:relative;">
+                    <canvas id="trendRevChart"></canvas>
+                </div>
+            </div>
+        </section>
 
     </main>
 

@@ -26,6 +26,7 @@
     let filteredSamsung = [];  // After filters (Samsung)
     let filteredAll = [];      // After filters (product+amc)
     let chartInstances = {};
+    let pincodeAreaCache = {}; // Cache for pincode area names API
 
     // ---- INDEXEDDB FOR MONTHLY CACHING ----
     const DB_NAME = 'myGAnalyticsDB';
@@ -90,6 +91,37 @@
         } catch (e) {
             console.error('[IndexedDB] Failed to get months', e);
             return [];
+        }
+    }
+
+    async function getAllMonthlyDataFromDB() {
+        try {
+            const db = await initDB();
+            const tx = db.transaction(STORE_NAME, 'readonly');
+            const store = tx.objectStore(STORE_NAME);
+            const request = store.getAll();
+            return new Promise((resolve, reject) => {
+                request.onsuccess = () => resolve(request.result || []);
+                request.onerror = () => reject(request.error);
+            });
+        } catch (e) {
+            console.error('[IndexedDB] Failed to get all data', e);
+            return [];
+        }
+    }
+
+    async function clearAllMonthlyDataFromDB() {
+        try {
+            const db = await initDB();
+            const tx = db.transaction(STORE_NAME, 'readwrite');
+            const store = tx.objectStore(STORE_NAME);
+            store.clear();
+            return new Promise((resolve, reject) => {
+                tx.oncomplete = resolve;
+                tx.onerror = () => reject(tx.error);
+            });
+        } catch (e) {
+            console.error('[IndexedDB] Failed to clear data', e);
         }
     }
 
@@ -164,11 +196,12 @@
         svcCharge: ['service charge', 'svc charge'],
         addition: ['addition', 'additions'],
         deduction: ['deduction', 'deductions'],
-        invoice: ['invoice number', 'invoice no', 'invoice', 'bill no', 'bill number', 'bill no.', 'invoice no.', 'inv no', 'receipt no'],
+        invoice: ['invoice number', 'invoice numb', 'invoice no', 'invoice', 'bill no', 'bill number', 'bill no.', 'invoice no.', 'inv no', 'receipt no'],
         invoiceDate: ['invoice date', 'date', 'bill date', 'creation date'],
         time: ['time', 'creation time', 'invoice time', 'bill time'],
         customerName: ['customer name', 'customer', 'cust name', 'buyer name', 'buyer', 'party name', 'party', 'client name', 'client'],
         customerNo: ['customer number', 'customer no', 'cust no', 'mobile', 'phone', 'contact', 'mobile no', 'phone no', 'contact no', 'customer mobile', 'cust mobile', 'mobile number'],
+        pincode: ['pincode', 'pin code', 'zip code', 'zip', 'postal code', 'customer pincode', 'cust pincode'],
     };
 
     // ---- COLUMN MAPPING (OSG file) ----
@@ -180,7 +213,8 @@
         brand: ['brand', 'brand name', 'make'],
         soldPrice: ['sold price', 'soldprice', 'plan price', 'selling price', 'net amount', 'amount', 'value', 'net value', 'sale price', 'mop', 'total amount', 'premium', 'premium amount'],
         qty: ['quantity', 'qty', 'ews qty', 'qnty', 'units', 'net qty', 'count', 'nos', 'pcs'],
-        invoice: ['invoice no', 'invoice number', 'invoice', 'bill no', 'bill number', 'bill no.', 'invoice no.', 'inv no', 'receipt no'],
+        invoice: ['invoice no', 'invoice numb', 'invoice number', 'invoice', 'bill no', 'bill number', 'bill no.', 'invoice no.', 'inv no', 'receipt no'],
+        staff: ['staff', 'staff name', 'sales person', 'salesman', 'employee name']
     };
 
     // ---- DOM REFERENCES ----
@@ -266,7 +300,8 @@
     const CO_CALLERS = [
         { name: 'Harmiya', color: '#7c3aed', bg: 'rgba(124,58,237,0.15)', pass: '1234' },
         { name: 'Aswathi', color: '#0891b2', bg: 'rgba(8,145,178,0.15)', pass: '5678' },
-        { name: 'Shikha', color: '#d97706', bg: 'rgba(217,119,6,0.15)', pass: '9012' }
+        { name: 'Shikha', color: '#d97706', bg: 'rgba(217,119,6,0.15)', pass: '9012' },
+        { name: 'Anjana', color: '#e11d48', bg: 'rgba(225,29,72,0.15)', pass: '3456' }
     ];
     let currentCaller = localStorage.getItem('co_caller') || null;
     let coCurrentRows = [];
@@ -412,6 +447,46 @@
     }
     menuToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
 
+    // ---- TRENDS BUTTON WIRING ----
+    // Set default month to current month
+    const trendMonthInput = document.getElementById('trendMonthSelect');
+    if (trendMonthInput) {
+        const now = new Date();
+        trendMonthInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    }
+
+    document.getElementById('btnSaveTrendMonth').addEventListener('click', async () => {
+        const month = document.getElementById('trendMonthSelect').value;
+        if (!month) { alert('Please select a month first.'); return; }
+        if (!filteredProduct || filteredProduct.length === 0) { alert('No data loaded. Upload files first.'); return; }
+
+        const conv = calcConversion(filteredProduct, filteredOSG);
+        const totalQty = filteredProduct.reduce((s, r) => s + (r.qty || 0), 0);
+        const totalRev = filteredProduct.reduce((s, r) => s + (r.revenue || r.soldPrice || 0), 0);
+
+        const snapshot = {
+            month,
+            totalQty,
+            totalRev,
+            osgQty: conv.oQty,
+            osgRev: conv.oSoldPrice,
+            qtyConv: parseFloat(conv.qtyConv.toFixed(2)),
+            valConv: parseFloat(conv.valueConv.toFixed(2)),
+            savedAt: new Date().toISOString()
+        };
+        await saveMonthlyDataToDB(month, snapshot);
+        alert(`✅ Data for ${month} saved successfully!`);
+        renderTrendsDashboard();
+    });
+
+    document.getElementById('btnClearTrends').addEventListener('click', async () => {
+        if (!confirm('Are you sure you want to clear ALL historical trend data?')) return;
+        await clearAllMonthlyDataFromDB();
+        renderTrendsDashboard();
+        alert('Historical data cleared.');
+    });
+
+
     // Report tabs
     document.querySelectorAll('.report-tab').forEach(tab => {
         tab.addEventListener('click', () => {
@@ -499,15 +574,27 @@
                                         const dObj = new Date(Math.round((dt - 25569) * 86400 * 1000));
                                         key = dObj.getUTCFullYear() + '-' + String(dObj.getUTCMonth() + 1).padStart(2, '0');
                                     } else if (typeof dt === 'string') {
-                                        if (dt.match(/^\d{4}-\d{2}-\d{2}/)) {
-                                            // ISO format: YYYY-MM-DD
-                                            key = dt.substring(0, 7);
+                                        const s = dt.trim();
+                                        if (s.match(/^\d{4}[\/\-]\d{2}[\/\-]\d{2}/)) {
+                                            // ISO format: YYYY-MM-DD or YYYY/MM/DD
+                                            key = s.substring(0, 4) + '-' + s.substring(5, 7);
                                         } else {
-                                            // DD/MM/YYYY or DD-MM-YYYY (Indian format)
-                                            const match = dt.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
-                                            if (match) {
-                                                const yy = match[3].length === 2 ? '20' + match[3] : match[3];
-                                                key = yy + '-' + match[2].padStart(2, '0');
+                                            // DD-MMM-YYYY or DD-MMM-YY (e.g. 01-Apr-2026)
+                                            const matchAlpha = s.match(/^(\d{1,2})[\/\-\s]+([A-Za-z]{3,})[\/\-\s]+(\d{2,4})/);
+                                            if (matchAlpha) {
+                                                const yy = matchAlpha[3].length === 2 ? '20' + matchAlpha[3] : matchAlpha[3];
+                                                const mName = matchAlpha[2].toLowerCase();
+                                                const mIdx = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].findIndex(m => mName.startsWith(m)) + 1;
+                                                if (mIdx > 0) {
+                                                    key = yy + '-' + String(mIdx).padStart(2, '0');
+                                                }
+                                            } else {
+                                                // DD/MM/YYYY or DD-MM-YYYY (Indian format)
+                                                const match = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+                                                if (match) {
+                                                    const yy = match[3].length === 2 ? '20' + match[3] : match[3];
+                                                    key = yy + '-' + match[2].padStart(2, '0');
+                                                }
                                             }
                                         }
                                     }
@@ -753,6 +840,7 @@
             r.invoiceDate = getVal(row, mapping.invoiceDate, '');
             r.time = getVal(row, mapping.time, '');
             r.customerNo = strVal(row, mapping.customerNo);
+            r.pincode = strVal(row, mapping.pincode);
             r.soldPrice = num(getVal(row, mapping.soldPrice, 0));
             r.taxableVal = num(getVal(row, mapping.taxableVal, 0));
             r.tax = num(getVal(row, mapping.tax, 0));
@@ -894,9 +982,46 @@
             r.category = normalizeProductCategory(strVal(row, mapping.category));
             r.brand = strVal(row, mapping.brand);
             r.soldPrice = num(getVal(row, mapping.soldPrice, 0));
-            r.qty = num(getVal(row, mapping.qty, 0));
+            r.qty = parseFloat(strVal(row, mapping.qty)) || 1;
             r.invoice = strVal(row, mapping.invoice);
+            r.staff = strVal(row, mapping.staff);
+
+            // If no branch column was found in the file, the "Brand" column likely
+            // holds the branch/store name (common in OSG exports with duplicate "Brand" headers).
+            if (!mapping.branch && !r.branch && r.brand) {
+                r.branch = r.brand;
+                r.brand = ''; // Clear since this wasn't actually the brand
+            }
+
+            // Ensure category is always normalized from the product column
+            if (!r.category || r.category === 'SMALL APPLIANCE') {
+                const normalized = normalizeProductCategory(r.product);
+                if (normalized !== 'SMALL APPLIANCE' || !r.category) {
+                    r.category = normalized;
+                }
+            }
+
             return r;
+        }).then(rows => {
+            // DEBUG: Log OSG parsing results
+            console.log('=== OSG DEBUG ===');
+            console.log('Total OSG rows parsed:', rows.length);
+            const withBranch = rows.filter(r => r.branch).length;
+            const withInvoice = rows.filter(r => r.invoice).length;
+            const withProduct = rows.filter(r => r.product).length;
+            const futureBranches = rows.filter(r => r.branch && r.branch.toUpperCase().includes('FUTURE')).length;
+            console.log('Rows with branch:', withBranch);
+            console.log('Rows with invoice:', withInvoice);
+            console.log('Rows with product:', withProduct);
+            console.log('Rows with FUTURE in branch:', futureBranches);
+            // Show unique branches
+            const branches = {};
+            rows.forEach(r => { branches[r.branch || '(empty)'] = (branches[r.branch || '(empty)'] || 0) + 1; });
+            console.log('OSG branches:', JSON.stringify(branches));
+            // Show first 5 rows
+            console.log('OSG sample rows:', JSON.stringify(rows.slice(0, 5).map(r => ({branch: r.branch, product: r.product, category: r.category, invoice: r.invoice, brand: r.brand, qty: r.qty}))));
+            console.log('=== END OSG DEBUG ===');
+            return rows;
         });
     }
 
@@ -910,9 +1035,9 @@
             r.staff = strVal(row, mapping.staff);
             // Normalize the raw LG product name → standard category
             const rawProduct = strVal(row, mapping.product);
-            r.product = mapLGAMCProductCategory(rawProduct);
+            r.product = rawProduct;
             r.rawProduct = rawProduct;  // keep original for debugging
-            r.category = normalizeProductCategory(strVal(row, mapping.category));
+            r.category = mapLGAMCProductCategory(rawProduct);
             r.brand = strVal(row, mapping.brand);
             r.invoice = strVal(row, mapping.invoice);
             r.customerName = strVal(row, mapping.customerName);
@@ -947,13 +1072,21 @@
             r.storeCode = strVal(row, mapping.storeCode);
             // Normalize the raw product name → standard category
             const rawProduct = strVal(row, mapping.product);
-            r.product = mapSamsungProductCategory(rawProduct);
+            r.product = rawProduct;
             r.rawProduct = rawProduct;  // keep original for debugging
-            r.category = normalizeProductCategory(strVal(row, mapping.category));
+            r.category = mapSamsungProductCategory(rawProduct);
             r.brand = strVal(row, mapping.brand);
             r.soldPrice = num(getVal(row, mapping.soldPrice, 0));
             r.qty = num(getVal(row, mapping.qty, 0));
             r.invoice = strVal(row, mapping.invoice);
+            r.staff = strVal(row, mapping.staff);
+
+            // If no branch column was found, the "Brand" column likely holds the branch name
+            if (!mapping.branch && !r.branch && r.brand) {
+                r.branch = r.brand;
+                r.brand = '';
+            }
+
             return r;
         });
     }
@@ -1188,6 +1321,46 @@
             return true;
         });
 
+        // Build metadata helpers for fallbacks
+        window.branchToMeta = window.branchToMeta || {};
+        window.productInvMeta = window.productInvMeta || {};
+        productData.forEach(r => {
+            if (r.branch && r.rbm && r.bdm) {
+                const bUpper = r.branch.toUpperCase().trim();
+                if (!window.branchToMeta[bUpper]) {
+                    window.branchToMeta[bUpper] = { rbm: r.rbm, bdm: r.bdm, origBranch: r.branch };
+                }
+            }
+            if (r.invoice) {
+                window.productInvMeta[r.invoice] = r;
+            }
+        });
+
+        // Helper to robustly find a branch meta by exact or fuzzy match, with invoice fallback
+        window.getBranchMeta = function(r) {
+            let b = null;
+            if (r && r.invoice && window.productInvMeta && window.productInvMeta[r.invoice]) {
+                const pRow = window.productInvMeta[r.invoice];
+                if (pRow.branch) b = pRow.branch.toUpperCase().trim();
+            }
+            if (!b && r && r.branch) {
+                b = r.branch.toUpperCase().trim();
+            }
+            
+            if (!b || !window.branchToMeta) return null;
+            
+            if (window.branchToMeta[b]) return window.branchToMeta[b];
+            
+            // Fuzzy match (e.g. 'FALNIR' matches 'FALNIR FUTURE')
+            for (const key of Object.keys(window.branchToMeta)) {
+                if (key.includes(b) || b.includes(key)) {
+                    return window.branchToMeta[key];
+                }
+            }
+            return null;
+        };
+
+
         // Filter OSG data by product, brand, branch (OSG has these fields)
         const hasPersonFilter = fRBM || fBDM || fStaff;
         const productInvoices = new Set();
@@ -1198,9 +1371,28 @@
                 if (fBranch && r.branch !== fBranch) return false;
                 if (fProduct && r.product !== fProduct) return false;
                 if (fBrand && r.brand !== fBrand) return false;
-                if (r.invoice && productInvoices.has(r.invoice)) return true;
-                if (!r.invoice) return true;
-                return false;
+                
+                let rbm = r.rbm || '';
+                let bdm = r.bdm || '';
+                let staff = r.staff || '';
+                
+                if (r.invoice && window.productInvMeta[r.invoice]) {
+                    rbm = window.productInvMeta[r.invoice].rbm || rbm;
+                    bdm = window.productInvMeta[r.invoice].bdm || bdm;
+                    staff = window.productInvMeta[r.invoice].staff || staff;
+                } else if (window.getBranchMeta(r)) {
+                    const m = window.getBranchMeta(r);
+                    rbm = rbm || m.rbm;
+                    bdm = bdm || m.bdm;
+                }
+                
+                if (fRBM && rbm !== fRBM) return false;
+                if (fBDM && bdm !== fBDM) return false;
+                if (fStaff && staff !== fStaff) return false;
+                
+                if (!rbm && !bdm && !staff && !r.invoice) return true;
+                if (!rbm && !bdm && !staff) return false; // unmatched completely
+                return true;
             });
         } else {
             filteredOSG = osgData.filter(r => {
@@ -1219,9 +1411,22 @@
                 if (fProduct && r.product !== fProduct && r.category !== fProduct) return false;
                 if (fBrand && r.brand !== fBrand) return false;
                 if (hasPersonFilter) {
-                    if (r.invoice && productInvoices.has(r.invoice)) return true;
-                    if (!r.invoice) return true; // keep care plans without invoices just in case
-                    return false;
+                    // Try to match using AMC row's own rbm/bdm/staff attributes first
+                    let rbm = r.rbm || '';
+                    let bdm = r.bdm || '';
+                    let staff = r.staff || '';
+                    
+                    // If the row lacks direct staff info, fallback to productInvoices lookup
+                    if (!rbm && !bdm && !staff) {
+                        if (r.invoice && productInvoices.has(r.invoice)) return true;
+                        if (!r.invoice) return true; // keep care plans without invoices just in case
+                        return false;
+                    }
+                    
+                    // Direct match checks
+                    if (fRBM && rbm !== fRBM) return false;
+                    if (fBDM && bdm !== fBDM) return false;
+                    if (fStaff && staff !== fStaff) return false;
                 }
                 return true;
             });
@@ -1235,9 +1440,26 @@
                 if (fProduct && r.product !== fProduct && r.category !== fProduct) return false;
                 if (fBrand && r.brand !== fBrand) return false;
                 if (hasPersonFilter) {
-                    if (r.invoice && productInvoices.has(r.invoice)) return true;
-                    if (!r.invoice) return true;
-                    return false;
+                    let rbm = r.rbm || '';
+                    let bdm = r.bdm || '';
+                    let staff = r.staff || '';
+                    
+                    if (r.invoice && window.productInvMeta[r.invoice]) {
+                        rbm = window.productInvMeta[r.invoice].rbm || rbm;
+                        bdm = window.productInvMeta[r.invoice].bdm || bdm;
+                        staff = window.productInvMeta[r.invoice].staff || staff;
+                    } else if (window.getBranchMeta(r)) {
+                        const m = window.getBranchMeta(r);
+                        rbm = rbm || m.rbm;
+                        bdm = bdm || m.bdm;
+                    }
+                    
+                    if (fRBM && rbm !== fRBM) return false;
+                    if (fBDM && bdm !== fBDM) return false;
+                    if (fStaff && staff !== fStaff) return false;
+                    
+                    if (!rbm && !bdm && !staff && !r.invoice) return true;
+                    if (!rbm && !bdm && !staff) return false;
                 }
                 return true;
             });
@@ -1246,6 +1468,138 @@
         renderDashboard();
         renderReports();
         renderCharts();
+
+        // Show PDF button when data is loaded
+        const pdfBtn = document.getElementById('btnPdfReport');
+        if (pdfBtn) pdfBtn.style.display = filteredProduct.length > 0 ? 'inline-flex' : 'none';
+    }
+
+    // ---- PDF EXECUTIVE SUMMARY ----
+    document.getElementById('btnPdfReport').addEventListener('click', generatePDFReport);
+
+    function generatePDFReport() {
+        if (!filteredProduct || filteredProduct.length === 0) { alert('No data loaded.'); return; }
+
+        const conv = calcConversion(filteredProduct, filteredOSG);
+        const totalQty = filteredProduct.reduce((s, r) => s + (r.qty || 0), 0);
+        const totalRev = filteredProduct.reduce((s, r) => s + (r.revenue || r.soldPrice || 0), 0);
+        const osgQty = conv.oQty;
+        const osgRev = conv.oSoldPrice;
+
+        // LG AMC stats
+        const lgQty = filteredProduct.reduce((s, r) => s + ((r.brand && r.brand.toUpperCase().includes('LG')) ? (r.qty || 0) : 0), 0);
+        const amcQty = filteredAMC.reduce((s, r) => s + (r.qty || 0), 0);
+        const amcConv = lgQty > 0 ? ((amcQty / lgQty) * 100).toFixed(2) : '0.00';
+
+        // Samsung stats
+        const samCats = ['AC','MICROWAVE OVEN','REFRIGERATOR','WASHING MACHINE'];
+        const samProdQty = filteredProduct.reduce((s, r) => { const p = (r.product || '').toUpperCase().trim(); return s + ((r.brand && r.brand.toUpperCase().includes('SAMSUNG') && samCats.includes(p)) ? (r.qty || 0) : 0); }, 0);
+        const samOsgQty = filteredSamsung.reduce((s, r) => s + (r.qty || 0), 0);
+        const samConv = samProdQty > 0 ? ((samOsgQty / samProdQty) * 100).toFixed(2) : '0.00';
+
+        // Top 5 branches by revenue
+        const branchMap = {};
+        filteredProduct.forEach(r => {
+            const b = r.branch || 'Unknown';
+            if (!branchMap[b]) branchMap[b] = { qty: 0, rev: 0 };
+            branchMap[b].qty += (r.qty || 0);
+            branchMap[b].rev += (r.revenue || r.soldPrice || 0);
+        });
+        const topBranches = Object.entries(branchMap).sort((a, b) => b[1].rev - a[1].rev).slice(0, 5);
+
+        // Top 5 staff by qty
+        const staffMap = {};
+        filteredProduct.forEach(r => {
+            const st = r.staff || 'Unknown';
+            if (!staffMap[st]) staffMap[st] = { qty: 0 };
+            staffMap[st].qty += (r.qty || 0);
+        });
+        const topStaff = Object.entries(staffMap).sort((a, b) => b[1].qty - a[1].qty).slice(0, 5);
+
+        const today = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+
+        const reportHTML = `
+        <div style="font-family:'Segoe UI',system-ui,sans-serif; color:#1e293b; padding:30px; max-width:800px; margin:auto;">
+            <div style="text-align:center; margin-bottom:30px; border-bottom:3px solid #f97316; padding-bottom:20px;">
+                <h1 style="margin:0; font-size:24px; color:#f97316; letter-spacing:-0.5px;">CRM-DATA ANALYTICS PORTAL</h1>
+                <h2 style="margin:6px 0 0; font-size:16px; color:#64748b; font-weight:400;">Executive Summary Report &bull; ${today}</h2>
+            </div>
+
+            <h3 style="color:#f97316; border-bottom:2px solid #fed7aa; padding-bottom:6px; margin-bottom:12px;">Key Performance Indicators</h3>
+            <table style="width:100%; border-collapse:collapse; margin-bottom:24px; font-size:13px;">
+                <tr style="background:#f8fafc;">
+                    <td style="padding:10px 12px; border:1px solid #e2e8f0; font-weight:600;">Total Product Qty</td>
+                    <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right;">${formatNumber(totalQty)}</td>
+                    <td style="padding:10px 12px; border:1px solid #e2e8f0; font-weight:600;">Total Product Revenue</td>
+                    <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right;">₹${fmtShort(totalRev)}</td>
+                </tr>
+                <tr>
+                    <td style="padding:10px 12px; border:1px solid #e2e8f0; font-weight:600;">OSG Qty</td>
+                    <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right;">${formatNumber(osgQty)}</td>
+                    <td style="padding:10px 12px; border:1px solid #e2e8f0; font-weight:600;">OSG Revenue</td>
+                    <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right;">₹${fmtShort(osgRev)}</td>
+                </tr>
+                <tr style="background:#f8fafc;">
+                    <td style="padding:10px 12px; border:1px solid #e2e8f0; font-weight:600;">Qty Conversion</td>
+                    <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right; color:${conv.qtyConv >= 15 ? '#10b981' : '#ef4444'}; font-weight:700;">${conv.qtyConv.toFixed(2)}%</td>
+                    <td style="padding:10px 12px; border:1px solid #e2e8f0; font-weight:600;">Value Conversion</td>
+                    <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right; color:${conv.valueConv >= 15 ? '#10b981' : '#ef4444'}; font-weight:700;">${conv.valueConv.toFixed(2)}%</td>
+                </tr>
+                <tr>
+                    <td style="padding:10px 12px; border:1px solid #e2e8f0; font-weight:600;">LG-AMC Conv%</td>
+                    <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right; font-weight:700;">${amcConv}%</td>
+                    <td style="padding:10px 12px; border:1px solid #e2e8f0; font-weight:600;">Samsung Conv%</td>
+                    <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right; font-weight:700;">${samConv}%</td>
+                </tr>
+            </table>
+
+            <h3 style="color:#3b82f6; border-bottom:2px solid #bfdbfe; padding-bottom:6px; margin-bottom:12px;">Top 5 Branches by Revenue</h3>
+            <table style="width:100%; border-collapse:collapse; margin-bottom:24px; font-size:13px;">
+                <tr style="background:#1e293b; color:#fff;">
+                    <th style="padding:8px 12px; text-align:left;">Branch</th>
+                    <th style="padding:8px 12px; text-align:right;">Qty</th>
+                    <th style="padding:8px 12px; text-align:right;">Revenue</th>
+                </tr>
+                ${topBranches.map(([name, d], i) => `
+                    <tr style="background:${i % 2 === 0 ? '#f8fafc' : '#fff'};">
+                        <td style="padding:8px 12px; border:1px solid #e2e8f0; font-weight:600;">${name}</td>
+                        <td style="padding:8px 12px; border:1px solid #e2e8f0; text-align:right;">${formatNumber(d.qty)}</td>
+                        <td style="padding:8px 12px; border:1px solid #e2e8f0; text-align:right;">₹${fmtShort(d.rev)}</td>
+                    </tr>
+                `).join('')}
+            </table>
+
+            <h3 style="color:#10b981; border-bottom:2px solid #a7f3d0; padding-bottom:6px; margin-bottom:12px;">Top 5 Staff by Volume</h3>
+            <table style="width:100%; border-collapse:collapse; margin-bottom:24px; font-size:13px;">
+                <tr style="background:#1e293b; color:#fff;">
+                    <th style="padding:8px 12px; text-align:left;">Staff</th>
+                    <th style="padding:8px 12px; text-align:right;">Qty Sold</th>
+                </tr>
+                ${topStaff.map(([name, d], i) => `
+                    <tr style="background:${i % 2 === 0 ? '#f8fafc' : '#fff'};">
+                        <td style="padding:8px 12px; border:1px solid #e2e8f0; font-weight:600;">${name}</td>
+                        <td style="padding:8px 12px; border:1px solid #e2e8f0; text-align:right;">${formatNumber(d.qty)}</td>
+                    </tr>
+                `).join('')}
+            </table>
+
+            <div style="text-align:center; color:#94a3b8; font-size:11px; margin-top:30px; border-top:1px solid #e2e8f0; padding-top:12px;">
+                Generated by CRM-DATA ANALYTICS PORTAL &bull; ${today} &bull; Confidential
+            </div>
+        </div>`;
+
+        const container = document.createElement('div');
+        container.innerHTML = reportHTML;
+
+        const opt = {
+            margin: [10, 10, 10, 10],
+            filename: `Executive_Summary_${today.replace(/\s/g, '_')}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        html2pdf().set(opt).from(container).save();
     }
 
     // ---- CONVERSION CALCULATION ----
@@ -1355,6 +1709,460 @@
             if (kpiSamsungConv) kpiSamsungConv.textContent = samsungConvPct.toFixed(2) + '%';
         } else if (samsungKpiRow) {
             samsungKpiRow.style.display = 'none';
+        }
+
+        renderPincodeDashboard();
+        renderProductDashboard();
+    }
+
+    // ---- PRODUCT ANALYTICS CHART INSTANCES ----
+    const prodChartInstances = {};
+
+    function renderProductDashboard() {
+        if (!filteredProduct || filteredProduct.length === 0) {
+            const noData = document.getElementById('prodNoData');
+            const tbody = document.getElementById('prodDetailTbody');
+            if (noData) noData.style.display = 'flex';
+            if (tbody) tbody.innerHTML = '';
+            return;
+        }
+
+        // ----- Aggregate by category -----
+        const invMapOSG = {};
+        filteredProduct.forEach(r => { if (r.invoice) invMapOSG[r.invoice] = r.product || 'Unknown'; });
+
+        const catMap = {}; // key: category
+        filteredProduct.forEach(r => {
+            const cat = (r.product || r.category || 'Unknown').toUpperCase().trim() || 'Unknown';
+            if (!catMap[cat]) catMap[cat] = { pQty: 0, pRev: 0, oQty: 0, aQty: 0, lgPQty: 0 };
+            catMap[cat].pQty += (r.qty || 0);
+            catMap[cat].pRev += (r.revenue || r.soldPrice || 0);
+            if (r.brand && r.brand.toUpperCase().includes('LG')) catMap[cat].lgPQty += (r.qty || 0);
+        });
+
+        filteredOSG.forEach(r => {
+            const cat = (r.product || r.category || 'Unknown').toUpperCase().trim();
+            if (catMap[cat]) catMap[cat].oQty += (r.qty || 0);
+            else {
+                // try matching via invoice
+                const invoice = r.invoice;
+                const pCat = invoice && invMapOSG[invoice] ? (invMapOSG[invoice]).toUpperCase().trim() : null;
+                if (pCat && catMap[pCat]) catMap[pCat].oQty += (r.qty || 0);
+            }
+        });
+
+        filteredAMC.forEach(r => {
+            const cat = (r.product || 'Unknown').toUpperCase().trim();
+            const branch = r.branch || 'Unknown';
+            const key = cat + '|' + branch;
+            if (catMap[cat]) catMap[cat].aQty += (r.qty || 0);
+        });
+
+        const cats = Object.entries(catMap)
+            .map(([name, d]) => ({
+                name,
+                pQty: d.pQty, pRev: d.pRev, oQty: d.oQty, aQty: d.aQty, lgPQty: d.lgPQty,
+                osgConv: d.pQty > 0 ? (d.oQty / d.pQty) * 100 : 0,
+                amcConv: d.lgPQty > 0 ? (d.aQty / d.lgPQty) * 100 : 0,
+                avgPrice: d.pQty > 0 ? d.pRev / d.pQty : 0
+            }))
+            .sort((a, b) => b.pRev - a.pRev);
+
+        // ----- KPI Cards -----
+        const totalQty = cats.reduce((s, c) => s + c.pQty, 0);
+        const totalRev = cats.reduce((s, c) => s + c.pRev, 0);
+        const avgConv = cats.length > 0 ? cats.reduce((s, c) => s + c.osgConv, 0) / cats.length : 0;
+
+        const elQ = document.getElementById('prodKpiTotalQty');
+        const elR = document.getElementById('prodKpiTotalRev');
+        const elC = document.getElementById('prodKpiCategories');
+        const elA = document.getElementById('prodKpiAvgConv');
+        if (elQ) elQ.textContent = formatNumber(totalQty);
+        if (elR) elR.textContent = '₹' + fmtShort(totalRev);
+        if (elC) elC.textContent = cats.length;
+        if (elA) elA.textContent = avgConv.toFixed(2) + '%';
+
+        // ----- Chart colours -----
+        const CHART_COLORS = [
+            '#f97316','#3b82f6','#10b981','#8b5cf6','#ec4899',
+            '#f59e0b','#06b6d4','#ef4444','#84cc16','#6366f1'
+        ];
+        const top10 = cats.slice(0, 10);
+        const labels = top10.map(c => c.name);
+        const revData = top10.map(c => Math.round(c.pRev));
+        const qtyData = top10.map(c => c.pQty);
+        const convData = top10.map(c => parseFloat(c.osgConv.toFixed(2)));
+
+        const chartDefaults = {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#94a3b8', font: { size: 12 } } } }
+        };
+
+        // Destroy old charts
+        ['prodRevChart', 'prodShareChart', 'prodConvChart'].forEach(id => {
+            if (prodChartInstances[id]) { prodChartInstances[id].destroy(); delete prodChartInstances[id]; }
+        });
+
+        // Revenue Bar Chart
+        const ctxRev = document.getElementById('prodRevChart');
+        if (ctxRev) {
+            prodChartInstances['prodRevChart'] = new Chart(ctxRev, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Revenue (₹)',
+                        data: revData,
+                        backgroundColor: CHART_COLORS,
+                        borderRadius: 6,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    ...chartDefaults,
+                    scales: {
+                        x: { ticks: { color: '#94a3b8', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        y: { ticks: { color: '#94a3b8', callback: v => '₹' + fmtShort(v) }, grid: { color: 'rgba(255,255,255,0.07)' } }
+                    },
+                    plugins: { ...chartDefaults.plugins, tooltip: { callbacks: { label: ctx => '₹' + formatNumber(ctx.parsed.y) } } }
+                }
+            });
+        }
+
+        // Doughnut Share Chart
+        const ctxShare = document.getElementById('prodShareChart');
+        if (ctxShare) {
+            prodChartInstances['prodShareChart'] = new Chart(ctxShare, {
+                type: 'doughnut',
+                data: {
+                    labels,
+                    datasets: [{
+                        data: qtyData,
+                        backgroundColor: CHART_COLORS,
+                        borderColor: '#1e293b',
+                        borderWidth: 2,
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    ...chartDefaults,
+                    cutout: '62%',
+                    plugins: {
+                        legend: { position: 'right', labels: { color: '#94a3b8', boxWidth: 14, font: { size: 11 } } },
+                        tooltip: { callbacks: { label: ctx => `${ctx.label}: ${formatNumber(ctx.parsed)} units` } }
+                    }
+                }
+            });
+        }
+
+        // Conversion Bar Chart
+        const ctxConv = document.getElementById('prodConvChart');
+        if (ctxConv) {
+            prodChartInstances['prodConvChart'] = new Chart(ctxConv, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'OSG Conv%',
+                        data: convData,
+                        backgroundColor: convData.map(v => v >= 15 ? '#10b981' : v >= 10 ? '#f59e0b' : '#ef4444'),
+                        borderRadius: 6,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    ...chartDefaults,
+                    scales: {
+                        x: { ticks: { color: '#94a3b8', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        y: { max: 100, ticks: { color: '#94a3b8', callback: v => v + '%' }, grid: { color: 'rgba(255,255,255,0.07)' } }
+                    },
+                    plugins: { ...chartDefaults.plugins, tooltip: { callbacks: { label: ctx => ctx.parsed.y.toFixed(2) + '%' } } }
+                }
+            });
+        }
+
+        // ----- Detail Table -----
+        const tbody = document.getElementById('prodDetailTbody');
+        if (!tbody) return;
+        const fmtPct = (p) => {
+            const color = p >= 15 ? 'color:#10b981;' : (p >= 10 ? 'color:#f59e0b;' : 'color:#ef4444;');
+            return `<span style="font-weight:600;${color}">${p.toFixed(2)}%</span>`;
+        };
+        tbody.innerHTML = cats.map((c, i) => `
+            <tr>
+                <td style="font-weight:600; display:flex; align-items:center; gap:8px;">
+                    <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${CHART_COLORS[i % 10]};"></span>
+                    ${c.name}
+                </td>
+                <td class="text-right">${formatNumber(c.pQty)}</td>
+                <td class="text-right">₹${fmtShort(c.pRev)}</td>
+                <td class="text-right">${formatNumber(c.oQty)}</td>
+                <td class="text-right">${fmtPct(c.osgConv)}</td>
+                <td class="text-right">${formatNumber(c.aQty)}</td>
+                <td class="text-right">${fmtPct(c.amcConv)}</td>
+                <td class="text-right">₹${fmtShort(c.avgPrice)}</td>
+            </tr>
+        `).join('');
+    }
+
+    // ---- TRENDS DASHBOARD ----
+    const trendChartInstances = {};
+
+    async function renderTrendsDashboard() {
+        const allData = await getAllMonthlyDataFromDB();
+
+        // Destroy old charts
+        ['trendConvChart', 'trendRevChart'].forEach(id => {
+            if (trendChartInstances[id]) { trendChartInstances[id].destroy(); delete trendChartInstances[id]; }
+        });
+
+        if (!allData || allData.length === 0) {
+            const ctxConv = document.getElementById('trendConvChart');
+            const ctxRev = document.getElementById('trendRevChart');
+            if (ctxConv) ctxConv.getContext('2d').clearRect(0, 0, ctxConv.width, ctxConv.height);
+            if (ctxRev) ctxRev.getContext('2d').clearRect(0, 0, ctxRev.width, ctxRev.height);
+            return;
+        }
+
+        // Sort by month ascending
+        allData.sort((a, b) => a.month.localeCompare(b.month));
+
+        const labels = allData.map(d => {
+            const [y, m] = d.month.split('-');
+            const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            return `${months[parseInt(m)-1]} ${y}`;
+        });
+        const qtyConvData = allData.map(d => d.qtyConv || 0);
+        const valConvData = allData.map(d => d.valConv || 0);
+        const revData = allData.map(d => d.totalRev || 0);
+
+        const chartDefaults = {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#94a3b8', font: { size: 12 } } } },
+            scales: {
+                x: { ticks: { color: '#94a3b8', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.07)' } }
+            }
+        };
+
+        // Conversion Trend (Dual Line)
+        const ctxConv = document.getElementById('trendConvChart');
+        if (ctxConv) {
+            trendChartInstances['trendConvChart'] = new Chart(ctxConv, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Qty Conv%',
+                            data: qtyConvData,
+                            borderColor: '#f97316',
+                            backgroundColor: 'rgba(249,115,22,0.1)',
+                            tension: 0.4, fill: true, pointRadius: 5,
+                            pointBackgroundColor: '#f97316', borderWidth: 2.5
+                        },
+                        {
+                            label: 'Value Conv%',
+                            data: valConvData,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59,130,246,0.1)',
+                            tension: 0.4, fill: true, pointRadius: 5,
+                            pointBackgroundColor: '#3b82f6', borderWidth: 2.5
+                        }
+                    ]
+                },
+                options: {
+                    ...chartDefaults,
+                    scales: {
+                        ...chartDefaults.scales,
+                        y: { ...chartDefaults.scales.y, ticks: { ...chartDefaults.scales.y.ticks, callback: v => v + '%' } }
+                    },
+                    plugins: {
+                        ...chartDefaults.plugins,
+                        tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(2) + '%' } }
+                    }
+                }
+            });
+        }
+
+        // Revenue Trend (Area Chart)
+        const ctxRev = document.getElementById('trendRevChart');
+        if (ctxRev) {
+            trendChartInstances['trendRevChart'] = new Chart(ctxRev, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Total Revenue (₹)',
+                        data: revData,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16,185,129,0.15)',
+                        tension: 0.4, fill: true, pointRadius: 5,
+                        pointBackgroundColor: '#10b981', borderWidth: 2.5
+                    }]
+                },
+                options: {
+                    ...chartDefaults,
+                    scales: {
+                        ...chartDefaults.scales,
+                        y: { ...chartDefaults.scales.y, ticks: { ...chartDefaults.scales.y.ticks, callback: v => '₹' + fmtShort(v) } }
+                    },
+                    plugins: {
+                        ...chartDefaults.plugins,
+                        tooltip: { callbacks: { label: ctx => '₹' + formatNumber(ctx.parsed.y) } }
+                    }
+                }
+            });
+        }
+    }
+
+    // Load trends on startup
+    renderTrendsDashboard();
+
+    function renderPincodeDashboard() {
+        const tbody = document.querySelector('#pincodeTable tbody');
+        const noData = document.getElementById('pincodeNoData');
+        const wrapper = document.getElementById('pincodeTableWrapper');
+        if (!tbody || !noData || !wrapper) return;
+
+        // Same filtering logic as the main dashboard
+        const dataProduct = filteredProduct;
+        if (!dataProduct || dataProduct.length === 0) {
+            tbody.innerHTML = '';
+            noData.style.display = 'flex';
+            wrapper.style.display = 'none';
+            return;
+        }
+
+        noData.style.display = 'none';
+        wrapper.style.display = 'block';
+
+        const invMeta = {};
+        dataProduct.forEach(r => {
+            if (r.invoice) invMeta[r.invoice] = { branch: r.branch, bdm: r.bdm || 'Unknown', pincode: r.pincode || 'Unknown' };
+        });
+
+        const pincodeGroups = {};
+        dataProduct.forEach(r => {
+            const pKey = r.pincode || 'Unknown';
+            if (!pincodeGroups[pKey]) pincodeGroups[pKey] = { pincode: pKey, pRows: [], oRows: [], aRows: [], sRows: [] };
+            pincodeGroups[pKey].pRows.push(r);
+        });
+
+        filteredOSG.forEach(r => {
+            if (r.invoice && invMeta[r.invoice]) {
+                const pKey = invMeta[r.invoice].pincode;
+                if (pincodeGroups[pKey]) pincodeGroups[pKey].oRows.push(r);
+            }
+        });
+        filteredAMC.forEach(r => {
+            // Use AMC row's own pincode if available, else fallback to invoice lookup
+            let pKey;
+            if (r.pincode) {
+                pKey = r.pincode;
+            } else if (r.invoice && invMeta[r.invoice]) {
+                pKey = invMeta[r.invoice].pincode;
+            } else {
+                pKey = 'Unknown';
+            }
+            if (!pincodeGroups[pKey]) pincodeGroups[pKey] = { pincode: pKey, pRows: [], oRows: [], aRows: [], sRows: [] };
+            pincodeGroups[pKey].aRows.push(r);
+        });
+        filteredSamsung.forEach(r => {
+            if (r.invoice && invMeta[r.invoice]) {
+                const pKey = invMeta[r.invoice].pincode;
+                if (pincodeGroups[pKey]) pincodeGroups[pKey].sRows.push(r);
+            }
+        });
+
+        const samsungAllowedCats = ['AC', 'MICROWAVE OVEN', 'REFRIGERATOR', 'WASHING MACHINE'];
+        const stats = Object.values(pincodeGroups).sort((a, b) => {
+            // Default sort by Total Product Qty descending
+            const aQty = a.pRows.reduce((s, r) => s + (r.qty || 0), 0);
+            const bQty = b.pRows.reduce((s, r) => s + (r.qty || 0), 0);
+            return bQty - aQty;
+        });
+
+        let html = '';
+        stats.forEach(grp => {
+            const pQty = grp.pRows.reduce((s, r) => s + (r.qty || 0), 0);
+            if (pQty === 0) return; // Skip empty pincodes
+
+            const pRev = grp.pRows.reduce((s, r) => s + (r.revenue || r.soldPrice || 0), 0);
+            const oQty = grp.oRows.reduce((s, r) => s + (r.qty || 0), 0);
+            const aQty = grp.aRows.reduce((s, r) => s + (r.qty || 0), 0);
+            const sQty = grp.sRows.reduce((s, r) => s + (r.qty || 0), 0);
+
+            const lgPQty = grp.pRows.filter(r => r.brand && r.brand.toUpperCase().includes('LG')).reduce((s, r) => s + (r.qty || 0), 0);
+            const samPQty = grp.pRows.filter(r => r.brand && r.brand.toUpperCase().includes('SAMSUNG') && samsungAllowedCats.includes((r.product || '').toUpperCase().trim())).reduce((s, r) => s + (r.qty || 0), 0);
+
+            const osgQtyC = pQty > 0 ? (oQty / pQty) * 100 : 0;
+            const amcQtyC = lgPQty > 0 ? (aQty / lgPQty) * 100 : 0;
+            const samQtyC = samPQty > 0 ? (sQty / samPQty) * 100 : 0;
+
+            const fmtNum = (n) => `<span class="kpi-value">${formatNumber(n)}</span>`;
+            const fmtPct = (p) => {
+                const color = p >= 15 ? 'color:#10b981;' : (p >= 10 ? 'color:#f59e0b;' : 'color:#ef4444;');
+                return `<span style="font-weight:600; ${color}">${p.toFixed(2)}%</span>`;
+            };
+
+            html += `
+                <tr>
+                    <td style="font-weight:600; color:var(--text-main);">${grp.pincode}</td>
+                    <td id="area-${grp.pincode}" style="font-size:0.85rem; color:var(--text-muted);">
+                        ${pincodeAreaCache[grp.pincode] ? pincodeAreaCache[grp.pincode] : 'Loading...'}
+                    </td>
+                    <td class="text-right">${fmtNum(pQty)}</td>
+                    <td class="text-right">₹${fmtShort(pRev)}</td>
+                    <td class="text-right">${fmtNum(oQty)}</td>
+                    <td class="text-right">${fmtPct(osgQtyC)}</td>
+                    <td class="text-right">${fmtNum(aQty)}</td>
+                    <td class="text-right">${fmtPct(amcQtyC)}</td>
+                    <td class="text-right">${fmtNum(sQty)}</td>
+                    <td class="text-right">${fmtPct(samQtyC)}</td>
+                </tr>
+            `;
+
+            // Trigger async fetch if we don't have it cached
+            if (!pincodeAreaCache[grp.pincode]) {
+                fetchAreaForPincode(grp.pincode);
+            }
+        });
+
+        tbody.innerHTML = html;
+    }
+
+    async function fetchAreaForPincode(pincode) {
+        if (!pincode || pincode === 'Unknown' || String(pincode).length < 6) {
+            pincodeAreaCache[pincode] = '-';
+            updateAreaUI(pincode, '-');
+            return;
+        }
+
+        try {
+            const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+            const data = await res.json();
+            if (data && data[0] && data[0].Status === 'Success' && data[0].PostOffice && data[0].PostOffice.length > 0) {
+                // Get the first area name, or join a couple if desired. Just taking the primary PostOffice Name
+                const areaName = data[0].PostOffice[0].Name;
+                const district = data[0].PostOffice[0].District;
+                const fullName = `${areaName}, ${district}`;
+                pincodeAreaCache[pincode] = fullName;
+                updateAreaUI(pincode, fullName);
+            } else {
+                pincodeAreaCache[pincode] = 'Not Found';
+                updateAreaUI(pincode, 'Not Found');
+            }
+        } catch (err) {
+            console.error('Error fetching area for pincode', pincode, err);
+            updateAreaUI(pincode, 'Error');
+        }
+    }
+
+    function updateAreaUI(pincode, areaName) {
+        const td = document.getElementById(`area-${pincode}`);
+        if (td) {
+            td.textContent = areaName;
         }
     }
 
@@ -2449,9 +3257,6 @@
     function buildFutureStaffStats() {
         const futureProduct = productData.filter(r => r.branch && r.branch.toUpperCase().includes('FUTURE'));
 
-        const invoiceStaff = {};
-        futureProduct.forEach(r => { if (r.invoice && r.staff) invoiceStaff[r.invoice] = r.staff; });
-
         const pByStaff = {};
         futureProduct.forEach(r => {
             const s = r.staff || 'Unknown';
@@ -2459,35 +3264,53 @@
             pByStaff[s].rows.push(r);
         });
 
+        // Helper to resolve staff and ensure it's a Future branch
+        const processWarr = (r, byStaffObj) => {
+            const meta = window.getBranchMeta(r);
+            if (!meta && !r.branch) return;
+            const branchName = meta ? meta.origBranch : r.branch;
+            
+            if (!branchName.toUpperCase().includes('FUTURE')) return; // strictly Future stores
+
+            const s = r.staff || ('Unknown|' + branchName);
+            if (!byStaffObj[s]) byStaffObj[s] = [];
+            byStaffObj[s].push(r);
+        };
+
         const oByStaff = {};
-        osgData.forEach(r => {
-            const s = r.invoice ? (invoiceStaff[r.invoice] || null) : null;
-            if (!s) return;
-            if (!oByStaff[s]) oByStaff[s] = [];
-            oByStaff[s].push(r);
-        });
+        osgData.forEach(r => processWarr(r, oByStaff));
 
         const amcByStaff = {};
-        amcData.forEach(r => {
-            const s = r.invoice ? (invoiceStaff[r.invoice] || null) : null;
-            if (!s) return;
-            if (!amcByStaff[s]) amcByStaff[s] = [];
-            amcByStaff[s].push(r);
-        });
+        amcData.forEach(r => processWarr(r, amcByStaff));
 
         const samByStaff = {};
-        samsungData.forEach(r => {
-            const s = r.invoice ? (invoiceStaff[r.invoice] || null) : null;
-            if (!s) return;
-            if (!samByStaff[s]) samByStaff[s] = [];
-            samByStaff[s].push(r);
-        });
+        samsungData.forEach(r => processWarr(r, samByStaff));
 
         const allStaff = new Set([...Object.keys(pByStaff), ...Object.keys(oByStaff), ...Object.keys(amcByStaff), ...Object.keys(samByStaff)]);
         allStaff.delete('Unknown');
 
         return Array.from(allStaff).map(name => {
-            const pInfo = pByStaff[name] || { branch: '', rbm: '', bdm: '', rows: [] };
+            let branch = '';
+            let rbm = '';
+            let bdm = '';
+            let displayName = name;
+
+            if (name.startsWith('Unknown|')) {
+                branch = name.split('|')[1] || '';
+                displayName = 'Unknown';
+                const m = window.getBranchMeta({ branch });
+                if (m) {
+                    rbm = m.rbm;
+                    bdm = m.bdm;
+                }
+            } else {
+                const info = pByStaff[name] || { branch: '', rbm: '', bdm: '' };
+                branch = info.branch;
+                rbm = info.rbm;
+                bdm = info.bdm;
+            }
+
+            const pInfo = pByStaff[name] || { branch, rbm, bdm, rows: [] };
             const oRows = oByStaff[name] || [];
             const amcRows = amcByStaff[name] || [];
             const samRows = samByStaff[name] || [];
@@ -2529,7 +3352,8 @@
             const oProdCounts = {};
             const oProdRev = {};
             oRows.forEach(r => {
-                const p = r.product || 'Unknown';
+                // OSG category column is already normalized; fall back to normalizing raw product name
+                const p = r.category || normalizeProductCategory(r.product) || 'Unknown';
                 oProdCounts[p] = (oProdCounts[p] || 0) + (r.qty || 0);
                 oProdRev[p] = (oProdRev[p] || 0) + (r.soldPrice || 0);
             });
@@ -2545,6 +3369,7 @@
             const samOsgCounts = {};
             const samOsgRev = {};
             samRows.forEach(r => {
+                // Samsung: r.product is already normalized by mapSamsungProductCategory
                 const p = r.product || 'Unknown';
                 samOsgCounts[p] = (samOsgCounts[p] || 0) + (r.qty || 0);
                 samOsgRev[p] = (samOsgRev[p] || 0) + (r.soldPrice || 0);
@@ -2590,7 +3415,16 @@
                 };
             }).sort((a, b) => b.qty - a.qty);
 
-            return { name, branch: pInfo.branch, rbm: pInfo.rbm, bdm: pInfo.bdm, pQty, oQty, pRev, oRev, qtyConv, valConv, products };
+            if (!branch || !rbm || !bdm) {
+                const amcFirst = amcRows.find(x => x.branch && x.rbm && x.bdm);
+                if (amcFirst) {
+                    if (!branch) branch = amcFirst.branch;
+                    if (!rbm) rbm = amcFirst.rbm;
+                    if (!bdm) bdm = amcFirst.bdm;
+                }
+            }
+
+            return { name: displayName, branch, rbm, bdm, pQty, oQty, pRev, oRev, qtyConv, valConv, products };
         });
     }
     function renderLowConvPage() {
@@ -3240,37 +4074,48 @@
 
         // Invoice mapping to branch/bdm
         const invMeta = {};
-        fProduct.forEach(r => { if (r.invoice) invMeta[r.invoice] = { branch: r.branch, bdm: r.bdm || 'Unknown' }; });
+        fProduct.forEach(r => { if (r.invoice) invMeta[r.invoice] = { branch: r.branch, bdm: r.bdm || 'Unknown', pincode: r.pincode || 'Unknown', product: r.product }; });
 
         // Group Product by BDM -> Branch
         const branchGroups = {}; // key: BDM|Branch
+        const pincodeGroups = {}; // key: Pincode
         fProduct.forEach(r => {
             const key = (r.bdm || 'Unknown') + '|' + (r.branch || 'Unknown');
             if (!branchGroups[key]) branchGroups[key] = { bdm: r.bdm || 'Unknown', branch: r.branch || 'Unknown', pRows: [], oRows: [], aRows: [], sRows: [] };
             branchGroups[key].pRows.push(r);
+            
+            const pKey = r.pincode || 'Unknown';
+            if (!pincodeGroups[pKey]) pincodeGroups[pKey] = { pincode: pKey, pRows: [], oRows: [], aRows: [], sRows: [] };
+            pincodeGroups[pKey].pRows.push(r);
         });
 
-        osgData.forEach(r => {
-            if (r.invoice && invMeta[r.invoice]) {
-                const meta = invMeta[r.invoice];
-                const key = meta.bdm + '|' + meta.branch;
-                if (branchGroups[key]) branchGroups[key].oRows.push(r);
-            }
-        });
-        amcData.forEach(r => {
-            if (r.invoice && invMeta[r.invoice]) {
-                const meta = invMeta[r.invoice];
-                const key = meta.bdm + '|' + meta.branch;
-                if (branchGroups[key]) branchGroups[key].aRows.push(r);
-            }
-        });
-        samsungData.forEach(r => {
-            if (r.invoice && invMeta[r.invoice]) {
-                const meta = invMeta[r.invoice];
-                const key = meta.bdm + '|' + meta.branch;
-                if (branchGroups[key]) branchGroups[key].sRows.push(r);
-            }
-        });
+        // Warranty Data grouping strictly by branch, entirely decoupled from invoices
+        const processWarrForExport = (r, rowsArrKey) => {
+            const meta = window.getBranchMeta(r);
+            if (!meta && !r.branch) return;
+            
+            const rowBranch = meta ? meta.origBranch : r.branch;
+            const rowBDM = r.bdm || (meta ? meta.bdm : 'Unknown');
+            const rowRBM = r.rbm || (meta ? meta.rbm : 'Unknown');
+            const rowPincode = r.pincode || 'Unknown'; // Since no invoice mapping, default to Unknown for OSG/Samsung
+
+            if (!rowBranch.toUpperCase().includes('FUTURE')) return; // Strictly future stores
+            if (selRBM && rowRBM !== selRBM) return;
+            if (selBDM && rowBDM !== selBDM) return;
+            if (selBranch && rowBranch !== selBranch) return;
+
+            const key = rowBDM + '|' + rowBranch;
+            if (!branchGroups[key]) branchGroups[key] = { bdm: rowBDM, branch: rowBranch, pRows: [], oRows: [], aRows: [], sRows: [] };
+            branchGroups[key][rowsArrKey].push(r);
+            
+            const pKey = rowPincode;
+            if (!pincodeGroups[pKey]) pincodeGroups[pKey] = { pincode: pKey, pRows: [], oRows: [], aRows: [], sRows: [] };
+            pincodeGroups[pKey][rowsArrKey].push(r);
+        };
+
+        osgData.forEach(r => processWarrForExport(r, 'oRows'));
+        amcData.forEach(r => processWarrForExport(r, 'aRows'));
+        samsungData.forEach(r => processWarrForExport(r, 'sRows'));
 
         // Convert to array and sort by BDM -> Branch
         const branchStats = Object.values(branchGroups).sort((a, b) => a.bdm.localeCompare(b.bdm) || a.branch.localeCompare(b.branch));
@@ -3326,7 +4171,8 @@
                 pRevs[p] = (pRevs[p] || 0) + (r.soldPrice || 0);
             });
             grp.oRows.forEach(r => {
-                const p = r.product || 'Unknown';
+                // OSG: use category column (already normalized), fall back to normalizing product name
+                const p = r.category || normalizeProductCategory(r.product) || 'Unknown';
                 oCounts[p] = (oCounts[p] || 0) + (r.qty || 0);
                 oRevs[p] = (oRevs[p] || 0) + (r.soldPrice || 0);
             });
@@ -3335,6 +4181,7 @@
                 aCounts[p] = (aCounts[p] || 0) + (r.qty || 0);
             });
             grp.sRows.forEach(r => {
+                // Samsung: r.product is already normalized by mapSamsungProductCategory
                 const p = r.product || 'Unknown';
                 sCounts[p] = (sCounts[p] || 0) + (r.qty || 0);
             });
@@ -3469,17 +4316,22 @@
         const w0TotalSoldQty   = w0AllProd.reduce((s, r) => s + (r.qty || 0), 0);
         const w0TotalSoldPrice = w0AllProd.reduce((s, r) => s + (r.soldPrice || 0), 0);
 
-        // Filter OSG/Samsung to only invoices in the filtered product set (since they don't have RBM columns)
-        const w0OsgData = osgData.filter(r => !r.invoice || w0InvSet.has(r.invoice));
-        const w0SamData = samsungData.filter(r => !r.invoice || w0InvSet.has(r.invoice));
+        // Filter OSG/Samsung/AMC directly via their branch values
+        const filterWarrRow = r => {
+            const meta = window.getBranchMeta(r);
+            if (!meta && !r.branch) return false;
+            const rowBranch = meta ? meta.origBranch : r.branch;
+            const rowRBM = r.rbm || (meta ? meta.rbm : '');
+            const rowBDM = r.bdm || (meta ? meta.bdm : '');
 
-        // LG-AMC data already has RBM/BDM/Branch mapped from its own Excel file, so filter it directly
-        // to avoid dropping valid sales due to invoice mismatches with the Product data.
-        const w0AmcDataF = amcData.filter(r => 
-            (!selRBM || r.rbm === selRBM) &&
-            (!selBDM || r.bdm === selBDM) &&
-            (!selBranch || r.branch === selBranch)
-        );
+            if (selRBM && rowRBM !== selRBM) return false;
+            if (selBDM && rowBDM !== selBDM) return false;
+            if (selBranch && rowBranch !== selBranch) return false;
+            return true;
+        };
+        const w0OsgData = osgData.filter(filterWarrRow);
+        const w0SamData = samsungData.filter(filterWarrRow);
+        const w0AmcDataF = amcData.filter(filterWarrRow);
 
         // OSG warranty across filtered stores
         const w0OsgSoldQty   = w0OsgData.reduce((s, r) => s + (r.qty || 0), 0);
@@ -3515,15 +4367,14 @@
         const globalOsgProds = new Set();
         const globalLgProds = new Set();
         
-        productData.forEach(r => {
-            const p = (r.product || 'Unknown').toUpperCase().trim();
-            globalOsgProds.add(p);
-            if (r.brand && r.brand.toUpperCase().includes('LG')) {
-                globalLgProds.add(p);
-            }
+        osgData.forEach(r => {
+            const cat = (r.category || 'SMALL APPLIANCE').toUpperCase().trim();
+            globalOsgProds.add(cat);
         });
-        osgData.forEach(r => globalOsgProds.add((r.product || 'Unknown').toUpperCase().trim()));
-        amcData.forEach(r => globalLgProds.add((r.product || 'Unknown').toUpperCase().trim()));
+        amcData.forEach(r => {
+            const cat = (r.category || 'SMALL APPLIANCE').toUpperCase().trim();
+            globalLgProds.add(cat);
+        });
         
         const osgProds = [...globalOsgProds].sort();
         const lgProds = [...globalLgProds].sort();
@@ -3533,12 +4384,12 @@
         const osgProdCounts = {}, osgProdPrices = {};
         const allProdCounts = {}, allProdPrices = {};
         w0AllProd.forEach(r => {
-            const p = (r.product || 'Unknown').toUpperCase().trim();
+            const p = (r.category || 'Unknown').toUpperCase().trim();
             allProdCounts[p] = (allProdCounts[p] || 0) + (r.qty || 0);
             allProdPrices[p] = (allProdPrices[p] || 0) + (r.soldPrice || 0);
         });
         w0OsgData.forEach(r => {
-            const p = (r.product || 'Unknown').toUpperCase().trim();
+            const p = (r.category || 'Unknown').toUpperCase().trim();
             osgProdCounts[p] = (osgProdCounts[p] || 0) + (r.qty || 0);
             osgProdPrices[p] = (osgProdPrices[p] || 0) + (r.soldPrice || 0);
         });
@@ -3547,27 +4398,27 @@
         const amcProdCounts = {}, lgProdAllCounts = {}, lgProdAllPrices = {};
         w0AllProd.forEach(r => {
             if (r.brand && r.brand.toUpperCase().includes('LG')) {
-                const p = (r.product || 'Unknown').toUpperCase().trim();
+                const p = (r.category || 'Unknown').toUpperCase().trim();
                 lgProdAllCounts[p] = (lgProdAllCounts[p] || 0) + (r.qty || 0);
                 lgProdAllPrices[p] = (lgProdAllPrices[p] || 0) + (r.soldPrice || 0);
             }
         });
         w0AmcDataF.forEach(r => {
-            const p = (r.product || 'Unknown').toUpperCase().trim();
+            const p = (r.category || 'Unknown').toUpperCase().trim();
             amcProdCounts[p] = (amcProdCounts[p] || 0) + (r.qty || 0);
         });
 
         // ---- SAMSUNG-OVERVIEW by product (filtered stores, only Samsung eligible categories) ----
         const samProdCounts = {}, samProdAllCounts = {}, samProdAllPrices = {};
         w0AllProd.forEach(r => {
-            const p = (r.product || 'Unknown').toUpperCase().trim();
+            const p = (r.category || 'Unknown').toUpperCase().trim();
             if (r.brand && r.brand.toUpperCase().includes('SAMSUNG') && w0SamAllowedCats.includes(p)) {
                 samProdAllCounts[p] = (samProdAllCounts[p] || 0) + (r.qty || 0);
                 samProdAllPrices[p] = (samProdAllPrices[p] || 0) + (r.soldPrice || 0);
             }
         });
         w0SamData.forEach(r => {
-            const p = (r.product || 'Unknown').toUpperCase().trim();
+            const p = (r.category || 'Unknown').toUpperCase().trim();
             samProdCounts[p] = (samProdCounts[p] || 0) + (r.qty || 0);
         });
 
@@ -3596,7 +4447,7 @@
         aoa0[1][6] = 'PRODUCT'; aoa0[1][7] = 'SOLD QTY'; aoa0[1][8] = 'SOLD PRICE'; aoa0[1][9] = 'QTY-CONV'; aoa0[1][10] = 'VALUE-CONV';
         samProds.forEach((p, i) => {
             const r = 2 + i, sq = samProdCounts[p] || 0, tq = samProdAllCounts[p] || 0, tp = samProdAllPrices[p] || 0;
-            const sv = w0SamData.filter(x => (x.product||'').toUpperCase().trim() === p).reduce((s,x) => s + (x.soldPrice||0), 0);
+            const sv = w0SamData.filter(x => (x.category||'Unknown').toUpperCase().trim() === p).reduce((s,x) => s + (x.soldPrice||0), 0);
             aoa0[r][6] = p; aoa0[r][7] = sq; aoa0[r][8] = fmt2(sv);
             aoa0[r][9] = tq > 0 ? fmt2((sq/tq)*100) : 0; aoa0[r][10] = tp > 0 ? fmt2((sv/tp)*100) : 0;
         });
@@ -3619,7 +4470,7 @@
         lgProds.forEach((p, i) => {
             const r = lgBlock0 + 2 + i, sq = amcProdCounts[p] || 0;
             const tq = lgProdAllCounts[p] || 0, tp = lgProdAllPrices[p] || 0;
-            const av = w0AmcDataF.filter(x => (x.product||'').toUpperCase().trim() === p).reduce((s,x) => s + (x.soldPrice||0), 0);
+            const av = w0AmcDataF.filter(x => (x.category||'Unknown').toUpperCase().trim() === p).reduce((s,x) => s + (x.soldPrice||0), 0);
             aoa0[r][6] = p; aoa0[r][7] = sq; aoa0[r][8] = fmt2(av);
             aoa0[r][9] = tq > 0 ? fmt2((sq/tq)*100) : 0; aoa0[r][10] = tp > 0 ? fmt2((av/tp)*100) : 0;
         });
@@ -3799,6 +4650,54 @@
         XLSX.utils.book_append_sheet(wb, ws2, 'Future_Staff_Overview');
         XLSX.utils.book_append_sheet(wb, ws3, 'LG-AMC');
         XLSX.utils.book_append_sheet(wb, ws4, 'SAMSUNG');
+
+        // --------------------------------------------------------------------------------
+        // DATA PROCESSING FOR PINCODE_Overview
+        // --------------------------------------------------------------------------------
+        const pincodeStats = Object.values(pincodeGroups).sort((a, b) => String(a.pincode).localeCompare(String(b.pincode)));
+        const aoaPin = [];
+        aoaPin.push(['PINCODE OVERVIEW']);
+        aoaPin.push(['Pincode', 'Product Qty', 'Product Rev', 'OSG Qty', 'OSG Rev', 'LG-AMC Qty', 'LG-AMC Rev', 'SAMSUNG Qty', 'SAMSUNG Rev', 'Osg Qty Conv%', 'Osg Val Conv%', 'LG-AMC Qty Conv%', 'LG-AMC Val Conv%', 'Samsung Qty Conv%', 'Samsung Val Conv%']);
+
+        pincodeStats.forEach(grp => {
+            const pQty = grp.pRows.reduce((s, r) => s + (r.qty || 0), 0);
+            const pRev = grp.pRows.reduce((s, r) => s + (r.revenue || r.soldPrice || 0), 0);
+            const oQty = grp.oRows.reduce((s, r) => s + (r.qty || 0), 0);
+            const oRev = grp.oRows.reduce((s, r) => s + (r.soldPrice || 0), 0);
+            const aQty = grp.aRows.reduce((s, r) => s + (r.qty || 0), 0);
+            const aRev = grp.aRows.reduce((s, r) => s + (r.soldPrice || 0), 0);
+            const sQty = grp.sRows.reduce((s, r) => s + (r.qty || 0), 0);
+            const sRev = grp.sRows.reduce((s, r) => s + (r.soldPrice || 0), 0);
+
+            const lgPQty = grp.pRows.filter(r => r.brand && r.brand.toUpperCase().includes('LG')).reduce((s, r) => s + (r.qty || 0), 0);
+            const lgPRev = grp.pRows.filter(r => r.brand && r.brand.toUpperCase().includes('LG')).reduce((s, r) => s + (r.revenue || r.soldPrice || 0), 0);
+
+            const samPQty = grp.pRows.filter(r => r.brand && r.brand.toUpperCase().includes('SAMSUNG') && w0SamAllowedCats.includes((r.product || '').toUpperCase().trim())).reduce((s, r) => s + (r.qty || 0), 0);
+            const samPRev = grp.pRows.filter(r => r.brand && r.brand.toUpperCase().includes('SAMSUNG') && w0SamAllowedCats.includes((r.product || '').toUpperCase().trim())).reduce((s, r) => s + (r.revenue || r.soldPrice || 0), 0);
+
+            const osgQtyC = pQty > 0 ? (oQty / pQty) * 100 : 0;
+            const osgValC = pRev > 0 ? (oRev / pRev) * 100 : 0;
+            const amcQtyC = lgPQty > 0 ? (aQty / lgPQty) * 100 : 0;
+            const amcValC = lgPRev > 0 ? (aRev / lgPRev) * 100 : 0;
+            const samQtyC = samPQty > 0 ? (sQty / samPQty) * 100 : 0;
+            const samValC = samPRev > 0 ? (sRev / samPRev) * 100 : 0;
+
+            aoaPin.push([
+                grp.pincode,
+                pQty, Math.round(pRev),
+                oQty, Math.round(oRev),
+                aQty, Math.round(aRev),
+                sQty, Math.round(sRev),
+                fmt2(osgQtyC), fmt2(osgValC),
+                fmt2(amcQtyC), fmt2(amcValC),
+                fmt2(samQtyC), fmt2(samValC)
+            ]);
+        });
+        
+        const wsPin = XLSX.utils.aoa_to_sheet(aoaPin);
+        wsPin['!cols'] = [{ wch: 15 }, { wch: 12 }, { wch: 14 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 14 }, { wch: 12 }, { wch: 14 }, { wch: 15 }, { wch: 15 }, { wch: 16 }, { wch: 16 }, { wch: 18 }, { wch: 18 }];
+        wsPin['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 14 } }];
+        XLSX.utils.book_append_sheet(wb, wsPin, 'Pincode_Overview');
 
         // Apply beautiful styles using xlsx-js-style
         const fullBorder = { top: { style: 'thin', color: { rgb: '000000' } }, bottom: { style: 'thin', color: { rgb: '000000' } }, left: { style: 'thin', color: { rgb: '000000' } }, right: { style: 'thin', color: { rgb: '000000' } } };
@@ -5127,7 +6026,11 @@
         const localMonths = await getAllMonthsFromDB();
         return firebase.database().ref('customerStatus').once('value').then(snap => {
             let keys = Object.keys(snap.val() || {}).filter(k => /^\d{4}-\d{2}$/.test(k));
-            localMonths.forEach(m => { if (!keys.includes(m)) keys.push(m); });
+            localMonths.forEach(m => { 
+                let norm = m;
+                if (/^\d{4}-\d{1}$/.test(m)) norm = m.substring(0, 5) + '0' + m.substring(5);
+                if (!keys.includes(norm) && /^\d{4}-\d{2}$/.test(norm)) keys.push(norm); 
+            });
             keys.sort().reverse();
 
             const current = window.coActiveMonth || '';
@@ -5518,7 +6421,7 @@
 
         window.toggleCoCall = function (inv, status) {
             if (!currentCaller && status !== "") {
-                alert('Please select your name (Harmiya / Aswathi / Shikha) at the top of the page before logging a call.');
+                alert('Please select your name (Harmiya / Aswathi / Shikha / Anjana) at the top of the page before logging a call.');
                 updateCoSingleRow(inv);
                 return;
             }
@@ -6156,18 +7059,38 @@
             (!selStaff || r.staff === selStaff)
         );
 
-        // Map invoices to filter attributes to easily assign OSG/AMC/Samsung records
+        // Map invoices only for Product grouping, not warranties
         const invMeta = {};
         fProduct.forEach(r => {
             if (r.invoice) invMeta[r.invoice] = { branch: r.branch, bdm: r.bdm || 'Unknown', staff: r.staff || 'Unknown' };
         });
 
-        const filterLinkedData = (dataArray) => {
-            return dataArray.filter(r => r.invoice && invMeta[r.invoice]);
+        // Helper to resolve the correct branch entirely decoupled from product file invoices
+        const resolveWarrMeta = (r) => {
+            const m = window.getBranchMeta(r);
+            if (!m && !r.branch) return null;
+            return { 
+                branch: m ? m.origBranch : r.branch, 
+                bdm: r.bdm || (m ? m.bdm : ''), 
+                rbm: r.rbm || (m ? m.rbm : ''), 
+                staff: r.staff || '' 
+            };
         };
-        const fOSG = filterLinkedData(osgData);
-        const fAMC = filterLinkedData(amcData);
-        const fSamsung = filterLinkedData(samsungData);
+
+        const filterWarrRow = r => {
+            const meta = resolveWarrMeta(r);
+            if (!meta || !meta.branch || !meta.branch.toUpperCase().includes('FUTURE')) return false;
+
+            if (selBDM && meta.bdm !== selBDM) return false;
+            if (selBranch && meta.branch !== selBranch) return false;
+            if (selStaff && meta.staff !== selStaff) return false;
+            // (Skipping RBM for dashboard UI to keep it simple, though it respects selRBM if added)
+            return true;
+        };
+
+        const fOSG = osgData.filter(filterWarrRow);
+        const fAMC = amcData.filter(filterWarrRow);
+        const fSamsung = samsungData.filter(filterWarrRow);
 
         // ====================================================================
         // TAB 1: BRANCH OVERVIEW (Group by BDM -> Branch)
@@ -6178,9 +7101,33 @@
             if (!brGrp[k]) brGrp[k] = { bdm: r.bdm || 'Unknown', branch: r.branch, p: [], o: [], a: [], s: [] };
             brGrp[k].p.push(r);
         });
-        fOSG.forEach(r => { const k = invMeta[r.invoice].bdm + '|' + invMeta[r.invoice].branch; if (brGrp[k]) brGrp[k].o.push(r); });
-        fAMC.forEach(r => { const k = invMeta[r.invoice].bdm + '|' + invMeta[r.invoice].branch; if (brGrp[k]) brGrp[k].a.push(r); });
-        fSamsung.forEach(r => { const k = invMeta[r.invoice].bdm + '|' + invMeta[r.invoice].branch; if (brGrp[k]) brGrp[k].s.push(r); });
+
+        fOSG.forEach(r => {
+            const m = resolveWarrMeta(r) || {};
+            let bdm = m.bdm || 'Unknown';
+            let branch = m.branch || 'Unknown';
+            const k = bdm + '|' + branch;
+            if (!brGrp[k]) brGrp[k] = { bdm, branch, p: [], o: [], a: [], s: [] };
+            brGrp[k].o.push(r);
+        });
+
+        fAMC.forEach(r => {
+            const m = resolveWarrMeta(r) || {};
+            let bdm = m.bdm || 'Unknown';
+            let branch = m.branch || 'Unknown';
+            const k = bdm + '|' + branch;
+            if (!brGrp[k]) brGrp[k] = { bdm, branch, p: [], o: [], a: [], s: [] };
+            brGrp[k].a.push(r);
+        });
+
+        fSamsung.forEach(r => {
+            const m = resolveWarrMeta(r) || {};
+            let bdm = m.bdm || 'Unknown';
+            let branch = m.branch || 'Unknown';
+            const k = bdm + '|' + branch;
+            if (!brGrp[k]) brGrp[k] = { bdm, branch, p: [], o: [], a: [], s: [] };
+            brGrp[k].s.push(r);
+        });
 
         let brHtml = `<tr><th>BDM</th><th>Branch</th><th>Prod Qty</th><th>OSG Qty</th><th>LG-AMC Qty</th><th>Samsung Qty</th><th>OSG Val Conv %</th><th>LG-AMC Val Conv %</th><th>Samsung Val Conv %</th></tr>`;
         Object.values(brGrp).sort((a, b) => a.bdm.localeCompare(b.bdm) || a.branch.localeCompare(b.branch)).forEach(grp => {
@@ -6225,9 +7172,29 @@
             if (!stGrp[k]) stGrp[k] = { branch: r.branch, staff: r.staff || 'Unknown', p: [], o: [], a: [], s: [] };
             stGrp[k].p.push(r);
         });
-        fOSG.forEach(r => { const k = invMeta[r.invoice].branch + '|' + invMeta[r.invoice].staff; if (stGrp[k]) stGrp[k].o.push(r); });
-        fAMC.forEach(r => { const k = invMeta[r.invoice].branch + '|' + invMeta[r.invoice].staff; if (stGrp[k]) stGrp[k].a.push(r); });
-        fSamsung.forEach(r => { const k = invMeta[r.invoice].branch + '|' + invMeta[r.invoice].staff; if (stGrp[k]) stGrp[k].s.push(r); });
+        fOSG.forEach(r => {
+            let branch = r.branch || ((r.invoice && invMeta[r.invoice]) ? invMeta[r.invoice].branch : 'Unknown');
+            let staff = (r.invoice && invMeta[r.invoice]) ? invMeta[r.invoice].staff : 'Unknown';
+            const k = branch + '|' + staff;
+            if (!stGrp[k]) stGrp[k] = { branch, staff, p: [], o: [], a: [], s: [] };
+            stGrp[k].o.push(r);
+        });
+
+        fAMC.forEach(r => {
+            let branch = r.branch || ((r.invoice && invMeta[r.invoice]) ? invMeta[r.invoice].branch : 'Unknown');
+            let staff = r.staff || ((r.invoice && invMeta[r.invoice]) ? invMeta[r.invoice].staff : 'Unknown');
+            const k = branch + '|' + staff;
+            if (!stGrp[k]) stGrp[k] = { branch, staff, p: [], o: [], a: [], s: [] };
+            stGrp[k].a.push(r);
+        });
+
+        fSamsung.forEach(r => {
+            let branch = r.branch || ((r.invoice && invMeta[r.invoice]) ? invMeta[r.invoice].branch : 'Unknown');
+            let staff = (r.invoice && invMeta[r.invoice]) ? invMeta[r.invoice].staff : 'Unknown';
+            const k = branch + '|' + staff;
+            if (!stGrp[k]) stGrp[k] = { branch, staff, p: [], o: [], a: [], s: [] };
+            stGrp[k].s.push(r);
+        });
 
         let stHtml = `<tr><th>Branch</th><th>Staff</th><th>Prod Qty</th><th>OSG Qty</th><th>LG-AMC Qty</th><th>Samsung Qty</th><th>OSG Val Conv %</th><th>LG-AMC Val Conv %</th><th>Samsung Val Conv %</th></tr>`;
         Object.values(stGrp).sort((a, b) => a.branch.localeCompare(b.branch) || a.staff.localeCompare(b.staff)).forEach(grp => {
