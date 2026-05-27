@@ -1,5 +1,5 @@
-// ============================================================
-// Analytics Portal ” Conversion Reports
+﻿// ============================================================
+// Analytics Portal Ã¢â‚¬Â Conversion Reports
 // Dual-file: Product Data + OSG Data
 // Value Conversion = OSG Sold Price / Product Sold Price
 // Qty Conversion   = OSG Quantity  / Product Quantity
@@ -394,7 +394,7 @@
             e.preventDefault();
             const section = item.dataset.section;
 
-            // Check if page needs auth ” Upload Data and Customers Without OSG are public
+            // Check if page needs auth Ã¢â‚¬Â Upload Data and Customers Without OSG are public
             const isPublicPage = section === 'customers-osg-section' || section === 'upload-section' || section === 'wosg-dashboard-section';
             if (!isPublicPage && !isAuthenticated) {
                 // Intercept navigation and show password modal
@@ -475,7 +475,7 @@
             savedAt: new Date().toISOString()
         };
         await saveMonthlyDataToDB(month, snapshot);
-        alert(`✅ Data for ${month} saved successfully!`);
+        alert(`Ã¢Å“â€¦ Data for ${month} saved successfully!`);
         renderTrendsDashboard();
     });
 
@@ -643,7 +643,7 @@
     function setupUploadZone(zone, input, onFiles) {
         console.log('[UPLOAD] setupUploadZone registered for', input.id);
         // Only open the file picker on bare zone clicks (not on label/button/input)
-        // The label's native `for` attribute already opens the input — no manual click needed
+        // The label's native `for` attribute already opens the input — no manual click needed
         zone.addEventListener('click', (e) => {
             if (e.target === input) return;
             if (e.target.tagName === 'LABEL' || e.target.closest('label')) return;
@@ -734,7 +734,7 @@
                     var bShr = document.getElementById('btnShare');
                     var bRst = document.getElementById('btnReset');
                     if (fcb) fcb.style.display = 'flex';
-                    if (fct) fct.textContent = allData.length + ' product · ' + osgData.length + ' OSG';
+                    if (fct) fct.textContent = allData.length + ' product Ã‚Â· ' + osgData.length + ' OSG';
                     if (bShr) bShr.style.display = 'flex';
                     if (bRst) bRst.style.display = 'flex';
 
@@ -862,8 +862,8 @@
     }
 
     // ---- SAMSUNG PRODUCT NAME NORMALIZER ----
-    // Maps raw Samsung Care+ product strings → standard category names
-    // e.g. "Samsung Care+ EW WM Auto TopLoad 1Year" → "WASHING MACHINE"
+    // Maps raw Samsung Care+ product strings Ã¢â€ â€™ standard category names
+    // e.g. "Samsung Care+ EW WM Auto TopLoad 1Year" Ã¢â€ â€™ "WASHING MACHINE"
     function mapSamsungProductCategory(rawName) {
         if (!rawName) return rawName;
         const name = rawName.toUpperCase();
@@ -886,7 +886,7 @@
     }
 
     // ---- UNIVERSAL CATEGORY NORMALIZER (for Product & OSG files) ----
-    // Maps raw category column values → one of the 9 standard categories
+    // Maps raw category column values Ã¢â€ â€™ one of the 9 standard categories
     function normalizeProductCategory(raw) {
         if (!raw) return raw;
         const c = raw.toUpperCase().trim();
@@ -906,13 +906,13 @@
             || c.includes('PURIFIER') || c.includes('WATER HEATER') || c.includes('GEYSER')
             || c.includes('HOME APPLIANCE')) return 'HOME APPLIANCE';
         if (c.includes('DISH WASHER') || c.includes('DISHWASHER')) return 'DISH WASHER';
-        // Return the original if not matched — keeps custom categories intact
+        // Return the original if not matched — keeps custom categories intact
         return raw;
     }
 
     // ---- LG-AMC PRODUCT NAME NORMALIZER ----
-    // Maps full LG product names → standard category names.
-    // Audio-related → AUDIO SYSTEM; anything else not in the 6 known categories → SMALL APPLIANCE
+    // Maps full LG product names Ã¢â€ â€™ standard category names.
+    // Audio-related Ã¢â€ â€™ AUDIO SYSTEM; anything else not in the 6 known categories Ã¢â€ â€™ SMALL APPLIANCE
     function mapLGAMCProductCategory(rawName) {
         if (!rawName) return rawName;
         const name = rawName.toUpperCase();
@@ -926,7 +926,7 @@
             || name.includes('FRONT LOAD') || name.includes('TOP LOAD') || name.includes('FL WM')
             || name.includes('TL WM') || name.includes('F/L') || name.includes('T/L') 
             || /\bSA\b/.test(name) || name.includes('SEMI') || name.includes('FL DRYER') || name.includes('DRYER')) {
-            // Dryer is laundry but separate — return DRYER
+            // Dryer is laundry but separate — return DRYER
             if (name.includes('DRYER') && !name.includes('WASHER') && !name.includes('WASHING')) return 'DRYER';
             return 'WASHING MACHINE';
         }
@@ -968,7 +968,7 @@
         // --- Laptop ---
         if (name.includes('LAPTOP') || name.includes('GRAM') || name.includes('NOTEBOOK')) return 'LAPTOP';
 
-        // --- Everything else → Small Appliance ---
+        // --- Everything else Ã¢â€ â€™ Small Appliance ---
         // (Styler, WashTower, other niche products)
         return 'SMALL APPLIANCE';
     }
@@ -1033,7 +1033,7 @@
             r.rbm = strVal(row, mapping.rbm);
             r.bdm = strVal(row, mapping.bdm);
             r.staff = strVal(row, mapping.staff);
-            // Normalize the raw LG product name → standard category
+            // Normalize the raw LG product name Ã¢â€ â€™ standard category
             const rawProduct = strVal(row, mapping.product);
             r.product = rawProduct;
             r.rawProduct = rawProduct;  // keep original for debugging
@@ -1070,7 +1070,7 @@
             const r = {};
             r.branch = strVal(row, mapping.branch);
             r.storeCode = strVal(row, mapping.storeCode);
-            // Normalize the raw product name → standard category
+            // Normalize the raw product name Ã¢â€ â€™ standard category
             const rawProduct = strVal(row, mapping.product);
             r.product = rawProduct;
             r.rawProduct = rawProduct;  // keep original for debugging
@@ -1100,9 +1100,9 @@
         if (typeof XLSX === 'undefined') {
             return Promise.reject(new Error(
                 'The XLSX library failed to load.\n\n' +
-                '✅ Fix: Check your internet connection and reload the page.\n' +
+                'Ã¢Å“â€¦ Fix: Check your internet connection and reload the page.\n' +
                 '   The library loads from cdn.jsdelivr.net on first use.\n\n' +
-                '💡 Alternative: Convert your file to CSV first:\n' +
+                'Ã°Å¸â€™Â¡ Alternative: Convert your file to CSV first:\n' +
                 '   python convert.py "your_file.xlsx"'
             ));
         }
@@ -1229,7 +1229,7 @@
         // Warn about critical unmapped columns
         const critical = ['soldPrice', 'qty', 'branch', 'product'];
         critical.forEach(k => {
-            if (!mapping[k]) console.warn(`[⚠ Column NOT FOUND] '${k}' ” no matching header. Available headers:`, headers.join(', '));
+            if (!mapping[k]) console.warn(`[Ã¢Å¡Â  Column NOT FOUND] '${k}' Ã¢â‚¬Â no matching header. Available headers:`, headers.join(', '));
         });
 
         console.log('[Column Mapping]', JSON.stringify(mapping));
@@ -1254,7 +1254,7 @@
     function populateFilters() {
         populateSelect(filterRBM, uniqueVals(allData, 'rbm'), 'All RBMs');
         populateSelect(filterBranch, uniqueVals([...allData, ...osgData], 'branch'), 'All Branches');
-        // Product dropdown is predefined ” keep as-is, just reset selection
+        // Product dropdown is predefined Ã¢â‚¬Â keep as-is, just reset selection
         filterProduct.value = '';
         // Brand populated dynamically from uploaded data
         populateSelect(filterBrand, uniqueVals([...allData, ...osgData], 'brand'), 'All Brands');
@@ -1531,13 +1531,13 @@
                     <td style="padding:10px 12px; border:1px solid #e2e8f0; font-weight:600;">Total Product Qty</td>
                     <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right;">${formatNumber(totalQty)}</td>
                     <td style="padding:10px 12px; border:1px solid #e2e8f0; font-weight:600;">Total Product Revenue</td>
-                    <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right;">₹${fmtShort(totalRev)}</td>
+                    <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right;">₹${fmtShortHtml(totalRev)}</td>
                 </tr>
                 <tr>
                     <td style="padding:10px 12px; border:1px solid #e2e8f0; font-weight:600;">OSG Qty</td>
                     <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right;">${formatNumber(osgQty)}</td>
                     <td style="padding:10px 12px; border:1px solid #e2e8f0; font-weight:600;">OSG Revenue</td>
-                    <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right;">₹${fmtShort(osgRev)}</td>
+                    <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right;">₹${fmtShortHtml(osgRev)}</td>
                 </tr>
                 <tr style="background:#f8fafc;">
                     <td style="padding:10px 12px; border:1px solid #e2e8f0; font-weight:600;">Qty Conversion</td>
@@ -1564,7 +1564,7 @@
                     <tr style="background:${i % 2 === 0 ? '#f8fafc' : '#fff'};">
                         <td style="padding:8px 12px; border:1px solid #e2e8f0; font-weight:600;">${name}</td>
                         <td style="padding:8px 12px; border:1px solid #e2e8f0; text-align:right;">${formatNumber(d.qty)}</td>
-                        <td style="padding:8px 12px; border:1px solid #e2e8f0; text-align:right;">₹${fmtShort(d.rev)}</td>
+                        <td style="padding:8px 12px; border:1px solid #e2e8f0; text-align:right;">₹${fmtShortHtml(d.rev)}</td>
                     </tr>
                 `).join('')}
             </table>
@@ -1895,12 +1895,12 @@
                     ${c.name}
                 </td>
                 <td class="text-right">${formatNumber(c.pQty)}</td>
-                <td class="text-right">₹${fmtShort(c.pRev)}</td>
+                <td class="text-right">₹${fmtShortHtml(c.pRev)}</td>
                 <td class="text-right">${formatNumber(c.oQty)}</td>
                 <td class="text-right">${fmtPct(c.osgConv)}</td>
                 <td class="text-right">${formatNumber(c.aQty)}</td>
                 <td class="text-right">${fmtPct(c.amcConv)}</td>
-                <td class="text-right">₹${fmtShort(c.avgPrice)}</td>
+                <td class="text-right">₹${fmtShortHtml(c.avgPrice)}</td>
             </tr>
         `).join('');
     }
@@ -2113,7 +2113,7 @@
                         ${pincodeAreaCache[grp.pincode] ? pincodeAreaCache[grp.pincode] : 'Loading...'}
                     </td>
                     <td class="text-right">${fmtNum(pQty)}</td>
-                    <td class="text-right">₹${fmtShort(pRev)}</td>
+                    <td class="text-right">₹${fmtShortHtml(pRev)}</td>
                     <td class="text-right">${fmtNum(oQty)}</td>
                     <td class="text-right">${fmtPct(osgQtyC)}</td>
                     <td class="text-right">${fmtNum(aQty)}</td>
@@ -2179,7 +2179,7 @@
         if (OSG_NATIVE_FIELDS.has(key)) {
             oGrouped = groupBy(filteredOSG, key);
         } else {
-            // Build invoice → key value lookup from filtered product data
+            // Build invoice Ã¢â€ â€™ key value lookup from filtered product data
             const invoiceToKey = {};
             filteredProduct.forEach(r => {
                 if (r.invoice && r[key]) invoiceToKey[r.invoice] = r[key];
@@ -2193,7 +2193,7 @@
                     if (!oGrouped[groupName]) oGrouped[groupName] = [];
                     oGrouped[groupName].push(r);
                 }
-                // Skip OSG rows that can't be attributed ” no "Unknown"
+                // Skip OSG rows that can't be attributed Ã¢â‚¬Â no "Unknown"
             });
         }
 
@@ -2224,8 +2224,8 @@
         entries.forEach(e => {
             html += `<tr>
                 <td>${e.name}</td>
-                <td class="number-cell">${fmtShort(e.pSold)}</td>
-                <td class="number-cell">${fmtShort(e.oSold)}</td>
+                <td class="number-cell">${fmtShortHtml(e.pSold)}</td>
+                <td class="number-cell">${fmtShortHtml(e.oSold)}</td>
                 <td class="number-cell conv-val">${e.valConv.toFixed(2)}%</td>
                 <td class="number-cell">${e.pQty}</td>
                 <td class="number-cell">${e.oQty}</td>
@@ -2245,7 +2245,7 @@
 
 
     function renderConversionReport() {
-        // Group by branch ” show value and qty conversion
+        // Group by branch Ã¢â‚¬Â show value and qty conversion
         const pGrouped = groupBy(filteredProduct, 'branch');
         const oGrouped = groupBy(filteredOSG, 'branch');
         const allKeys = new Set([...Object.keys(pGrouped), ...Object.keys(oGrouped)]);
@@ -2283,8 +2283,8 @@
             html += `<tr>
                 <td>${e.branch}</td><td>${e.rbms}</td><td>${e.bdms}</td>
                 <td class="number-cell">${e.staffCount}</td><td class="number-cell">${e.productCount}</td>
-                <td class="number-cell">${fmtShort(e.pSold)}</td>
-                <td class="number-cell">${fmtShort(e.oSold)}</td>
+                <td class="number-cell">${fmtShortHtml(e.pSold)}</td>
+                <td class="number-cell">${fmtShortHtml(e.oSold)}</td>
                 <td class="number-cell conv-val">${e.valConv.toFixed(2)}%</td>
                 <td class="number-cell">${e.pQty}</td>
                 <td class="number-cell">${e.oQty}</td>
@@ -2310,11 +2310,11 @@
             html += `<tr>
                 <td>${r.branch}</td><td>${r.rbm}</td><td>${r.bdm}</td><td>${r.staff}</td>
                 <td>${r.product}</td><td>${r.brand}</td>
-                <td class="number-cell">${fmtShort(r.soldPrice)}</td>
-                <td class="number-cell">${fmtShort(r.taxableVal)}</td>
-                <td class="number-cell">${fmtShort(r.tax)}</td>
+                <td class="number-cell">${fmtShortHtml(r.soldPrice)}</td>
+                <td class="number-cell">${fmtShortHtml(r.taxableVal)}</td>
+                <td class="number-cell">${fmtShortHtml(r.tax)}</td>
                 <td class="number-cell">${r.qty}</td>
-                <td class="number-cell ${cls}">${fmtShort(r.profit)}</td>
+                <td class="number-cell ${cls}">${fmtShortHtml(r.profit)}</td>
             </tr>`;
         });
         html += '</tbody></table>';
@@ -2380,13 +2380,13 @@
         destroyChart('qtyConvRBM');
         const pG = groupBy(filteredProduct, 'rbm');
 
-        // Map OSG → RBM via invoice lookup (same as renderConvTable)
+        // Map OSG Ã¢â€ â€™ RBM via invoice lookup (same as renderConvTable)
         const invoiceToRBM = {};
         filteredProduct.forEach(r => { if (r.invoice && r.rbm) invoiceToRBM[r.invoice] = r.rbm; });
         const osgByRBM = {};
         filteredOSG.forEach(r => {
             const rbm = r.invoice ? (invoiceToRBM[r.invoice] || null) : null;
-            if (!rbm) return; // skip unattributable rows ” no "Unknown"
+            if (!rbm) return; // skip unattributable rows Ã¢â‚¬Â no "Unknown"
             if (!osgByRBM[rbm]) osgByRBM[rbm] = [];
             osgByRBM[rbm].push(r);
         });
@@ -2671,7 +2671,7 @@
 
     // ---- LOW CONV STAFF LOGIC ----
     function buildStaffStats() {
-        // Build invoice → staff lookup from ALL product data (unfiltered)
+        // Build invoice Ã¢â€ â€™ staff lookup from ALL product data (unfiltered)
         const invoiceStaff = {};
         productData.forEach(r => { if (r.invoice && r.staff) invoiceStaff[r.invoice] = r.staff; });
 
@@ -2761,11 +2761,11 @@
             <div class="lc-kpi"><span class="lc-kpi-label">Total Product Qty</span><span class="lc-kpi-val">${formatNumber(totalPQty)}</span></div>
             <div class="lc-kpi"><span class="lc-kpi-label">Total OSG Qty (Sold)</span><span class="lc-kpi-val">${formatNumber(totalOQty)}</span></div>
             <div class="lc-kpi"><span class="lc-kpi-label">Opportunity Missed (Qty)</span><span class="lc-kpi-val loss-text">${formatNumber(totalPQty - totalOQty)}</span></div>
-            <div class="lc-kpi"><span class="lc-kpi-label">Total Product Revenue</span><span class="lc-kpi-val">${fmtShort(totalPRev)}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Total Product Revenue</span><span class="lc-kpi-val">${fmtShortHtml(totalPRev)}</span></div>
         `;
 
         if (filtered.length === 0) {
-            $('lcTableWrapper').innerHTML = noDataHTML(`No staff found with ≥${minQty} product qty and ≤${maxConv}% qty conversion.`);
+            $('lcTableWrapper').innerHTML = noDataHTML(`No staff found with ≥${minQty} product qty and Ã¢â€°Â¤${maxConv}% qty conversion.`);
             return;
         }
 
@@ -2790,7 +2790,7 @@
                 <td class="number-cell">${e.oQty}</td>
                 <td class="number-cell ${convCls}">${e.qtyConv.toFixed(2)}%</td>
                 <td class="number-cell conv-val">${e.valConv.toFixed(2)}%</td>
-                <td class="number-cell">${fmtShort(e.pRev)}</td>
+                <td class="number-cell">${fmtShortHtml(e.pRev)}</td>
             </tr>`;
         });
 
@@ -2881,8 +2881,8 @@
             <div class="lc-kpi"><span class="lc-kpi-label">Avg Qty Conv</span><span class="lc-kpi-val profit-text">${avgQtyConv.toFixed(2)}%</span></div>
             <div class="lc-kpi"><span class="lc-kpi-label">Avg Val Conv</span><span class="lc-kpi-val profit-text">${avgValConv.toFixed(2)}%</span></div>
             <div class="lc-kpi"><span class="lc-kpi-label">Total OSG Qty</span><span class="lc-kpi-val">${formatNumber(totalOQty)}</span></div>
-            <div class="lc-kpi"><span class="lc-kpi-label">Total OSG Revenue</span><span class="lc-kpi-val">${fmtShort(totalORev)}</span></div>
-            <div class="lc-kpi"><span class="lc-kpi-label">Total Prod Revenue</span><span class="lc-kpi-val">${fmtShort(totalPRev)}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Total OSG Revenue</span><span class="lc-kpi-val">${fmtShortHtml(totalORev)}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Total Prod Revenue</span><span class="lc-kpi-val">${fmtShortHtml(totalPRev)}</span></div>
         `;
 
         if (filtered.length === 0) {
@@ -2911,8 +2911,8 @@
                 <td class="number-cell"><strong>${e.oQty}</strong></td>
                 <td class="number-cell profit-val">${e.qtyConv.toFixed(2)}%</td>
                 <td class="number-cell profit-val">${e.valConv.toFixed(2)}%</td>
-                <td class="number-cell">${fmtShort(e.pRev)}</td>
-                <td class="number-cell">${fmtShort(e.oRev)}</td>
+                <td class="number-cell">${fmtShortHtml(e.pRev)}</td>
+                <td class="number-cell">${fmtShortHtml(e.oRev)}</td>
             </tr>`;
         });
 
@@ -3024,13 +3024,13 @@
         let html = '';
 
         // ---- Card 1: Overall Summary ----
-        html += insightCard('📊', 'Overall Performance Summary', 'info', `
+        html += insightCard('Ã°Å¸â€œÅ ', 'Overall Performance Summary', 'info', `
             <div class="insight-metrics">
                 <div class="insight-metric"><span class="metric-val">${formatNumber(productData.length)}</span><span class="metric-label">Total Transactions</span></div>
                 <div class="insight-metric"><span class="metric-val">${totalStaff}</span><span class="metric-label">Active Staff</span></div>
                 <div class="insight-metric"><span class="metric-val">${conv.valueConv.toFixed(2)}%</span><span class="metric-label">Value Conversion</span></div>
                 <div class="insight-metric"><span class="metric-val">${conv.qtyConv.toFixed(2)}%</span><span class="metric-label">Qty Conversion</span></div>
-                <div class="insight-metric"><span class="metric-val">${fmtShort(totalPRev)}</span><span class="metric-label">Total Prod Revenue</span></div>
+                <div class="insight-metric"><span class="metric-val">${fmtShortHtml(totalPRev)}</span><span class="metric-label">Total Prod Revenue</span></div>
                 <div class="insight-metric"><span class="metric-val">${Object.keys(pByBranch).length}</span><span class="metric-label">Active Branches</span></div>
             </div>
         `);
@@ -3040,8 +3040,8 @@
             const zeroTotalQty = zeroConvStaff.reduce((s, r) => s + r.pQty, 0);
             const zeroTotalRev = zeroConvStaff.reduce((s, r) => s + r.pRev, 0);
             const topZero = zeroConvStaff.sort((a, b) => b.pQty - a.pQty).slice(0, 5);
-            html += insightCard('', `Zero Conversion Alert ” ${zeroConvStaff.length} Staff`, 'danger', `
-                <p><strong>${zeroConvStaff.length} staff</strong> have sold <strong>${formatNumber(zeroTotalQty)} products</strong> (${fmtShort(zeroTotalRev)} revenue) but <strong>zero OSG/warranty conversion</strong>.</p>
+            html += insightCard('', `Zero Conversion Alert Ã¢â‚¬Â ${zeroConvStaff.length} Staff`, 'danger', `
+                <p><strong>${zeroConvStaff.length} staff</strong> have sold <strong>${formatNumber(zeroTotalQty)} products</strong> (${fmtShortHtml(zeroTotalRev)} revenue) but <strong>zero OSG/warranty conversion</strong>.</p>
                 <div class="insight-tag-row">
                     ${topZero.map(s => `<span class="insight-tag danger">${s.name} (${s.pQty} qty)</span>`).join('')}
                     ${zeroConvStaff.length > 5 ? `<span class="insight-tag muted">+${zeroConvStaff.length - 5} more</span>` : ''}
@@ -3054,7 +3054,7 @@
 
         // ---- Card 3: Top Performers ----
         if (topQty.length > 0) {
-            html += insightCard(' ', 'Top Performers ” Best Qty Conversion', 'success', `
+            html += insightCard('Ã‚Â ', 'Top Performers Ã¢â‚¬Â Best Qty Conversion', 'success', `
                 <div class="insight-list">
                     ${topQty.map((s, i) => `
                         <div class="insight-list-item">
@@ -3075,7 +3075,7 @@
         // ---- Card 4: Underperforming Branches ----
         const weakBranches = branchStats.filter(b => b.pQty >= 10 && b.qtyConv < 2).sort((a, b) => a.qtyConv - b.qtyConv).slice(0, 5);
         if (weakBranches.length > 0) {
-            html += insightCard('📉', 'Underperforming Branches', 'warning', `
+            html += insightCard('Ã°Å¸â€œâ€°', 'Underperforming Branches', 'warning', `
                 <p>These branches have significant product sales but very low OSG conversion:</p>
                 <table class="data-table insight-table"><thead><tr>
                     <th>Branch</th><th>Prod Qty</th><th>OSG Qty</th><th>Qty Conv%</th>
@@ -3094,7 +3094,7 @@
             const best = rbmSorted[0];
             const worst = rbmSorted[rbmSorted.length - 1];
             const gap = best.qtyConv - worst.qtyConv;
-            html += insightCard('👥', 'RBM Performance Gap', gap > 5 ? 'warning' : 'info', `
+            html += insightCard('Ã°Å¸â€˜Â¥', 'RBM Performance Gap', gap > 5 ? 'warning' : 'info', `
                 <div class="insight-compare">
                     <div class="compare-box success-bg">
                         <span class="compare-label">Best RBM</span>
@@ -3120,7 +3120,7 @@
         const weakProds = prodSorted.slice(0, 3);
         const strongProds = prodSorted.slice(-3).reverse();
         if (prodSorted.length > 0) {
-            html += insightCard('📋', 'Product Category Analysis', 'info', `
+            html += insightCard('Ã°Å¸â€œâ€¹', 'Product Category Analysis', 'info', `
                 <div class="insight-compare">
                     <div class="compare-box success-bg" style="flex:1;">
                         <span class="compare-label">Strong Categories</span>
@@ -3140,12 +3140,12 @@
         // ---- Card 7: Revenue Concentration Risk ----
         if (branchRevShare.length >= 3) {
             const top3Share = branchRevShare.slice(0, 3).reduce((s, b) => s + b.share, 0);
-            html += insightCard('⚖️', 'Revenue Concentration', top3Share > 50 ? 'warning' : 'info', `
+            html += insightCard('Ã¢Å¡â€“Ã¯Â¸Â', 'Revenue Concentration', top3Share > 50 ? 'warning' : 'info', `
                 <p>Top 3 branches contribute <strong>${top3Share.toFixed(1)}%</strong> of total product revenue:</p>
                 <div class="insight-tag-row">
                     ${branchRevShare.slice(0, 5).map(b => `<span class="insight-tag info">${b.name}: ${b.share.toFixed(1)}%</span>`).join('')}
                 </div>
-                ${top3Share > 50 ? '<p class="text-warning"> High concentration risk ” underperformance in these branches would significantly impact overall numbers.</p>' : '<p class="text-success">✅ Revenue is fairly distributed ” good diversification.</p>'}
+                ${top3Share > 50 ? '<p class="text-warning"> High concentration risk Ã¢â‚¬Â underperformance in these branches would significantly impact overall numbers.</p>' : '<p class="text-success">Ã¢Å“â€¦ Revenue is fairly distributed Ã¢â‚¬Â good diversification.</p>'}
                 <div class="insight-solution">
                     <strong> Recommendation:</strong> ${top3Share > 50 ? 'Invest in growing smaller branches. Reduce dependency on top branches by improving performance of bottom 50%.' : 'Maintain balanced growth across all branches.'}
                 </div>
@@ -3210,7 +3210,7 @@
         }
         deepAnalysisHtml += `</ul>`;
 
-        html += insightCard('🔍', 'Deep Root Cause Analysis', 'danger', `
+        html += insightCard('Ã°Å¸â€Â', 'Deep Root Cause Analysis', 'danger', `
             <p style="margin-bottom:1rem; color:var(--text-primary); font-weight:500;">Based on combinatorial data analysis, the primary drivers of lost conversion are:</p>
             ${deepAnalysisHtml}
         `);
@@ -3219,12 +3219,12 @@
         const urgentActions = [];
         if (zeroConvStaff.length > 5) urgentActions.push(`Train ${zeroConvStaff.length} zero-conversion staff on OSG selling immediately`);
         if (weakBranches.length > 0) urgentActions.push(`Conduct branch visits to ${weakBranches.map(b => b.name).join(', ')}`);
-        if (conv.qtyConv < 5) urgentActions.push(`Overall qty conversion (${conv.qtyConv.toFixed(1)}%) is below target ” launch org-wide OSG campaign`);
+        if (conv.qtyConv < 5) urgentActions.push(`Overall qty conversion (${conv.qtyConv.toFixed(1)}%) is below target Ã¢â‚¬Â launch org-wide OSG campaign`);
         urgentActions.push('Review and update staff-wise weekly conversion targets');
         urgentActions.push('Share top performer success stories in team meetings');
         if (topQty.length > 0) urgentActions.push(`Reward top converters: ${topQty.slice(0, 3).map(s => s.name).join(', ')}`);
 
-        html += insightCard('', 'Action Plan ” Next Steps', 'action', `
+        html += insightCard('', 'Action Plan Ã¢â‚¬Â Next Steps', 'action', `
             <ol class="insight-actions">
                 ${urgentActions.map(a => `<li>${a}</li>`).join('')}
             </ol>
@@ -3478,11 +3478,11 @@
             <div class="lc-kpi"><span class="lc-kpi-label">Total Product Qty</span><span class="lc-kpi-val">${formatNumber(totalPQty)}</span></div>
             <div class="lc-kpi"><span class="lc-kpi-label">Total OSG Qty (Sold)</span><span class="lc-kpi-val">${formatNumber(totalOQty)}</span></div>
             <div class="lc-kpi"><span class="lc-kpi-label">Opportunity Missed (Qty)</span><span class="lc-kpi-val loss-text">${formatNumber(totalPQty - totalOQty)}</span></div>
-            <div class="lc-kpi"><span class="lc-kpi-label">Total Product Revenue</span><span class="lc-kpi-val">${fmtShort(totalPRev)}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Total Product Revenue</span><span class="lc-kpi-val">${fmtShortHtml(totalPRev)}</span></div>
         `;
 
         if (filtered.length === 0) {
-            $('lcTableWrapper').innerHTML = noDataHTML(`No staff found with ≥${minQty} product qty and ≤${maxConv}% qty conversion.`);
+            $('lcTableWrapper').innerHTML = noDataHTML(`No staff found with ≥${minQty} product qty and Ã¢â€°Â¤${maxConv}% qty conversion.`);
             return;
         }
 
@@ -3507,7 +3507,7 @@
                 <td class="number-cell">${e.oQty}</td>
                 <td class="number-cell ${convCls}">${e.qtyConv.toFixed(2)}%</td>
                 <td class="number-cell conv-val">${e.valConv.toFixed(2)}%</td>
-                <td class="number-cell">${fmtShort(e.pRev)}</td>
+                <td class="number-cell">${fmtShortHtml(e.pRev)}</td>
             </tr>`;
         });
 
@@ -3598,8 +3598,8 @@
             <div class="lc-kpi"><span class="lc-kpi-label">Avg Qty Conv</span><span class="lc-kpi-val profit-text">${avgQtyConv.toFixed(2)}%</span></div>
             <div class="lc-kpi"><span class="lc-kpi-label">Avg Val Conv</span><span class="lc-kpi-val profit-text">${avgValConv.toFixed(2)}%</span></div>
             <div class="lc-kpi"><span class="lc-kpi-label">Total OSG Qty</span><span class="lc-kpi-val">${formatNumber(totalOQty)}</span></div>
-            <div class="lc-kpi"><span class="lc-kpi-label">Total OSG Revenue</span><span class="lc-kpi-val">${fmtShort(totalORev)}</span></div>
-            <div class="lc-kpi"><span class="lc-kpi-label">Total Prod Revenue</span><span class="lc-kpi-val">${fmtShort(totalPRev)}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Total OSG Revenue</span><span class="lc-kpi-val">${fmtShortHtml(totalORev)}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Total Prod Revenue</span><span class="lc-kpi-val">${fmtShortHtml(totalPRev)}</span></div>
         `;
 
         if (filtered.length === 0) {
@@ -3628,8 +3628,8 @@
                 <td class="number-cell"><strong>${e.oQty}</strong></td>
                 <td class="number-cell profit-val">${e.qtyConv.toFixed(2)}%</td>
                 <td class="number-cell profit-val">${e.valConv.toFixed(2)}%</td>
-                <td class="number-cell">${fmtShort(e.pRev)}</td>
-                <td class="number-cell">${fmtShort(e.oRev)}</td>
+                <td class="number-cell">${fmtShortHtml(e.pRev)}</td>
+                <td class="number-cell">${fmtShortHtml(e.oRev)}</td>
             </tr>`;
         });
 
@@ -3741,13 +3741,13 @@
         let html = '';
 
         // ---- Card 1: Overall Summary ----
-        html += insightCard('📊', 'Overall Performance Summary', 'info', `
+        html += insightCard('Ã°Å¸â€œÅ ', 'Overall Performance Summary', 'info', `
             <div class="insight-metrics">
                 <div class="insight-metric"><span class="metric-val">${formatNumber(productData.length)}</span><span class="metric-label">Total Transactions</span></div>
                 <div class="insight-metric"><span class="metric-val">${totalStaff}</span><span class="metric-label">Active Staff</span></div>
                 <div class="insight-metric"><span class="metric-val">${conv.valueConv.toFixed(2)}%</span><span class="metric-label">Value Conversion</span></div>
                 <div class="insight-metric"><span class="metric-val">${conv.qtyConv.toFixed(2)}%</span><span class="metric-label">Qty Conversion</span></div>
-                <div class="insight-metric"><span class="metric-val">${fmtShort(totalPRev)}</span><span class="metric-label">Total Prod Revenue</span></div>
+                <div class="insight-metric"><span class="metric-val">${fmtShortHtml(totalPRev)}</span><span class="metric-label">Total Prod Revenue</span></div>
                 <div class="insight-metric"><span class="metric-val">${Object.keys(pByBranch).length}</span><span class="metric-label">Active Branches</span></div>
             </div>
         `);
@@ -3757,8 +3757,8 @@
             const zeroTotalQty = zeroConvStaff.reduce((s, r) => s + r.pQty, 0);
             const zeroTotalRev = zeroConvStaff.reduce((s, r) => s + r.pRev, 0);
             const topZero = zeroConvStaff.sort((a, b) => b.pQty - a.pQty).slice(0, 5);
-            html += insightCard('', `Zero Conversion Alert ” ${zeroConvStaff.length} Staff`, 'danger', `
-                <p><strong>${zeroConvStaff.length} staff</strong> have sold <strong>${formatNumber(zeroTotalQty)} products</strong> (${fmtShort(zeroTotalRev)} revenue) but <strong>zero OSG/warranty conversion</strong>.</p>
+            html += insightCard('', `Zero Conversion Alert Ã¢â‚¬Â ${zeroConvStaff.length} Staff`, 'danger', `
+                <p><strong>${zeroConvStaff.length} staff</strong> have sold <strong>${formatNumber(zeroTotalQty)} products</strong> (${fmtShortHtml(zeroTotalRev)} revenue) but <strong>zero OSG/warranty conversion</strong>.</p>
                 <div class="insight-tag-row">
                     ${topZero.map(s => `<span class="insight-tag danger">${s.name} (${s.pQty} qty)</span>`).join('')}
                     ${zeroConvStaff.length > 5 ? `<span class="insight-tag muted">+${zeroConvStaff.length - 5} more</span>` : ''}
@@ -3771,7 +3771,7 @@
 
         // ---- Card 3: Top Performers ----
         if (topQty.length > 0) {
-            html += insightCard(' ', 'Top Performers ” Best Qty Conversion', 'success', `
+            html += insightCard('Ã‚Â ', 'Top Performers Ã¢â‚¬Â Best Qty Conversion', 'success', `
                 <div class="insight-list">
                     ${topQty.map((s, i) => `
                         <div class="insight-list-item">
@@ -3792,7 +3792,7 @@
         // ---- Card 4: Underperforming Branches ----
         const weakBranches = branchStats.filter(b => b.pQty >= 10 && b.qtyConv < 2).sort((a, b) => a.qtyConv - b.qtyConv).slice(0, 5);
         if (weakBranches.length > 0) {
-            html += insightCard('📉', 'Underperforming Branches', 'warning', `
+            html += insightCard('Ã°Å¸â€œâ€°', 'Underperforming Branches', 'warning', `
                 <p>These branches have significant product sales but very low OSG conversion:</p>
                 <table class="data-table insight-table"><thead><tr>
                     <th>Branch</th><th>Prod Qty</th><th>OSG Qty</th><th>Qty Conv%</th>
@@ -3811,7 +3811,7 @@
             const best = rbmSorted[0];
             const worst = rbmSorted[rbmSorted.length - 1];
             const gap = best.qtyConv - worst.qtyConv;
-            html += insightCard('👥', 'RBM Performance Gap', gap > 5 ? 'warning' : 'info', `
+            html += insightCard('Ã°Å¸â€˜Â¥', 'RBM Performance Gap', gap > 5 ? 'warning' : 'info', `
                 <div class="insight-compare">
                     <div class="compare-box success-bg">
                         <span class="compare-label">Best RBM</span>
@@ -3837,7 +3837,7 @@
         const weakProds = prodSorted.slice(0, 3);
         const strongProds = prodSorted.slice(-3).reverse();
         if (prodSorted.length > 0) {
-            html += insightCard('📋', 'Product Category Analysis', 'info', `
+            html += insightCard('Ã°Å¸â€œâ€¹', 'Product Category Analysis', 'info', `
                 <div class="insight-compare">
                     <div class="compare-box success-bg" style="flex:1;">
                         <span class="compare-label">Strong Categories</span>
@@ -3857,12 +3857,12 @@
         // ---- Card 7: Revenue Concentration Risk ----
         if (branchRevShare.length >= 3) {
             const top3Share = branchRevShare.slice(0, 3).reduce((s, b) => s + b.share, 0);
-            html += insightCard('⚖️', 'Revenue Concentration', top3Share > 50 ? 'warning' : 'info', `
+            html += insightCard('Ã¢Å¡â€“Ã¯Â¸Â', 'Revenue Concentration', top3Share > 50 ? 'warning' : 'info', `
                 <p>Top 3 branches contribute <strong>${top3Share.toFixed(1)}%</strong> of total product revenue:</p>
                 <div class="insight-tag-row">
                     ${branchRevShare.slice(0, 5).map(b => `<span class="insight-tag info">${b.name}: ${b.share.toFixed(1)}%</span>`).join('')}
                 </div>
-                ${top3Share > 50 ? '<p class="text-warning"> High concentration risk ” underperformance in these branches would significantly impact overall numbers.</p>' : '<p class="text-success">✅ Revenue is fairly distributed ” good diversification.</p>'}
+                ${top3Share > 50 ? '<p class="text-warning"> High concentration risk Ã¢â‚¬Â underperformance in these branches would significantly impact overall numbers.</p>' : '<p class="text-success">Ã¢Å“â€¦ Revenue is fairly distributed Ã¢â‚¬Â good diversification.</p>'}
                 <div class="insight-solution">
                     <strong> Recommendation:</strong> ${top3Share > 50 ? 'Invest in growing smaller branches. Reduce dependency on top branches by improving performance of bottom 50%.' : 'Maintain balanced growth across all branches.'}
                 </div>
@@ -3927,7 +3927,7 @@
         }
         deepAnalysisHtml += `</ul>`;
 
-        html += insightCard('🔍', 'Deep Root Cause Analysis', 'danger', `
+        html += insightCard('Ã°Å¸â€Â', 'Deep Root Cause Analysis', 'danger', `
             <p style="margin-bottom:1rem; color:var(--text-primary); font-weight:500;">Based on combinatorial data analysis, the primary drivers of lost conversion are:</p>
             ${deepAnalysisHtml}
         `);
@@ -3936,12 +3936,12 @@
         const urgentActions = [];
         if (zeroConvStaff.length > 5) urgentActions.push(`Train ${zeroConvStaff.length} zero-conversion staff on OSG selling immediately`);
         if (weakBranches.length > 0) urgentActions.push(`Conduct branch visits to ${weakBranches.map(b => b.name).join(', ')}`);
-        if (conv.qtyConv < 5) urgentActions.push(`Overall qty conversion (${conv.qtyConv.toFixed(1)}%) is below target ” launch org-wide OSG campaign`);
+        if (conv.qtyConv < 5) urgentActions.push(`Overall qty conversion (${conv.qtyConv.toFixed(1)}%) is below target Ã¢â‚¬Â launch org-wide OSG campaign`);
         urgentActions.push('Review and update staff-wise weekly conversion targets');
         urgentActions.push('Share top performer success stories in team meetings');
         if (topQty.length > 0) urgentActions.push(`Reward top converters: ${topQty.slice(0, 3).map(s => s.name).join(', ')}`);
 
-        html += insightCard('', 'Action Plan ” Next Steps', 'action', `
+        html += insightCard('', 'Action Plan Ã¢â‚¬Â Next Steps', 'action', `
             <ol class="insight-actions">
                 ${urgentActions.map(a => `<li>${a}</li>`).join('')}
             </ol>
@@ -4016,8 +4016,8 @@
             <div class="lc-kpi"><span class="lc-kpi-label">Total Staff</span><span class="lc-kpi-val">${filtered.length}</span></div>
             <div class="lc-kpi"><span class="lc-kpi-label">Avg Qty Conv</span><span class="lc-kpi-val conversion-text">${avgQtyConv.toFixed(2)}%</span></div>
             <div class="lc-kpi"><span class="lc-kpi-label">Avg Val Conv</span><span class="lc-kpi-val conversion-text">${avgValConv.toFixed(2)}%</span></div>
-            <div class="lc-kpi"><span class="lc-kpi-label">Total Product Revenue</span><span class="lc-kpi-val">${fmtShort(totalPRev)}</span></div>
-            <div class="lc-kpi"><span class="lc-kpi-label">Total OSG Revenue</span><span class="lc-kpi-val">${fmtShort(totalORev)}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Total Product Revenue</span><span class="lc-kpi-val">${fmtShortHtml(totalPRev)}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Total OSG Revenue</span><span class="lc-kpi-val">${fmtShortHtml(totalORev)}</span></div>
         `;
 
         if (filtered.length === 0) {
@@ -4047,8 +4047,8 @@
                 <td class="number-cell">${e.oQty}</td>
                 <td class="number-cell ${convCls}">${e.qtyConv.toFixed(2)}%</td>
                 <td class="number-cell conv-val">${e.valConv.toFixed(2)}%</td>
-                <td class="number-cell">${fmtShort(e.pRev)}</td>
-                <td class="number-cell">${fmtShort(e.oRev)}</td>
+                <td class="number-cell">${fmtShortHtml(e.pRev)}</td>
+                <td class="number-cell">${fmtShortHtml(e.oRev)}</td>
             </tr>`;
         });
 
@@ -4056,827 +4056,498 @@
         $('fsTableWrapper').innerHTML = html;
     }
 
-    function exportFutureStoresCSV() {
-        if (productData.length === 0) return;
-        const selRBM = $('fsRBM').value;
-        const selBDM = $('fsBDM').value;
-        const selBranch = $('fsBranch').value;
+function exportFutureStoresCSV() {
+    if (productData.length === 0) return;
+    const selRBM = $('fsRBM').value;
+    const selBDM = $('fsBDM').value;
+    const selBranch = $('fsBranch').value;
 
-        // --------------------------------------------------------------------------------
-        // DATA PROCESSING FOR SHEET 1: FUTURE_STORES_OVERVIEW (Grouped by BDM -> Branch)
-        // --------------------------------------------------------------------------------
-
-        // Filter Future Product Data
-        const fProduct = productData.filter(r => r.branch && r.branch.toUpperCase().includes('FUTURE')
-            && (!selRBM || r.rbm === selRBM)
-            && (!selBDM || r.bdm === selBDM)
-            && (!selBranch || r.branch === selBranch));
-
-        // Invoice mapping to branch/bdm
-        const invMeta = {};
-        fProduct.forEach(r => { if (r.invoice) invMeta[r.invoice] = { branch: r.branch, bdm: r.bdm || 'Unknown', pincode: r.pincode || 'Unknown', product: r.product }; });
-
-        // Group Product by BDM -> Branch
-        const branchGroups = {}; // key: BDM|Branch
-        const pincodeGroups = {}; // key: Pincode
-        fProduct.forEach(r => {
-            const key = (r.bdm || 'Unknown') + '|' + (r.branch || 'Unknown');
-            if (!branchGroups[key]) branchGroups[key] = { bdm: r.bdm || 'Unknown', branch: r.branch || 'Unknown', pRows: [], oRows: [], aRows: [], sRows: [] };
-            branchGroups[key].pRows.push(r);
-            
-            const pKey = r.pincode || 'Unknown';
-            if (!pincodeGroups[pKey]) pincodeGroups[pKey] = { pincode: pKey, pRows: [], oRows: [], aRows: [], sRows: [] };
-            pincodeGroups[pKey].pRows.push(r);
-        });
-
-        // Warranty Data grouping strictly by branch, entirely decoupled from invoices
-        const processWarrForExport = (r, rowsArrKey) => {
-            const meta = window.getBranchMeta(r);
-            if (!meta && !r.branch) return;
-            
-            const rowBranch = meta ? meta.origBranch : r.branch;
-            const rowBDM = r.bdm || (meta ? meta.bdm : 'Unknown');
-            const rowRBM = r.rbm || (meta ? meta.rbm : 'Unknown');
-            const rowPincode = r.pincode || 'Unknown'; // Since no invoice mapping, default to Unknown for OSG/Samsung
-
-            if (!rowBranch.toUpperCase().includes('FUTURE')) return; // Strictly future stores
-            if (selRBM && rowRBM !== selRBM) return;
-            if (selBDM && rowBDM !== selBDM) return;
-            if (selBranch && rowBranch !== selBranch) return;
-
-            const key = rowBDM + '|' + rowBranch;
-            if (!branchGroups[key]) branchGroups[key] = { bdm: rowBDM, branch: rowBranch, pRows: [], oRows: [], aRows: [], sRows: [] };
-            branchGroups[key][rowsArrKey].push(r);
-            
-            const pKey = rowPincode;
-            if (!pincodeGroups[pKey]) pincodeGroups[pKey] = { pincode: pKey, pRows: [], oRows: [], aRows: [], sRows: [] };
-            pincodeGroups[pKey][rowsArrKey].push(r);
-        };
-
-        osgData.forEach(r => processWarrForExport(r, 'oRows'));
-        amcData.forEach(r => processWarrForExport(r, 'aRows'));
-        samsungData.forEach(r => processWarrForExport(r, 'sRows'));
-
-        // Convert to array and sort by BDM -> Branch
-        const branchStats = Object.values(branchGroups).sort((a, b) => a.bdm.localeCompare(b.bdm) || a.branch.localeCompare(b.branch));
-
-        // Build Sheet 1 AoA
-        const hdr1 = ['BDM', 'Branch', 'Product', 'Product Qty', 'OSG Qty', 'LG-AMC Qty', 'SAMSUNG Qty', 'Osg Qty Conv%', 'Osg Val Conv%', 'OVERALL Osg Qty Conv%', 'OVERALL Osg Val Conv%', 'OVERALL LG-AMC Qty Conv%', 'OVERALL LG-AMC Val Conv%', 'OVERALL Samsung Qty Conv%', 'OVERALL Samsung Val Conv%'];
-        const aoa1 = [['FUTURE STORES — EXPORT CSV'], hdr1];
-        const merges1 = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 14 } }]; // Header merge
-
-        let bdmStart = 2, branchStart = 2;
-
-        branchStats.forEach((grp, grpIdx) => {
-            // Overall calculations for this branch
-            const tPQty = grp.pRows.reduce((s, r) => s + r.qty, 0);
-            const tOQty = grp.oRows.reduce((s, r) => s + r.qty, 0);
-            const tAQty = grp.aRows.reduce((s, r) => s + r.qty, 0);
-            const tSQty = grp.sRows.reduce((s, r) => s + r.qty, 0);
-
-            const tPRev = grp.pRows.reduce((s, r) => s + r.soldPrice, 0);
-            const tORev = grp.oRows.reduce((s, r) => s + r.soldPrice, 0);
-            const tARev = grp.aRows.reduce((s, r) => s + r.soldPrice, 0);
-            const tSRev = grp.sRows.reduce((s, r) => s + r.soldPrice, 0);
-
-            // Need LG specific totals for AMC conversion
-            const lgPQty = grp.pRows.reduce((s, r) => s + ((r.brand && r.brand.toUpperCase().includes('LG')) ? (r.qty || 0) : 0), 0);
-            const lgPRev = grp.pRows.reduce((s, r) => s + ((r.brand && r.brand.toUpperCase().includes('LG')) ? (r.soldPrice || 0) : 0), 0);
-
-            // Need Samsung specific totals for Samsung conversion
-            const samsungAllowedCats = ['AC', 'MICROWAVE OVEN', 'REFRIGERATOR', 'WASHING MACHINE'];
-            const samPQty = grp.pRows.reduce((s, r) => {
-                const p = r.product ? r.product.toUpperCase().trim() : '';
-                return s + ((r.brand && r.brand.toUpperCase().includes('SAMSUNG') && samsungAllowedCats.includes(p)) ? (r.qty || 0) : 0);
-            }, 0);
-            const samPRev = grp.pRows.reduce((s, r) => {
-                const p = r.product ? r.product.toUpperCase().trim() : '';
-                return s + ((r.brand && r.brand.toUpperCase().includes('SAMSUNG') && samsungAllowedCats.includes(p)) ? (r.soldPrice || 0) : 0);
-            }, 0);
-
-            const ovOsgQtyConv = tPQty > 0 ? (tOQty / tPQty) * 100 : 0;
-            const ovOsgValConv = tPRev > 0 ? (tORev / tPRev) * 100 : 0;
-            const ovAmcQtyConv = lgPQty > 0 ? (tAQty / lgPQty) * 100 : 0;
-            const ovAmcValConv = lgPRev > 0 ? (tARev / lgPRev) * 100 : 0;
-            const ovSamQtyConv = samPQty > 0 ? (tSQty / samPQty) * 100 : 0;
-            const ovSamValConv = samPRev > 0 ? (tSRev / samPRev) * 100 : 0;
-
-            // Product level calculations
-            const pCounts = {}, oCounts = {}, aCounts = {}, sCounts = {};
-            const pRevs = {}, oRevs = {};
-
-            grp.pRows.forEach(r => {
-                const p = r.product || 'Unknown';
-                pCounts[p] = (pCounts[p] || 0) + (r.qty || 0);
-                pRevs[p] = (pRevs[p] || 0) + (r.soldPrice || 0);
-            });
-            grp.oRows.forEach(r => {
-                // OSG: use category column (already normalized), fall back to normalizing product name
-                const p = r.category || normalizeProductCategory(r.product) || 'Unknown';
-                oCounts[p] = (oCounts[p] || 0) + (r.qty || 0);
-                oRevs[p] = (oRevs[p] || 0) + (r.soldPrice || 0);
-            });
-            grp.aRows.forEach(r => {
-                const p = r.product || 'Unknown';
-                aCounts[p] = (aCounts[p] || 0) + (r.qty || 0);
-            });
-            grp.sRows.forEach(r => {
-                // Samsung: r.product is already normalized by mapSamsungProductCategory
-                const p = r.product || 'Unknown';
-                sCounts[p] = (sCounts[p] || 0) + (r.qty || 0);
-            });
-
-            const allProds = Array.from(new Set([...Object.keys(pCounts), ...Object.keys(oCounts), ...Object.keys(aCounts), ...Object.keys(sCounts)]));
-            allProds.sort((a, b) => (pCounts[b] || 0) - (pCounts[a] || 0));
-
-            allProds.forEach((prodName, pIdx) => {
-                const pQ = pCounts[prodName] || 0;
-                const oQ = oCounts[prodName] || 0;
-                const aQ = aCounts[prodName] || 0;
-                const sQ = sCounts[prodName] || 0;
-                const pR = pRevs[prodName] || 0;
-                const oR = oRevs[prodName] || 0;
-
-                const pOsgQtyConv = pQ > 0 ? (oQ / pQ) * 100 : 0;
-                const pOsgValConv = pR > 0 ? (oR / pR) * 100 : 0;
-
-                const isFirst = pIdx === 0;
-
-                aoa1.push([
-                    isFirst ? grp.bdm : '',
-                    isFirst ? grp.branch : '',
-                    prodName,
-                    pQ, oQ, aQ, sQ,
-                    parseFloat(pOsgQtyConv.toFixed(2)),
-                    parseFloat(pOsgValConv.toFixed(2)),
-                    isFirst ? parseFloat(ovOsgQtyConv.toFixed(2)) : '',
-                    isFirst ? parseFloat(ovOsgValConv.toFixed(2)) : '',
-                    isFirst ? parseFloat(ovAmcQtyConv.toFixed(2)) : '',
-                    isFirst ? parseFloat(ovAmcValConv.toFixed(2)) : '',
-                    isFirst ? parseFloat(ovSamQtyConv.toFixed(2)) : '',
-                    isFirst ? parseFloat(ovSamValConv.toFixed(2)) : ''
-                ]);
-            });
-
-            // Push merges for this group
-            const numProds = allProds.length;
-            if (numProds > 1) {
-                // Determine if BDM should merge (if previous branch had same BDM)
-                const isLastGrp = grpIdx === branchStats.length - 1;
-                const nextGrp = isLastGrp ? null : branchStats[grpIdx + 1];
-
-                if (isLastGrp || nextGrp.bdm !== grp.bdm) {
-                    merges1.push({ s: { r: bdmStart, c: 0 }, e: { r: bdmStart + numProds - 1, c: 0 } }); // BDM
-                    bdmStart += numProds;
-                } else {
-                    // It will continue to the next branch
-                    // wait, we only push merge when the BDM changes.
-                    // Let's refactor merge logic to process at the end to be perfectly accurate
-                }
-            }
-        });
-
-        // Refactored Merge Logic for Sheet 1
-        const finalMerges1 = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 14 } }]; // Title merge
-        let mBdmStart = 2, mBranchStart = 2;
-
-        for (let i = 2; i <= aoa1.length; i++) {
-            const isLast = i === aoa1.length;
-            const row = isLast ? [] : aoa1[i];
-            const prevRow = aoa1[i - 1];
-
-            // Branch & Overall Columns Merge (1, 9, 10, 11, 12, 13, 14)
-            if (isLast || (row[1] !== '' && row[1] !== prevRow[1])) {
-                if (i - 1 > mBranchStart) {
-                    finalMerges1.push({ s: { r: mBranchStart, c: 1 }, e: { r: i - 1, c: 1 } });
-                    [9, 10, 11, 12, 13, 14].forEach(colIdx => {
-                        finalMerges1.push({ s: { r: mBranchStart, c: colIdx }, e: { r: i - 1, c: colIdx } });
-                    });
-                }
-                mBranchStart = i;
-            }
-
-            // BDM (0)
-            if (isLast || (row[0] !== '' && row[0] !== prevRow[0])) {
-                if (i - 1 > mBdmStart) {
-                    finalMerges1.push({ s: { r: mBdmStart, c: 0 }, e: { r: i - 1, c: 0 } });
-                }
-                mBdmStart = i;
-            }
+    const isFuture = (b) => b && b.toUpperCase().includes('FUTURE');
+    const invoiceMeta = {};
+    productData.forEach(r => {
+        if (r.invoice) {
+            const m = window.getBranchMeta(r);
+            invoiceMeta[r.invoice] = {
+                branch: m ? m.origBranch : (r.branch || ''),
+                rbm: r.rbm || (m ? m.rbm : 'Unknown'),
+                bdm: r.bdm || (m ? m.bdm : 'Unknown'),
+                staff: r.staff || 'Unknown'
+            };
         }
+    });
 
-        // --------------------------------------------------------------------------------
-        // DATA PROCESSING FOR SHEET 2: FUTURE_STAFF_OVERVIEW (Grouped by BDM -> Branch -> Staff)
-        // --------------------------------------------------------------------------------
-
-        const allStats = buildFutureStaffStats();
-        const filteredStats = allStats
-            .filter(s => !selRBM || s.rbm === selRBM)
-            .filter(s => !selBDM || s.bdm === selBDM)
-            .filter(s => !selBranch || s.branch === selBranch)
-            .sort((a, b) => (a.branch || '').localeCompare(b.branch || '') || (a.bdm || '').localeCompare(b.bdm || '') || (a.name || '').localeCompare(b.name || ''));
-
-        const hdr2 = ['BRANCH', 'BDM', 'Staff', 'Product', 'Product Qty', 'OSG Qty', 'AMC Qty', 'SAMSUNG Qty', 'Osg Qty Conv%', 'Osg Val Conv%'];
-        const aoa2 = [hdr2];
-
-        filteredStats.forEach(e => {
-            if (e.products && e.products.length > 0) {
-                e.products.forEach(prod => {
-                    aoa2.push([
-                        e.branch || 'Unknown',
-                        e.bdm || 'Unknown',
-                        e.name || 'Unknown',
-                        prod.name || 'Unknown',
-                        prod.qty,
-                        prod.osgQty,
-                        prod.amcQty,
-                        prod.samQty,
-                        parseFloat(prod.qtyConv.toFixed(2)),
-                        parseFloat(prod.valConv.toFixed(2))
-                    ]);
-                });
-            }
-        });
-
-        // --------------------------------------------------------------------------------
-        // DATA PROCESSING FOR SHEET 0: WARRANTY_Overview (All Stores)
-        // --------------------------------------------------------------------------------
-
-        // ---- WARRANTY_Overview summary (across ALL stores, but respects RBM/BDM/Branch filters) ----
-        const w0AllProd = productData.filter(r => 
-            (!selRBM || r.rbm === selRBM) &&
-            (!selBDM || r.bdm === selBDM) &&
-            (!selBranch || r.branch === selBranch)
-        );
-        const w0InvSet    = new Set(w0AllProd.map(r => r.invoice).filter(Boolean));
-        const w0InvMeta   = {};
-        w0AllProd.forEach(r => { if (r.invoice) w0InvMeta[r.invoice] = r; });
-
-        // Total sold qty & price from filtered product data
-        const w0TotalSoldQty   = w0AllProd.reduce((s, r) => s + (r.qty || 0), 0);
-        const w0TotalSoldPrice = w0AllProd.reduce((s, r) => s + (r.soldPrice || 0), 0);
-
-        // Filter OSG/Samsung/AMC directly via their branch values
-        const filterWarrRow = r => {
-            const meta = window.getBranchMeta(r);
-            if (!meta && !r.branch) return false;
-            const rowBranch = meta ? meta.origBranch : r.branch;
-            const rowRBM = r.rbm || (meta ? meta.rbm : '');
-            const rowBDM = r.bdm || (meta ? meta.bdm : '');
-
-            if (selRBM && rowRBM !== selRBM) return false;
-            if (selBDM && rowBDM !== selBDM) return false;
-            if (selBranch && rowBranch !== selBranch) return false;
-            return true;
-        };
-        const w0OsgData = osgData.filter(filterWarrRow);
-        const w0SamData = samsungData.filter(filterWarrRow);
-        const w0AmcDataF = amcData.filter(filterWarrRow);
-
-        // OSG warranty across filtered stores
-        const w0OsgSoldQty   = w0OsgData.reduce((s, r) => s + (r.qty || 0), 0);
-        const w0OsgSoldPrice = w0OsgData.reduce((s, r) => s + (r.soldPrice || 0), 0);
-        const w0OsgQtyConv   = w0TotalSoldQty > 0 ? (w0OsgSoldQty / w0TotalSoldQty) * 100 : 0;
-        const w0OsgValConv   = w0TotalSoldPrice > 0 ? (w0OsgSoldPrice / w0TotalSoldPrice) * 100 : 0;
-
-        // LG-AMC across filtered stores (only LG brand product qty as denominator)
-        const lgAllowedBrands = ['LG'];
-        const w0LgProdQty   = w0AllProd.reduce((s, r) => s + ((r.brand && r.brand.toUpperCase().includes('LG')) ? (r.qty || 0) : 0), 0);
-        const w0LgProdPrice = w0AllProd.reduce((s, r) => s + ((r.brand && r.brand.toUpperCase().includes('LG')) ? (r.soldPrice || 0) : 0), 0);
-        const w0AmcSoldQty   = w0AmcDataF.reduce((s, r) => s + (r.qty || 0), 0);
-        const w0AmcSoldPrice = w0AmcDataF.reduce((s, r) => s + (r.soldPrice || 0), 0);
-        const w0AmcQtyConv   = w0LgProdQty > 0 ? (w0AmcSoldQty / w0LgProdQty) * 100 : 0;
-        const w0AmcValConv   = w0LgProdPrice > 0 ? (w0AmcSoldPrice / w0LgProdPrice) * 100 : 0;
-
-        // Samsung across filtered stores
-        const w0SamAllowedCats = ['AC', 'MICROWAVE OVEN', 'REFRIGERATOR', 'WASHING MACHINE'];
-        const w0SamProdQty   = w0AllProd.reduce((s, r) => { const p = (r.product || '').toUpperCase().trim(); return s + ((r.brand && r.brand.toUpperCase().includes('SAMSUNG') && w0SamAllowedCats.includes(p)) ? (r.qty || 0) : 0); }, 0);
-        const w0SamProdPrice = w0AllProd.reduce((s, r) => { const p = (r.product || '').toUpperCase().trim(); return s + ((r.brand && r.brand.toUpperCase().includes('SAMSUNG') && w0SamAllowedCats.includes(p)) ? (r.soldPrice || 0) : 0); }, 0);
-        const w0SamSoldQty   = w0SamData.reduce((s, r) => s + (r.qty || 0), 0);
-        const w0SamSoldPrice = w0SamData.reduce((s, r) => s + (r.soldPrice || 0), 0);
-        const w0SamQtyConv   = w0SamProdQty > 0 ? (w0SamSoldQty / w0SamProdQty) * 100 : 0;
-        const w0SamValConv   = w0SamProdPrice > 0 ? (w0SamSoldPrice / w0SamProdPrice) * 100 : 0;
-
-        // Total WARRANTY qty & val (OSG + AMC + Samsung)
-        const w0TotalWarrQty   = w0OsgSoldQty + w0AmcSoldQty + w0SamSoldQty;
-        const w0TotalWarrPrice = w0OsgSoldPrice + w0AmcSoldPrice + w0SamSoldPrice;
-
-        const fmt2 = v => parseFloat(v.toFixed(2));
-
-        // ---- Generate Global Product Lists to Ensure Consistent Table Shapes ----
-        const globalOsgProds = new Set();
-        const globalLgProds = new Set();
-        
-        osgData.forEach(r => {
-            const cat = (r.category || 'SMALL APPLIANCE').toUpperCase().trim();
-            globalOsgProds.add(cat);
-        });
-        amcData.forEach(r => {
-            const cat = (r.category || 'SMALL APPLIANCE').toUpperCase().trim();
-            globalLgProds.add(cat);
-        });
-        
-        const osgProds = [...globalOsgProds].sort();
-        const lgProds = [...globalLgProds].sort();
-        const samProds = [...w0SamAllowedCats].sort();
-
-        // ---- OSG-OVERVIEW by product (filtered stores) ----
-        const osgProdCounts = {}, osgProdPrices = {};
-        const allProdCounts = {}, allProdPrices = {};
-        w0AllProd.forEach(r => {
-            const p = (r.category || 'Unknown').toUpperCase().trim();
-            allProdCounts[p] = (allProdCounts[p] || 0) + (r.qty || 0);
-            allProdPrices[p] = (allProdPrices[p] || 0) + (r.soldPrice || 0);
-        });
-        w0OsgData.forEach(r => {
-            const p = (r.category || 'Unknown').toUpperCase().trim();
-            osgProdCounts[p] = (osgProdCounts[p] || 0) + (r.qty || 0);
-            osgProdPrices[p] = (osgProdPrices[p] || 0) + (r.soldPrice || 0);
-        });
-
-        // ---- LG-AMC-OVERVIEW by product (filtered stores, only LG eligible products) ----
-        const amcProdCounts = {}, lgProdAllCounts = {}, lgProdAllPrices = {};
-        w0AllProd.forEach(r => {
-            if (r.brand && r.brand.toUpperCase().includes('LG')) {
-                const p = (r.category || 'Unknown').toUpperCase().trim();
-                lgProdAllCounts[p] = (lgProdAllCounts[p] || 0) + (r.qty || 0);
-                lgProdAllPrices[p] = (lgProdAllPrices[p] || 0) + (r.soldPrice || 0);
-            }
-        });
-        w0AmcDataF.forEach(r => {
-            const p = (r.category || 'Unknown').toUpperCase().trim();
-            amcProdCounts[p] = (amcProdCounts[p] || 0) + (r.qty || 0);
-        });
-
-        // ---- SAMSUNG-OVERVIEW by product (filtered stores, only Samsung eligible categories) ----
-        const samProdCounts = {}, samProdAllCounts = {}, samProdAllPrices = {};
-        w0AllProd.forEach(r => {
-            const p = (r.category || 'Unknown').toUpperCase().trim();
-            if (r.brand && r.brand.toUpperCase().includes('SAMSUNG') && w0SamAllowedCats.includes(p)) {
-                samProdAllCounts[p] = (samProdAllCounts[p] || 0) + (r.qty || 0);
-                samProdAllPrices[p] = (samProdAllPrices[p] || 0) + (r.soldPrice || 0);
-            }
-        });
-        w0SamData.forEach(r => {
-            const p = (r.category || 'Unknown').toUpperCase().trim();
-            samProdCounts[p] = (samProdCounts[p] || 0) + (r.qty || 0);
-        });
-
-        // ---- Build the WARRANTY_Overview AoA (side-by-side layout) ----
-        // Left (A-E): WARRANTY OVERVIEW + OSG-OVERVIEW
-        // Col F: spacer
-        // Right (G-K): SAMSUNG-OVERVIEW + LG_AMC-OVERVIEW
-
-        const block2Start = Math.max(7, 2 + samProds.length + 1);
-        const maxBottom = Math.max(osgProds.length, lgProds.length);
-        const totalW0Rows = block2Start + 2 + maxBottom;
-
-        const aoa0 = [];
-        for (let i = 0; i < totalW0Rows; i++) aoa0.push(['','','','','','','','','','','']);
-
-        // --- TOP LEFT: WARRANTY OVERVIEW (rows 0-5) ---
-        aoa0[0][0] = 'WARRANTY OVERVIEW';
-        aoa0[1][0] = 'WARRANTY'; aoa0[1][1] = 'SOLD QTY'; aoa0[1][2] = 'SOLD PRICE'; aoa0[1][3] = 'QTY-CONV'; aoa0[1][4] = 'VALUE-CONV';
-        aoa0[2][0] = 'OSG';     aoa0[2][1] = w0OsgSoldQty;   aoa0[2][2] = fmt2(w0OsgSoldPrice);   aoa0[2][3] = fmt2(w0OsgQtyConv);   aoa0[2][4] = fmt2(w0OsgValConv);
-        aoa0[3][0] = 'LG AMC';  aoa0[3][1] = w0AmcSoldQty;   aoa0[3][2] = fmt2(w0AmcSoldPrice);   aoa0[3][3] = fmt2(w0AmcQtyConv);   aoa0[3][4] = fmt2(w0AmcValConv);
-        aoa0[4][0] = 'SAMSUNG'; aoa0[4][1] = w0SamSoldQty;   aoa0[4][2] = fmt2(w0SamSoldPrice);   aoa0[4][3] = fmt2(w0SamQtyConv);   aoa0[4][4] = fmt2(w0SamValConv);
-        aoa0[5][0] = 'TOTAL';   aoa0[5][1] = w0TotalWarrQty; aoa0[5][2] = fmt2(w0TotalWarrPrice);
-
-        // --- TOP RIGHT: SAMSUNG-OVERVIEW (rows 0 onwards) ---
-        aoa0[0][6] = 'SAMSUNG-OVERVIEW';
-        aoa0[1][6] = 'PRODUCT'; aoa0[1][7] = 'SOLD QTY'; aoa0[1][8] = 'SOLD PRICE'; aoa0[1][9] = 'QTY-CONV'; aoa0[1][10] = 'VALUE-CONV';
-        samProds.forEach((p, i) => {
-            const r = 2 + i, sq = samProdCounts[p] || 0, tq = samProdAllCounts[p] || 0, tp = samProdAllPrices[p] || 0;
-            const sv = w0SamData.filter(x => (x.category||'Unknown').toUpperCase().trim() === p).reduce((s,x) => s + (x.soldPrice||0), 0);
-            aoa0[r][6] = p; aoa0[r][7] = sq; aoa0[r][8] = fmt2(sv);
-            aoa0[r][9] = tq > 0 ? fmt2((sq/tq)*100) : 0; aoa0[r][10] = tp > 0 ? fmt2((sv/tp)*100) : 0;
-        });
-
-        // --- BOTTOM LEFT: OSG-OVERVIEW (starts at block2Start) ---
-        const osgBlock0 = block2Start;
-        aoa0[osgBlock0][0] = 'OSG-OVERVIEW';
-        aoa0[osgBlock0+1][0] = 'PRODUCT'; aoa0[osgBlock0+1][1] = 'SOLD QTY'; aoa0[osgBlock0+1][2] = 'SOLD PRICE'; aoa0[osgBlock0+1][3] = 'QTY-CONV'; aoa0[osgBlock0+1][4] = 'VALUE-CONV';
-        osgProds.forEach((p, i) => {
-            const r = osgBlock0 + 2 + i, sq = osgProdCounts[p] || 0, sp = osgProdPrices[p] || 0;
-            const tq = allProdCounts[p] || 0, tp = allProdPrices[p] || 0;
-            aoa0[r][0] = p; aoa0[r][1] = sq; aoa0[r][2] = fmt2(sp);
-            aoa0[r][3] = tq > 0 ? fmt2((sq/tq)*100) : 0; aoa0[r][4] = tp > 0 ? fmt2((sp/tp)*100) : 0;
-        });
-
-        // --- BOTTOM RIGHT: LG_AMC-OVERVIEW (starts at block2Start) ---
-        const lgBlock0 = block2Start;
-        aoa0[lgBlock0][6] = 'LG_AMC-OVERVIEW';
-        aoa0[lgBlock0+1][6] = 'PRODUCT'; aoa0[lgBlock0+1][7] = 'SOLD QTY'; aoa0[lgBlock0+1][8] = 'SOLD PRICE'; aoa0[lgBlock0+1][9] = 'QTY-CONV'; aoa0[lgBlock0+1][10] = 'VALUE-CONV';
-        lgProds.forEach((p, i) => {
-            const r = lgBlock0 + 2 + i, sq = amcProdCounts[p] || 0;
-            const tq = lgProdAllCounts[p] || 0, tp = lgProdAllPrices[p] || 0;
-            const av = w0AmcDataF.filter(x => (x.category||'Unknown').toUpperCase().trim() === p).reduce((s,x) => s + (x.soldPrice||0), 0);
-            aoa0[r][6] = p; aoa0[r][7] = sq; aoa0[r][8] = fmt2(av);
-            aoa0[r][9] = tq > 0 ? fmt2((sq/tq)*100) : 0; aoa0[r][10] = tp > 0 ? fmt2((av/tp)*100) : 0;
-        });
-
-        // --------------------------------------------------------------------------------
-        // WRITE TO EXCEL
-        // --------------------------------------------------------------------------------
-
-        const wb = XLSX.utils.book_new();
-
-        // Add Sheet 1
-        const ws1 = XLSX.utils.aoa_to_sheet(aoa1);
-        ws1['!merges'] = finalMerges1;
-        ws1['!cols'] = [{ wch: 15 }, { wch: 22 }, { wch: 20 }, { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 24 }, { wch: 24 }, { wch: 28 }, { wch: 28 }, { wch: 28 }, { wch: 28 }];
-
-        // --------------------------------------------------------------------------------
-        // DATA PROCESSING FOR SHEET 3 & 4: LG-AMC & SAMSUNG
-        // --------------------------------------------------------------------------------
-        const hdr3 = ['BRANCH', 'BDM', 'Staff', 'Product', 'Product Qty', 'AMC Qty', 'AMC Qty Conv%', 'AMC Val Conv%'];
-        const aoa3 = [hdr3];
-
-        const hdr4 = ['BRANCH', 'BDM', 'Staff', 'Product', 'Product Qty', 'SAMSUNG Qty', 'SAM Qty Conv%', 'SAM Val Conv%'];
-        const aoa4 = [hdr4];
-
-        filteredStats.forEach(e => {
-            if (e.products && e.products.length > 0) {
-                e.products.forEach(prod => {
-                    if (prod.lgProdQty > 0 || prod.amcQty > 0) {
-                        aoa3.push([
-                            e.branch || 'Unknown',
-                            e.bdm || 'Unknown',
-                            e.name || 'Unknown',
-                            prod.name || 'Unknown',
-                            prod.lgProdQty,
-                            prod.amcQty,
-                            parseFloat(prod.amcQtyConv.toFixed(2)),
-                            parseFloat(prod.amcValConv.toFixed(2))
-                        ]);
-                    }
-
-                    if (prod.samProdQty > 0 || prod.samQty > 0) {
-                        aoa4.push([
-                            e.branch || 'Unknown',
-                            e.bdm || 'Unknown',
-                            e.name || 'Unknown',
-                            prod.name || 'Unknown',
-                            prod.samProdQty,
-                            prod.samQty,
-                            parseFloat(prod.samQtyConv.toFixed(2)),
-                            parseFloat(prod.samValConv.toFixed(2))
-                        ]);
-                    }
-                });
-            }
-        });
-
-        // Add Sheet 2
-        const ws2 = XLSX.utils.aoa_to_sheet(aoa2);
-        ws2['!cols'] = [{ wch: 22 }, { wch: 15 }, { wch: 20 }, { wch: 25 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 14 }, { wch: 16 }, { wch: 16 }];
-
-        // Add Sheet 3
-        const ws3 = XLSX.utils.aoa_to_sheet(aoa3);
-        ws3['!cols'] = [{ wch: 22 }, { wch: 15 }, { wch: 20 }, { wch: 25 }, { wch: 12 }, { wch: 10 }, { wch: 16 }, { wch: 16 }];
-
-        // Add Sheet 4
-        const ws4 = XLSX.utils.aoa_to_sheet(aoa4);
-        ws4['!cols'] = [{ wch: 22 }, { wch: 15 }, { wch: 20 }, { wch: 25 }, { wch: 12 }, { wch: 12 }, { wch: 16 }, { wch: 16 }];
-
-        // Force numeric types for calculations
-        for (let r = 2; r < aoa1.length; r++) {
-            [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].forEach(c => {
-                const cell = ws1[XLSX.utils.encode_cell({ r, c })];
-                if (cell && cell.v !== '') cell.t = 'n';
-            });
+    const getMeta = (r) => {
+        if (r.invoice && invoiceMeta[r.invoice]) {
+            return invoiceMeta[r.invoice];
         }
-        for (let r = 1; r < aoa2.length; r++) {
-            [4, 5, 6, 7, 8, 9].forEach(c => {
-                const cell = ws2[XLSX.utils.encode_cell({ r, c })];
-                if (cell) cell.t = 'n';
-            });
-        }
-
-        // Sheet 0: WARRANTY_Overview (side-by-side)
-        const ws0 = XLSX.utils.aoa_to_sheet(aoa0);
-        ws0['!cols'] = [
-            { wch: 22 }, { wch: 12 }, { wch: 16 }, { wch: 12 }, { wch: 14 }, // A-E left
-            { wch: 3 },  // F spacer
-            { wch: 22 }, { wch: 12 }, { wch: 16 }, { wch: 12 }, { wch: 14 }  // G-K right
-        ];
-        if (!ws0['!rows']) ws0['!rows'] = [];
-        aoa0.forEach((_, i) => { ws0['!rows'][i] = { hpt: 20 }; });
-        ws0['!merges'] = [
-            { s: { r: 0, c: 0 }, e: { r: 0, c: 4 } },
-            { s: { r: 0, c: 6 }, e: { r: 0, c: 10 } },
-            { s: { r: osgBlock0, c: 0 }, e: { r: osgBlock0, c: 4 } },
-            { s: { r: lgBlock0, c: 6 }, e: { r: lgBlock0, c: 10 } },
-        ];
-
-        // --------------------------------------------------------------------------------
-        // DATA PROCESSING FOR RBM_Overview
-        // --------------------------------------------------------------------------------
-        const rbmStatsMap = {};
-        filteredStats.forEach(staff => {
-            const rbm = staff.rbm || 'Unknown';
-            if (!rbmStatsMap[rbm]) {
-                rbmStatsMap[rbm] = {
-                    pQty: 0, pRev: 0, oQty: 0, oRev: 0,
-                    lgPQty: 0, lgPRev: 0, amcQty: 0, amcRev: 0,
-                    samPQty: 0, samPRev: 0, samQty: 0, samRev: 0
-                };
-            }
-            rbmStatsMap[rbm].pQty += staff.pQty || 0;
-            rbmStatsMap[rbm].oQty += staff.oQty || 0;
-            rbmStatsMap[rbm].pRev += staff.pRev || 0;
-            rbmStatsMap[rbm].oRev += staff.oRev || 0;
-
-            if (staff.products) {
-                staff.products.forEach(p => {
-                    rbmStatsMap[rbm].lgPQty += p.lgProdQty || 0;
-                    rbmStatsMap[rbm].lgPRev += p.lgProdRev || 0;
-                    rbmStatsMap[rbm].amcQty += p.amcQty || 0;
-                    rbmStatsMap[rbm].amcRev += p.amcRev || 0;
-
-                    rbmStatsMap[rbm].samPQty += p.samProdQty || 0;
-                    rbmStatsMap[rbm].samPRev += p.samProdRev || 0;
-                    rbmStatsMap[rbm].samQty += p.samQty || 0;
-                    rbmStatsMap[rbm].samRev += p.samRev || 0;
-                });
-            }
-        });
-
-        const rbmNames = Object.keys(rbmStatsMap).sort();
-        const aoaRbm = [];
-        
-        // Block 1
-        aoaRbm.push(['RBM', 'OSG', '', 'LG-AMC', '', 'SAMSUNG', '']);
-        aoaRbm.push(['', 'QTY', 'SALE', 'QTY', 'SALE', 'QTY', 'SALE']);
-        rbmNames.forEach(rbm => {
-            const r = rbmStatsMap[rbm];
-            aoaRbm.push([rbm, r.oQty, fmt2(r.oRev), r.amcQty, fmt2(r.amcRev), r.samQty, fmt2(r.samRev)]);
-        });
-
-        const block2RowIdxRbm = aoaRbm.length + 1; // 1 empty row
-        aoaRbm.push(['','','','','','','']);
-        
-        // Block 2
-        aoaRbm.push(['RBM', 'OSG', '', 'LG-AMC', '', 'SAMSUNG', '']);
-        aoaRbm.push(['', 'VAL CONV', 'QTY CONV', 'VAL CONV', 'QTY CONV', 'VAL CONV', 'QTY CONV']);
-        rbmNames.forEach(rbm => {
-            const r = rbmStatsMap[rbm];
-            const osgQtyConv = r.pQty > 0 ? (r.oQty / r.pQty) * 100 : 0;
-            const osgValConv = r.pRev > 0 ? (r.oRev / r.pRev) * 100 : 0;
-            const amcQtyConv = r.lgPQty > 0 ? (r.amcQty / r.lgPQty) * 100 : 0;
-            const amcValConv = r.lgPRev > 0 ? (r.amcRev / r.lgPRev) * 100 : 0;
-            const samQtyConv = r.samPQty > 0 ? (r.samQty / r.samPQty) * 100 : 0;
-            const samValConv = r.samPRev > 0 ? (r.samRev / r.samPRev) * 100 : 0;
-            
-            aoaRbm.push([rbm, fmt2(osgValConv), fmt2(osgQtyConv), fmt2(amcValConv), fmt2(amcQtyConv), fmt2(samValConv), fmt2(samQtyConv)]);
-        });
-
-        const wsRbm = XLSX.utils.aoa_to_sheet(aoaRbm);
-        wsRbm['!cols'] = [{ wch: 15 }, { wch: 12 }, { wch: 14 }, { wch: 12 }, { wch: 14 }, { wch: 12 }, { wch: 14 }];
-        if (!wsRbm['!rows']) wsRbm['!rows'] = [];
-        aoaRbm.forEach((_, i) => { wsRbm['!rows'][i] = { hpt: 20 }; });
-        wsRbm['!merges'] = [
-            { s: { r: 0, c: 1 }, e: { r: 0, c: 2 } },
-            { s: { r: 0, c: 3 }, e: { r: 0, c: 4 } },
-            { s: { r: 0, c: 5 }, e: { r: 0, c: 6 } },
-            { s: { r: block2RowIdxRbm, c: 1 }, e: { r: block2RowIdxRbm, c: 2 } },
-            { s: { r: block2RowIdxRbm, c: 3 }, e: { r: block2RowIdxRbm, c: 4 } },
-            { s: { r: block2RowIdxRbm, c: 5 }, e: { r: block2RowIdxRbm, c: 6 } }
-        ];
-
-        XLSX.utils.book_append_sheet(wb, ws0, 'WARRANTY_Overview');
-        XLSX.utils.book_append_sheet(wb, wsRbm, 'RBM_Overview');
-        XLSX.utils.book_append_sheet(wb, ws1, 'Future_Stores_Overview');
-        XLSX.utils.book_append_sheet(wb, ws2, 'Future_Staff_Overview');
-        XLSX.utils.book_append_sheet(wb, ws3, 'LG-AMC');
-        XLSX.utils.book_append_sheet(wb, ws4, 'SAMSUNG');
-
-        // --------------------------------------------------------------------------------
-        // DATA PROCESSING FOR PINCODE_Overview
-        // --------------------------------------------------------------------------------
-        const pincodeStats = Object.values(pincodeGroups).sort((a, b) => String(a.pincode).localeCompare(String(b.pincode)));
-        const aoaPin = [];
-        aoaPin.push(['PINCODE OVERVIEW']);
-        aoaPin.push(['Pincode', 'Product Qty', 'Product Rev', 'OSG Qty', 'OSG Rev', 'LG-AMC Qty', 'LG-AMC Rev', 'SAMSUNG Qty', 'SAMSUNG Rev', 'Osg Qty Conv%', 'Osg Val Conv%', 'LG-AMC Qty Conv%', 'LG-AMC Val Conv%', 'Samsung Qty Conv%', 'Samsung Val Conv%']);
-
-        pincodeStats.forEach(grp => {
-            const pQty = grp.pRows.reduce((s, r) => s + (r.qty || 0), 0);
-            const pRev = grp.pRows.reduce((s, r) => s + (r.revenue || r.soldPrice || 0), 0);
-            const oQty = grp.oRows.reduce((s, r) => s + (r.qty || 0), 0);
-            const oRev = grp.oRows.reduce((s, r) => s + (r.soldPrice || 0), 0);
-            const aQty = grp.aRows.reduce((s, r) => s + (r.qty || 0), 0);
-            const aRev = grp.aRows.reduce((s, r) => s + (r.soldPrice || 0), 0);
-            const sQty = grp.sRows.reduce((s, r) => s + (r.qty || 0), 0);
-            const sRev = grp.sRows.reduce((s, r) => s + (r.soldPrice || 0), 0);
-
-            const lgPQty = grp.pRows.filter(r => r.brand && r.brand.toUpperCase().includes('LG')).reduce((s, r) => s + (r.qty || 0), 0);
-            const lgPRev = grp.pRows.filter(r => r.brand && r.brand.toUpperCase().includes('LG')).reduce((s, r) => s + (r.revenue || r.soldPrice || 0), 0);
-
-            const samPQty = grp.pRows.filter(r => r.brand && r.brand.toUpperCase().includes('SAMSUNG') && w0SamAllowedCats.includes((r.product || '').toUpperCase().trim())).reduce((s, r) => s + (r.qty || 0), 0);
-            const samPRev = grp.pRows.filter(r => r.brand && r.brand.toUpperCase().includes('SAMSUNG') && w0SamAllowedCats.includes((r.product || '').toUpperCase().trim())).reduce((s, r) => s + (r.revenue || r.soldPrice || 0), 0);
-
-            const osgQtyC = pQty > 0 ? (oQty / pQty) * 100 : 0;
-            const osgValC = pRev > 0 ? (oRev / pRev) * 100 : 0;
-            const amcQtyC = lgPQty > 0 ? (aQty / lgPQty) * 100 : 0;
-            const amcValC = lgPRev > 0 ? (aRev / lgPRev) * 100 : 0;
-            const samQtyC = samPQty > 0 ? (sQty / samPQty) * 100 : 0;
-            const samValC = samPRev > 0 ? (sRev / samPRev) * 100 : 0;
-
-            aoaPin.push([
-                grp.pincode,
-                pQty, Math.round(pRev),
-                oQty, Math.round(oRev),
-                aQty, Math.round(aRev),
-                sQty, Math.round(sRev),
-                fmt2(osgQtyC), fmt2(osgValC),
-                fmt2(amcQtyC), fmt2(amcValC),
-                fmt2(samQtyC), fmt2(samValC)
-            ]);
-        });
-        
-        const wsPin = XLSX.utils.aoa_to_sheet(aoaPin);
-        wsPin['!cols'] = [{ wch: 15 }, { wch: 12 }, { wch: 14 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 14 }, { wch: 12 }, { wch: 14 }, { wch: 15 }, { wch: 15 }, { wch: 16 }, { wch: 16 }, { wch: 18 }, { wch: 18 }];
-        wsPin['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 14 } }];
-        XLSX.utils.book_append_sheet(wb, wsPin, 'Pincode_Overview');
-
-        // Apply beautiful styles using xlsx-js-style
-        const fullBorder = { top: { style: 'thin', color: { rgb: '000000' } }, bottom: { style: 'thin', color: { rgb: '000000' } }, left: { style: 'thin', color: { rgb: '000000' } }, right: { style: 'thin', color: { rgb: '000000' } } };
-        
-        const headerStyle = {
-            fill: { fgColor: { rgb: "0F243E" } },
-            font: { color: { rgb: "FFFFFF" }, bold: true, sz: 11 },
-            alignment: { horizontal: "center", vertical: "center", wrapText: true },
-            border: fullBorder
+        const m = window.getBranchMeta(r);
+        return {
+            branch: m ? m.origBranch : (r.branch || ''),
+            rbm: r.rbm || (m ? m.rbm : 'Unknown'),
+            bdm: r.bdm || (m ? m.bdm : 'Unknown'),
+            staff: r.staff || 'Unknown'
         };
-        const rowStyleAlt = {
-            fill: { fgColor: { rgb: "E2E8F0" } },
-            font: { color: { rgb: "0F172A" }, sz: 10 },
-            alignment: { vertical: "center" },
-            border: fullBorder
-        };
-        const rowStyle = {
-            fill: { fgColor: { rgb: "F8FAFC" } },
-            font: { color: { rgb: "0F172A" }, sz: 10 },
-            alignment: { vertical: "center" },
-            border: fullBorder
-        };
-        const numStyle = { alignment: { horizontal: "center", vertical: "center" } };
+    };
 
-        // ---- Style WARRANTY_Overview ----
-        const sectionTitleStyle = { fill: { fgColor: { rgb: '0F243E' } }, font: { color: { rgb: 'FFFFFF' }, bold: true, sz: 12 }, alignment: { horizontal: 'center', vertical: 'center' }, border: fullBorder };
-        const subHeaderStyle = { fill: { fgColor: { rgb: '1E3A5F' } }, font: { color: { rgb: 'FFD700' }, bold: true, sz: 10 }, alignment: { horizontal: 'center', vertical: 'center' }, border: fullBorder };
-        const totalRowStyle = { fill: { fgColor: { rgb: '0F243E' } }, font: { color: { rgb: 'FFFFFF' }, bold: true, sz: 10 }, alignment: { horizontal: 'center', vertical: 'center' }, border: fullBorder };
-        const emptyStyle = { fill: { fgColor: { rgb: 'FFFFFF' } } };
-        const leftTitleRows = new Set([0, osgBlock0]);
-        const rightTitleRows = new Set([0, lgBlock0]);
-        const leftHdrRows = new Set([1, osgBlock0 + 1]);
-        const rightHdrRows = new Set([1, lgBlock0 + 1]);
+    const passFilters = (m) => {
+        // if (!isFuture(m.branch)) return false;
+        if (selRBM && m.rbm !== selRBM) return false;
+        if (selBDM && m.bdm !== selBDM) return false;
+        if (selBranch && m.branch !== selBranch) return false;
+        return true;
+    };
 
-        const w0Range = XLSX.utils.decode_range(ws0['!ref']);
-        for (let R = w0Range.s.r; R <= w0Range.e.r; R++) {
-            for (let C = w0Range.s.c; C <= w0Range.e.c; C++) {
-                const ref = XLSX.utils.encode_cell({ r: R, c: C });
-                if (!ws0[ref]) ws0[ref] = { t: 's', v: '' };
-                if (C === 5) { ws0[ref].s = emptyStyle; continue; }
-                const isLeft = C <= 4, isRight = C >= 6;
-                const val = aoa0[R] ? aoa0[R][C] : '';
-                const leftEmpty = aoa0[R] && aoa0[R][0] === '' && aoa0[R][1] === '';
-                const rightEmpty = aoa0[R] && aoa0[R][6] === '' && aoa0[R][7] === '';
-                if (isLeft) {
-                    if (leftTitleRows.has(R)) ws0[ref].s = sectionTitleStyle;
-                    else if (leftHdrRows.has(R)) ws0[ref].s = subHeaderStyle;
-                    else if (R === 5) ws0[ref].s = totalRowStyle;
-                    else if (leftEmpty) ws0[ref].s = emptyStyle;
-                    else { const ri = R < osgBlock0 ? R - 2 : R - (osgBlock0 + 2); ws0[ref].s = { ...(ri % 2 === 1 ? rowStyleAlt : rowStyle), alignment: { horizontal: C === 0 ? 'left' : 'center', vertical: 'center' } }; }
-                } else if (isRight) {
-                    if (rightTitleRows.has(R)) ws0[ref].s = sectionTitleStyle;
-                    else if (rightHdrRows.has(R)) ws0[ref].s = subHeaderStyle;
-                    else if (rightEmpty) ws0[ref].s = emptyStyle;
-                    else { const ri = R < lgBlock0 ? R - 2 : R - (lgBlock0 + 2); ws0[ref].s = { ...(ri % 2 === 1 ? rowStyleAlt : rowStyle), alignment: { horizontal: C === 6 ? 'left' : 'center', vertical: 'center' } }; }
-                }
-            }
+    const fP = [], fO = [], fA = [], fS = [];
+    productData.forEach(r => { const m = getMeta(r); if (passFilters(m)) { r._m = m; fP.push(r); } });
+    osgData.forEach(r => { const m = getMeta(r); if (passFilters(m)) { r._m = m; fO.push(r); } });
+    amcData.forEach(r => { const m = getMeta(r); if (passFilters(m)) { r._m = m; fA.push(r); } });
+    samsungData.forEach(r => { const m = getMeta(r); if (passFilters(m)) { r._m = m; fS.push(r); } });
+
+    const H = {};
+    const getObj = (rbm, bdm, branch, staff, prod) => {
+        if (!H[rbm]) H[rbm] = {};
+        if (!H[rbm][bdm]) H[rbm][bdm] = {};
+        if (!H[rbm][bdm][branch]) H[rbm][bdm][branch] = {};
+        if (!H[rbm][bdm][branch][staff]) H[rbm][bdm][branch][staff] = {};
+        const pName = prod ? prod.toUpperCase().trim() : 'UNKNOWN';
+        if (!H[rbm][bdm][branch][staff][pName]) {
+            H[rbm][bdm][branch][staff][pName] = { 
+                name: pName, pQty:0, pRev:0, oQty:0, oRev:0, aQty:0, aRev:0, sQty:0, sRev:0, lgPQty:0, lgPRev:0, samPQty:0, samPRev:0 
+            };
         }
+        return H[rbm][bdm][branch][staff][pName];
+    };
 
-        // ---- Style RBM_Overview ----
-        const rRange = XLSX.utils.decode_range(wsRbm['!ref']);
-        for (let R = rRange.s.r; R <= rRange.e.r; R++) {
-            for (let C = rRange.s.c; C <= rRange.e.c; C++) {
-                const ref = XLSX.utils.encode_cell({ r: R, c: C });
-                if (!wsRbm[ref]) wsRbm[ref] = { t: 's', v: '' };
-                const isTitle = (R === 0 || R === block2RowIdxRbm);
-                const isSubHdr = (R === 1 || R === block2RowIdxRbm + 1);
-                const isEmpty = (R === block2RowIdxRbm - 1);
-                if (isTitle) wsRbm[ref].s = sectionTitleStyle;
-                else if (isSubHdr) wsRbm[ref].s = subHeaderStyle;
-                else if (isEmpty) wsRbm[ref].s = emptyStyle;
-                else {
-                    const ri = R < block2RowIdxRbm ? R - 2 : R - (block2RowIdxRbm + 2);
-                    wsRbm[ref].s = { ...(ri % 2 === 1 ? rowStyleAlt : rowStyle), alignment: { horizontal: C === 0 ? 'left' : 'center', vertical: 'center' } };
-                }
-            }
-        }
-        wsRbm['!views'] = [{ state: 'frozen', ySplit: 2 }];
+    const samAllowed = ['AC', 'MICROWAVE OVEN', 'REFRIGERATOR', 'WASHING MACHINE'];
+    fP.forEach(r => {
+        const prod = r.product || 'Unknown';
+        const obj = getObj(r._m.rbm, r._m.bdm, r._m.branch, r._m.staff, prod);
+        obj.pQty += (r.qty || 0); obj.pRev += (r.soldPrice || 0);
+        const b = (r.brand || '').toUpperCase();
+        if (b.includes('LG')) { obj.lgPQty += (r.qty || 0); obj.lgPRev += (r.soldPrice || 0); }
+        if (b.includes('SAMSUNG') && samAllowed.includes(prod.toUpperCase().trim())) { obj.samPQty += (r.qty || 0); obj.samPRev += (r.soldPrice || 0); }
+    });
+    fO.forEach(r => {
+        const prod = r.category || window.normalizeProductCategory(r.product) || 'Unknown';
+        const obj = getObj(r._m.rbm, r._m.bdm, r._m.branch, r._m.staff, prod);
+        obj.oQty += (r.qty || 0); obj.oRev += (r.soldPrice || 0);
+    });
+    fA.forEach(r => {
+        const prod = r.product || 'Unknown';
+        const obj = getObj(r._m.rbm, r._m.bdm, r._m.branch, r._m.staff, prod);
+        obj.aQty += (r.qty || 0); obj.aRev += (r.soldPrice || 0);
+    });
+    fS.forEach(r => {
+        const prod = r.product || 'Unknown';
+        const obj = getObj(r._m.rbm, r._m.bdm, r._m.branch, r._m.staff, prod);
+        obj.sQty += (r.qty || 0); obj.sRev += (r.soldPrice || 0);
+    });
 
-        // Add Freeze Panes and Auto-Filters
-        ws1['!views'] = [{ state: 'frozen', ySplit: 2 }];
-        ws2['!views'] = [{ state: 'frozen', ySplit: 1 }];
-        ws3['!views'] = [{ state: 'frozen', ySplit: 1 }];
-        ws4['!views'] = [{ state: 'frozen', ySplit: 1 }];
-
-        [ws1, ws2, ws3, ws4].forEach(ws => {
-            const range = XLSX.utils.decode_range(ws['!ref']);
-            const keyCol = (ws === ws1) ? 1 : 2; // Toggle color by Branch for ws1, by Staff for others
-            let isAlt = false;
-            let lastKey = null;
-
-            // Apply Auto-Filter
-            const hdrRow = (ws === ws1) ? 1 : 0;
-            ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: hdrRow, c: range.s.c }, e: range.e }) };
-
-            // Set row heights
-            if (!ws['!rows']) ws['!rows'] = [];
-
-            for (let R = range.s.r; R <= range.e.r; R++) {
-                ws['!rows'][R] = { hpt: (R === 0 || R === 1) ? 25 : 20 };
-
-                // Header rows
-                if (R === 0 || (ws === ws1 && R === 1)) {
-                    for (let C = range.s.c; C <= range.e.c; C++) {
-                        const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
-                        if (!ws[cellRef]) ws[cellRef] = { t: 's', v: '' };
-                        ws[cellRef].s = headerStyle;
-                    }
-                    continue;
-                }
-
-                // Check key column to toggle color
-                const keyCellRef = XLSX.utils.encode_cell({ r: R, c: keyCol });
-                const currentKey = ws[keyCellRef] ? ws[keyCellRef].v : '';
-
-                // Toggle if we hit a new group (ignore empty cells from merges)
-                if (currentKey !== '' && currentKey !== lastKey) {
-                    isAlt = !isAlt;
-                    lastKey = currentKey;
-                }
-
-                let style = isAlt ? rowStyleAlt : rowStyle;
-
-                for (let C = range.s.c; C <= range.e.c; C++) {
-                    const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
-                    if (!ws[cellRef]) ws[cellRef] = { t: 's', v: '' };
-
-                    ws[cellRef].s = { ...style };
-                    
-                    // Get header to check if this is a percentage column
-                    const hdrRow = (ws === ws1) ? 1 : 0;
-                    const hdrRef = XLSX.utils.encode_cell({ r: hdrRow, c: C });
-                    const hdrVal = ws[hdrRef] && ws[hdrRef].v ? String(ws[hdrRef].v).toUpperCase() : '';
-                    const isPctCol = hdrVal.includes('%') || hdrVal.includes('CONV');
-                    const isCurrencyCol = hdrVal.includes('PRICE') || hdrVal.includes('REVENUE') || hdrVal.includes('TAX') || hdrVal.includes('PROFIT') || hdrVal.includes('VALUE');
-
-                    // Center align numbers and apply color coding for percentages
-                    if (ws[cellRef].t === 'n') {
-                        let finalNumStyle = { ...style, ...numStyle };
-                        
-                        if (isPctCol) {
-                            finalNumStyle.z = '0"%"'; // Round off, no decimals
-                            const val = ws[cellRef].v;
-                            let greenThresh = 10, yellowThresh = 5;
-
-                            if (hdrVal.includes('VAL CONV')) {
-                                greenThresh = 2; yellowThresh = 1;
-                            } else if (hdrVal.includes('LG-AMC QTY CONV') || hdrVal.includes('SAMSUNG QTY CONV')) {
-                                greenThresh = 15; yellowThresh = 10;
-                            } else if (hdrVal.includes('OSG QTY CONV') || hdrVal.includes('QTY CONV')) {
-                                greenThresh = 10; yellowThresh = 5;
-                            }
-
-                            if (val < yellowThresh) { // Red
-                                finalNumStyle = { ...finalNumStyle, font: { color: { rgb: "991B1B" }, bold: true }, fill: { fgColor: { rgb: "FEE2E2" } } };
-                            } else if (val >= greenThresh) { // Green
-                                finalNumStyle = { ...finalNumStyle, font: { color: { rgb: "166534" }, bold: true }, fill: { fgColor: { rgb: "DCFCE7" } } };
-                            } else { // Yellow
-                                finalNumStyle = { ...finalNumStyle, font: { color: { rgb: "9A3412" }, bold: true }, fill: { fgColor: { rgb: "FEF08A" } } };
-                            }
-                        } else if (isCurrencyCol) {
-                            finalNumStyle.z = '"₹"#,##0'; // Native Indian Rupee currency formatting, no decimals
-                        } else {
-                            finalNumStyle.z = '#,##0'; // Standard integer formatting with commas, no decimals
+    const flatDataAll = [];
+    for (const rbm in H) {
+        for (const bdm in H[rbm]) {
+            for (const branch in H[rbm][bdm]) {
+                for (const staff in H[rbm][bdm][branch]) {
+                    for (const p in H[rbm][bdm][branch][staff]) {
+                        const d = H[rbm][bdm][branch][staff][p];
+                        if (d.pQty>0 || d.oQty>0 || d.aQty>0 || d.sQty>0) {
+                            flatDataAll.push({ rbm, bdm, branch, staff, product: d.name, ...d });
                         }
-                        
-                        ws[cellRef].s = finalNumStyle;
-                    }
-                    // Center align text for BDM, Branch, Staff
-                    if (C <= 2) {
-                        ws[cellRef].s = { ...style, alignment: { horizontal: "center", vertical: "center" } };
                     }
                 }
             }
-        });
-
-        XLSX.writeFile(wb, 'Future_Stores_Report.xlsx');
+        }
     }
 
+    const flatDataFuture = flatDataAll.filter(d => isFuture(d.branch));
+
+    const calcConv = (n, d) => d > 0 ? (n / d) * 100 : 0;
+    const wb = XLSX.utils.book_new();
+
+    const applyDesignStyles = (ws, merges, isSheet1 = false, groupCol = -1) => {
+        if (!ws['!merges']) ws['!merges'] = [];
+        if (merges) ws['!merges'].push(...merges);
+
+        const NAVY   = "132448";
+        const GOLD   = "FFD700";
+        const WHITE  = "FFFFFF";
+        const LTBLUE = "D6E4F2";
+        const DKTXT  = "1A1A2E";
+
+        const border = { top:{style:"thin",color:{rgb:"9DB2CC"}}, bottom:{style:"thin",color:{rgb:"9DB2CC"}}, left:{style:"thin",color:{rgb:"9DB2CC"}}, right:{style:"thin",color:{rgb:"9DB2CC"}} };
+        const borderDark = { top:{style:"thin",color:{rgb:"000000"}}, bottom:{style:"thin",color:{rgb:"000000"}}, left:{style:"thin",color:{rgb:"000000"}}, right:{style:"thin",color:{rgb:"000000"}} };
+
+        const sTitle  = { fill:{fgColor:{rgb:NAVY}}, font:{color:{rgb:WHITE}, bold:true, name:"Calibri", sz:13}, alignment:{horizontal:"center",vertical:"center"}, border:borderDark };
+        const sHeader = { fill:{fgColor:{rgb:NAVY}}, font:{color:{rgb:GOLD},  bold:true, name:"Calibri", sz:11}, alignment:{horizontal:"center",vertical:"center"}, border:borderDark };
+        const sTotal  = { fill:{fgColor:{rgb:NAVY}}, font:{color:{rgb:WHITE}, bold:true, name:"Calibri", sz:11}, alignment:{horizontal:"center",vertical:"center"}, border:borderDark };
+        const sDataW  = { fill:{fgColor:{rgb:WHITE}},  font:{color:{rgb:DKTXT}, name:"Calibri", sz:11}, alignment:{horizontal:"center",vertical:"center"}, border:border };
+        const sDataL  = { fill:{fgColor:{rgb:LTBLUE}}, font:{color:{rgb:DKTXT}, name:"Calibri", sz:11}, alignment:{horizontal:"center",vertical:"center"}, border:border };
+
+        const range = XLSX.utils.decode_range(ws['!ref']);
+        const colWidths = [];
+        for (let C = range.s.c; C <= range.e.c; C++) colWidths[C] = 10;
+
+
+
+        const titleTexts = ['SALES DETAILS','CONVERSION DETAILS','WARRANTY','OVERVIEW'];
+        const rowTypes = {};
+        for (let R = range.s.r; R <= range.e.r; R++) {
+            const cellRef0 = XLSX.utils.encode_cell({ r: R, c: 0 });
+            const val0 = ws[cellRef0] ? String(ws[cellRef0].v).toUpperCase().trim() : '';
+            const cellRef6 = XLSX.utils.encode_cell({ r: R, c: 6 });
+            const val6 = ws[cellRef6] ? String(ws[cellRef6].v).toUpperCase().trim() : '';
+
+            if (isSheet1) {
+                let isTitleRow = false;
+                const titleKw = ['WARRANTY OVERVIEW','OSG-OVERVIEW','SAMSUNG-OVERVIEW','LG_AMC-OVERVIEW'];
+                for (let c = range.s.c; c <= range.e.c; c++) {
+                    const cr = XLSX.utils.encode_cell({r:R, c:c});
+                    if (ws[cr] && titleKw.some(t => String(ws[cr].v).toUpperCase().includes(t))) { isTitleRow = true; break; }
+                }
+                if (isTitleRow) rowTypes[R] = 'title';
+                else if (rowTypes[R-1] === 'title') rowTypes[R] = 'header';
+                else if (val0 === 'TOTAL' || val6 === 'TOTAL') rowTypes[R] = 'total';
+                else {
+                    let hasAnyContent = false;
+                    for (let c = range.s.c; c <= range.e.c; c++) {
+                        const cr = XLSX.utils.encode_cell({r:R, c:c});
+                        if (ws[cr] && String(ws[cr].v).trim() !== '') { hasAnyContent = true; break; }
+                    }
+                    rowTypes[R] = hasAnyContent ? 'data' : 'empty';
+                }
+            } else {
+                const isTitleText = titleTexts.some(t => val0.includes(t)) || val0.includes('FUTURE STORE');
+                if (isTitleText) {
+                    rowTypes[R] = 'title';
+                } else if (R === 0 || (rowTypes[R-1] === 'title')) {
+                    rowTypes[R] = 'header';
+                } else if (val0 === 'TOTAL' || val0 === 'OVERALL') {
+                    rowTypes[R] = 'total';
+                } else {
+                    rowTypes[R] = 'data';
+                }
+            }
+        }
+
+        const groupMap = {};
+        if (groupCol >= 0) {
+            let lastVal = null, gIdx = 0;
+            for (let R = range.s.r; R <= range.e.r; R++) {
+                if (rowTypes[R] !== 'data') continue;
+                const cr = XLSX.utils.encode_cell({r:R, c:groupCol});
+                const val = ws[cr] ? String(ws[cr].v).trim() : '';
+                if (val !== lastVal) { gIdx++; lastVal = val; }
+                groupMap[R] = gIdx;
+            }
+        }
+
+        let altIdx = 0;
+        for (let R = range.s.r; R <= range.e.r; R++) {
+            const rType = rowTypes[R];
+            if (rType === 'data' && groupCol < 0) altIdx++;
+            
+            const cellRef0 = XLSX.utils.encode_cell({ r: R, c: 0 });
+            const val0 = ws[cellRef0] ? String(ws[cellRef0].v).toUpperCase().trim() : '';
+            const cellRef6 = XLSX.utils.encode_cell({ r: R, c: 6 });
+            const val6 = ws[cellRef6] ? String(ws[cellRef6].v).toUpperCase().trim() : '';
+
+            for (let C = range.s.c; C <= range.e.c; C++) {
+                const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+                if (!ws[cellRef]) continue;
+                if (ws[cellRef].v === '' || ws[cellRef].v === undefined || ws[cellRef].v === null) continue;
+
+                const valStr = String(ws[cellRef].v);
+                valStr.split('\n').forEach(l => { if (l.length + 2 > colWidths[C]) colWidths[C] = l.length + 2; });
+
+                let cType = rType;
+                if (isSheet1) {
+                    if (C <= 4) {
+                        if (R === 0 || R === 7) cType = 'title';
+                        else if (R === 1 || R === 8) cType = 'header';
+                        else if (val0 === 'TOTAL') cType = 'total';
+                        else cType = 'data';
+                    } else if (C >= 6) {
+                        if (R === 0 || R === 7) cType = 'title';
+                        else if (R === 1 || R === 8) cType = 'header';
+                        else if (val6 === 'TOTAL') cType = 'total';
+                        else cType = 'data';
+                    }
+                }
+
+                let style;
+                if (cType === 'title')  style = JSON.parse(JSON.stringify(sTitle));
+                else if (cType === 'header') style = JSON.parse(JSON.stringify(sHeader));
+                else if (cType === 'total') style = JSON.parse(JSON.stringify(sTotal));
+                else {
+                    const idx = isSheet1 ? R : (groupCol >= 0 ? (groupMap[R] || 0) : altIdx);
+                    style = JSON.parse(JSON.stringify(idx % 2 === 0 ? sDataL : sDataW));
+                }
+
+                const isLabelCol = (isSheet1 && (C === 0 || C === 6)) || (!isSheet1 && C <= 1);
+                if (isLabelCol && cType !== 'title') {
+                    style.alignment = { ...style.alignment, horizontal: "left" };
+                }
+
+                ws[cellRef].s = style;
+
+                if (!isNaN(ws[cellRef].v) && ws[cellRef].v !== '') {
+                    let numVal = Number(ws[cellRef].v);
+                    
+                    let isConv = false;
+                    for (let hR = R; hR >= range.s.r; hR--) {
+                        if (rowTypes[hR] === 'header') {
+                            const hCellRef = XLSX.utils.encode_cell({r: hR, c: C});
+                            if (ws[hCellRef] && typeof ws[hCellRef].v === 'string') {
+                                const v = ws[hCellRef].v.toUpperCase();
+                                if (v.includes('CONV') || v.includes('%')) isConv = true;
+                            }
+                            break;
+                        }
+                    }
+
+                    ws[cellRef].v = isConv ? numVal : Math.round(numVal);
+                    ws[cellRef].t = 'n';
+                    ws[cellRef].z = isConv ? "0.00" : "0";
+                }
+            }
+        }
+
+        ws['!cols'] = colWidths.map((w, idx) => {
+            if (isSheet1 && idx === 5) return { wch: 3 };
+            return { wch: Math.min(Math.max(w, 13), 28) };
+        });
+
+        ws['!rows'] = [];
+        for (let R = range.s.r; R <= range.e.r; R++) {
+            if (rowTypes[R] === 'title') ws['!rows'][R] = { hpt: 22 };
+            else if (rowTypes[R] === 'header') ws['!rows'][R] = { hpt: 20 };
+            else ws['!rows'][R] = { hpt: 18 };
+        }
+    };
+    const addSheet = (name, aoa, merges, isSheet1 = false, groupCol = -1) => {
+        const ws = XLSX.utils.aoa_to_sheet(aoa);
+        applyDesignStyles(ws, merges, isSheet1, groupCol);
+        XLSX.utils.book_append_sheet(wb, ws, name.substring(0, 31));
+        return ws;
+    };
+
+    // Sheet 1: WARRANTY_Overview
+    const s1ProdMap = {};
+    let tPQty=0, tOQty=0, tAQty=0, tSQty=0, tPRev=0, tORev=0, tARev=0, tSRev=0;
+    let tLgPQty=0, tLgPRev=0, tSamPQty=0, tSamPRev=0;
+    flatDataAll.forEach(d => {
+        if (!s1ProdMap[d.product]) s1ProdMap[d.product] = { oQ:0, oR:0, aQ:0, aR:0, sQ:0, sR:0, pQ:0, pR:0, lgPQ:0, lgPR:0, samPQ:0, samPR:0 };
+        const p = s1ProdMap[d.product];
+        p.pQ+=d.pQty; p.pR+=d.pRev; p.oQ+=d.oQty; p.oR+=d.oRev;
+        p.aQ+=d.aQty; p.aR+=d.aRev; p.sQ+=d.sQty; p.sR+=d.sRev;
+        p.lgPQ+=d.lgPQty; p.lgPR+=d.lgPRev; p.samPQ+=d.samPQty; p.samPR+=d.samPRev;
+        tPQty+=d.pQty; tPRev+=d.pRev; tOQty+=d.oQty; tORev+=d.oRev;
+        tAQty+=d.aQty; tARev+=d.aRev; tSQty+=d.sQty; tSRev+=d.sRev;
+        tLgPQty+=d.lgPQty; tLgPRev+=d.lgPRev; tSamPQty+=d.samPQty; tSamPRev+=d.samPRev;
+    });
+
+    const aoa1 = [['WARRANTY OVERVIEW', '', '', '', '', '', 'SAMSUNG-OVERVIEW', '', '', '', '']];
+    aoa1.push(['WARRANTY', 'SOLD QTY', 'SOLD PRICE', 'QTY-CONV', 'VALUE-CONV', '', 'PRODUCT', 'SOLD QTY', 'SOLD PRICE', 'QTY-CONV', 'VALUE-CONV']);
+    
+    const wRows = [
+        ['OSG', tOQty, tORev, calcConv(tOQty, tPQty), calcConv(tORev, tPRev)],
+        ['LG AMC', tAQty, tARev, calcConv(tAQty, tLgPQty), calcConv(tARev, tLgPRev)],
+        ['SAMSUNG', tSQty, tSRev, calcConv(tSQty, tSamPQty), calcConv(tSRev, tSamPRev)],
+        ['TOTAL', tOQty+tAQty+tSQty, tORev+tARev+tSRev, calcConv(tOQty+tAQty+tSQty, tPQty), calcConv(tORev+tARev+tSRev, tPRev)]
+    ];
+
+    const prods = Object.keys(s1ProdMap).sort();
+    const osgRows=[], amcRows=[], samRows=[];
+    prods.forEach(k => {
+        const p = s1ProdMap[k];
+        if (p.oQ>0 || p.oR>0) osgRows.push([k, p.oQ, p.oR, calcConv(p.oQ, p.pQ), calcConv(p.oR, p.pR)]);
+        if (p.aQ>0 || p.aR>0) amcRows.push([k, p.aQ, p.aR, calcConv(p.aQ, p.lgPQ), calcConv(p.aR, p.lgPR)]);
+        if (p.sQ>0 || p.sR>0) samRows.push([k, p.sQ, p.sR, calcConv(p.sQ, p.samPQ), calcConv(p.sR, p.samPR)]);
+    });
+    osgRows.push(['TOTAL', tOQty, tORev, calcConv(tOQty, tPQty), calcConv(tORev, tPRev)]);
+    amcRows.push(['TOTAL', tAQty, tARev, calcConv(tAQty, tLgPQty), calcConv(tARev, tLgPRev)]);
+    samRows.push(['TOTAL', tSQty, tSRev, calcConv(tSQty, tSamPQty), calcConv(tSRev, tSamPRev)]);
+
+    for (let i=0; i<Math.max(wRows.length, samRows.length); i++) {
+        const left = wRows[i] || ['', '', '', '', ''];
+        const right = samRows[i] || ['', '', '', '', ''];
+        aoa1.push([...left, '', ...right]);
+    }
+    
+    aoa1.push([]);
+    
+    const botLeftStartR = aoa1.length;
+    aoa1.push(['OSG-OVERVIEW', '', '', '', '', '', 'LG_AMC-OVERVIEW', '', '', '', '']);
+    aoa1.push(['PRODUCT', 'SOLD QTY', 'SOLD PRICE', 'QTY-CONV', 'VALUE-CONV', '', 'PRODUCT', 'SOLD QTY', 'SOLD PRICE', 'QTY-CONV', 'VALUE-CONV']);
+
+    let maxBotR = Math.max(osgRows.length, amcRows.length);
+    for (let i=0; i<maxBotR; i++) {
+        const left = osgRows[i] || ['', '', '', '', ''];
+        const right = amcRows[i] || ['', '', '', '', ''];
+        aoa1.push([...left, '', ...right]);
+    }
+
+    const merges1 = [
+        {s:{r:0,c:0}, e:{r:0,c:4}}, 
+        {s:{r:0,c:6}, e:{r:0,c:10}}, 
+        {s:{r:botLeftStartR, c:0}, e:{r:botLeftStartR, c:4}}, 
+        {s:{r:botLeftStartR, c:6}, e:{r:botLeftStartR, c:10}}
+    ];
+
+    addSheet('WARRANTY_Overview', aoa1, merges1, true);
+
+    // Sheet 2: RBM_SALE AND CONVESION
+    const rbmMap = {};
+    flatDataAll.forEach(d => {
+        if (d.rbm && d.rbm.toUpperCase() === 'GENERAL') return; if (!rbmMap[d.rbm]) rbmMap[d.rbm] = { pQ:0, pR:0, lgPQ:0, lgPR:0, samPQ:0, samPR:0, oQ:0, oR:0, aQ:0, aR:0, sQ:0, sR:0 };
+        const p = rbmMap[d.rbm];
+        p.pQ+=d.pQty; p.pR+=d.pRev; p.oQ+=d.oQty; p.oR+=d.oRev;
+        p.aQ+=d.aQty; p.aR+=d.aRev; p.sQ+=d.sQty; p.sR+=d.sRev;
+        p.lgPQ+=d.lgPQty; p.lgPR+=d.lgPRev; p.samPQ+=d.samPQty; p.samPR+=d.samPRev;
+    });
+
+    const aoa2 = [['SALES DETAILS']];
+    aoa2.push(['RBM', 'OSG QTY', 'OSG SALE', 'LG-AMC QTY', 'LG-AMC SALE', 'SAMSUNG QTY', 'SAMSUNG SALE']);
+    Object.keys(rbmMap).sort().forEach(r => {
+        const d = rbmMap[r];
+        aoa2.push([r, d.oQ, d.oR, d.aQ, d.aR, d.sQ, d.sR]);
+    });
+    aoa2.push([]);
+    aoa2.push(['CONVERSION DETAILS']);
+    aoa2.push(['RBM', 'OSG VAL CONV', 'OSG QTY CONV', 'LG-AMC VAL CONV', 'LG-AMC QTY CONV', 'SAMSUNG VAL CONV', 'SAMSUNG QTY CONV']);
+    Object.keys(rbmMap).sort().forEach(r => {
+        const d = rbmMap[r];
+        aoa2.push([r, calcConv(d.oR, d.pR), calcConv(d.oQ, d.pQ), calcConv(d.aR, d.lgPR), calcConv(d.aQ, d.lgPQ), calcConv(d.sR, d.samPR), calcConv(d.sQ, d.samPQ)]);
+    });
+    addSheet('RBM_Overview', aoa2, [{s:{r:0,c:0}, e:{r:0,c:6}}, {s:{r:aoa2.length-1 - Object.keys(rbmMap).length - 1, c:0}, e:{r:aoa2.length-1 - Object.keys(rbmMap).length - 1, c:6}}]);
+
+    const buildRbmProdSheet = (name, hdr, rowMapFn) => {
+        const aoa = [hdr];
+        const merges = [];
+        const rbmPMap = {};
+        flatDataAll.forEach(d => {
+            if (d.rbm && d.rbm.toUpperCase() === 'GENERAL') return; if (!rbmPMap[d.rbm]) rbmPMap[d.rbm] = {};
+            if (!rbmPMap[d.rbm][d.product]) rbmPMap[d.rbm][d.product] = { pQ:0, oQ:0, aQ:0, sQ:0, pR:0, oR:0, aR:0, sR:0, lgPQ:0, lgPR:0, samPQ:0, samPR:0 };
+            const p = rbmPMap[d.rbm][d.product];
+            p.pQ+=d.pQty; p.oQ+=d.oQty; p.aQ+=d.aQty; p.sQ+=d.sQty;
+            p.pR+=d.pRev; p.oR+=d.oRev; p.aR+=d.aRev; p.sR+=d.sRev;
+            p.lgPQ+=d.lgPQty; p.lgPR+=d.lgPRev; p.samPQ+=d.samPQty; p.samPR+=d.samPRev;
+        });
+
+        let rIdx = 1;
+        Object.keys(rbmPMap).sort().forEach(r => {
+            let startR = rIdx;
+            let tPQ=0, tOQ=0, tAQ=0, tSQ=0, tPR=0, tOR=0, tAR=0, tSR=0, tLgPQ=0, tLgPR=0, tSamPQ=0, tSamPR=0;
+            const prods = Object.keys(rbmPMap[r]).sort();
+            prods.forEach(k => {
+                const p = rbmPMap[r][k];
+                tPQ+=p.pQ; tOQ+=p.oQ; tAQ+=p.aQ; tSQ+=p.sQ;
+                tPR+=p.pR; tOR+=p.oR; tAR+=p.aR; tSR+=p.sR;
+                tLgPQ+=p.lgPQ; tLgPR+=p.lgPR; tSamPQ+=p.samPQ; tSamPR+=p.samPR;
+                aoa.push(rowMapFn(r, k, p, null));
+                rIdx++;
+            });
+            if (rIdx > startR + 1) merges.push({s:{r:startR, c:0}, e:{r:rIdx-1, c:0}});
+            const ovals = rowMapFn(r, 'OVERALL', { pQ:tPQ, oQ:tOQ, aQ:tAQ, sQ:tSQ, pR:tPR, oR:tOR, aR:tAR, sR:tSR, lgPQ:tLgPQ, lgPR:tLgPR, samPQ:tSamPQ, samPR:tSamPR }, true);
+            for (let i=0; i<ovals.length; i++) {
+                if (ovals[i] !== undefined) aoa[startR][i] = ovals[i];
+                if (ovals[i] !== undefined && rIdx > startR + 1) merges.push({s:{r:startR, c:i}, e:{r:rIdx-1, c:i}});
+            }
+        });
+        return addSheet(name, aoa, merges);
+    };
+
+    buildRbmProdSheet('RBM_PRODUCT WISE OSG', 
+        ['RBM', 'Product', 'Product Qty', 'OSG Qty', 'LG-AMC Qty', 'SAMSUNG Qty', 'Osg Qty Conv%', 'Osg Val Conv%', 'OVERALL OSG Qty Conv%', 'OVERALL OSG Val Conv%'],
+        (r, k, p, isOverall) => {
+            if (isOverall) { const arr = new Array(10).fill(undefined); arr[8] = calcConv(p.oQ, p.pQ); arr[9] = calcConv(p.oR, p.pR); return arr; }
+            return [r, k, p.pQ, p.oQ, p.aQ, p.sQ, calcConv(p.oQ, p.pQ), calcConv(p.oR, p.pR), '', ''];
+        }
+    );
+
+    buildRbmProdSheet('RBM_PRODUCT WISE LG-AMC', 
+        ['RBM', 'Product', 'Product Qty', 'LG-AMC Qty', 'LG-AMC Qty Conv%', 'LG-AMC Val Conv%', 'OVERALL LG-AMC Qty Conv%', 'OVERALL LG-AMC Val Conv%'],
+        (r, k, p, isOverall) => {
+            if (isOverall) { const arr = new Array(8).fill(undefined); arr[6] = calcConv(p.aQ, p.lgPQ); arr[7] = calcConv(p.aR, p.lgPR); return arr; }
+            return [r, k, p.lgPQ, p.aQ, calcConv(p.aQ, p.lgPQ), calcConv(p.aR, p.lgPR), '', ''];
+        }
+    );
+
+    buildRbmProdSheet('RBM_PRODUCT WISE SAMSUNG', 
+        ['RBM', 'Product', 'Product Qty', 'SAMSUNG Qty', 'SAMSUNG Qty Conv%', 'SAMSUNG Val Conv%', 'OVERALL SAMSUNG Qty Conv%', 'OVERALL SAMSUNG Val Conv%'],
+        (r, k, p, isOverall) => {
+            if (isOverall) { const arr = new Array(8).fill(undefined); arr[6] = calcConv(p.sQ, p.samPQ); arr[7] = calcConv(p.sR, p.samPR); return arr; }
+            return [r, k, p.samPQ, p.sQ, calcConv(p.sQ, p.samPQ), calcConv(p.sR, p.samPR), '', ''];
+        }
+    );
+
+    const s6Hdr = ['BDM', 'Branch', 'Product', 'Product Qty', 'OSG Qty', 'LG-AMC Qty', 'SAMSUNG Qty', 'Osg Qty Conv%', 'Osg Val Conv%', 'OVERALL Osg Qty Conv%', 'OVERALL Osg Val Conv%', 'OVERALL LG-AMC Qty Conv%', 'OVERALL LG-AMC Val Conv%', 'OVERALL Samsung Qty Conv%', 'OVERALL Samsung Val Conv%'];
+    const aoa6 = [['FUTURE STORES — EXPORT CSV'], s6Hdr];
+    const merges6 = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 14 } }];
+    const bdmBranchMap = {};
+    flatDataFuture.forEach(d => {
+        if (!bdmBranchMap[d.bdm]) bdmBranchMap[d.bdm] = {};
+        if (!bdmBranchMap[d.bdm][d.branch]) bdmBranchMap[d.bdm][d.branch] = {};
+        if (!bdmBranchMap[d.bdm][d.branch][d.product]) bdmBranchMap[d.bdm][d.branch][d.product] = { pQ:0, oQ:0, aQ:0, sQ:0, pR:0, oR:0, aR:0, sR:0, lgPQ:0, lgPR:0, samPQ:0, samPR:0 };
+        const p = bdmBranchMap[d.bdm][d.branch][d.product];
+        p.pQ+=d.pQty; p.oQ+=d.oQty; p.aQ+=d.aQty; p.sQ+=d.sQty;
+        p.pR+=d.pRev; p.oR+=d.oRev; p.aR+=d.aRev; p.sR+=d.sRev;
+        p.lgPQ+=d.lgPQty; p.lgPR+=d.lgPRev; p.samPQ+=d.samPQty; p.samPR+=d.samPRev;
+    });
+
+    let bdmStart = 2;
+    Object.keys(bdmBranchMap).sort().forEach(bdm => {
+        let branchStart = bdmStart;
+        Object.keys(bdmBranchMap[bdm]).sort().forEach(branch => {
+            let pStart = branchStart;
+            let tPQ=0, tOQ=0, tAQ=0, tSQ=0, tPR=0, tOR=0, tAR=0, tSR=0, tLgPQ=0, tLgPR=0, tSamPQ=0, tSamPR=0;
+            const prods = Object.keys(bdmBranchMap[bdm][branch]).sort();
+            prods.forEach(k => {
+                const p = bdmBranchMap[bdm][branch][k];
+                tPQ+=p.pQ; tOQ+=p.oQ; tAQ+=p.aQ; tSQ+=p.sQ;
+                tPR+=p.pR; tOR+=p.oR; tAR+=p.aR; tSR+=p.sR;
+                tLgPQ+=p.lgPQ; tLgPR+=p.lgPR; tSamPQ+=p.samPQ; tSamPR+=p.samPR;
+                aoa6.push([bdm, branch, k, p.pQ, p.oQ, p.aQ, p.sQ, calcConv(p.oQ, p.pQ), calcConv(p.oR, p.pR), '', '', '', '', '', '']);
+                branchStart++;
+            });
+            aoa6[pStart][9] = calcConv(tOQ, tPQ); aoa6[pStart][10] = calcConv(tOR, tPR);
+            aoa6[pStart][11] = calcConv(tAQ, tLgPQ); aoa6[pStart][12] = calcConv(tAR, tLgPR);
+            aoa6[pStart][13] = calcConv(tSQ, tSamPQ); aoa6[pStart][14] = calcConv(tSR, tSamPR);
+
+            if (branchStart > pStart + 1) {
+                merges6.push({ s: { r: pStart, c: 1 }, e: { r: branchStart - 1, c: 1 } });
+                for (let i = 9; i <= 14; i++) merges6.push({ s: { r: pStart, c: i }, e: { r: branchStart - 1, c: i } });
+            }
+        });
+        if (branchStart > bdmStart + 1) merges6.push({ s: { r: bdmStart, c: 0 }, e: { r: branchStart - 1, c: 0 } });
+        bdmStart = branchStart;
+    });
+    addSheet('FUTURE STORE_PRODUCT WISE', aoa6, merges6);
+
+    const buildStaffSheet = (name, hdr, rowMapFn) => {
+        const aoa = [hdr];
+        const flatSorted = [...flatDataFuture].sort((a,b) => a.branch.localeCompare(b.branch) || a.bdm.localeCompare(b.bdm) || a.staff.localeCompare(b.staff) || a.product.localeCompare(b.product));
+        flatSorted.forEach(d => { aoa.push(rowMapFn(d)); });
+        return addSheet(name, aoa, [], false, 2);
+    };
+
+    buildStaffSheet('STAFF WISE OSG', 
+        ['BRANCH', 'BDM', 'Staff', 'Product', 'Product Qty', 'OSG Qty', 'AMC Qty', 'SAMSUNG Qty', 'Osg Qty Conv%', 'Osg Val Conv%'],
+        d => [d.branch, d.bdm, d.staff, d.product, d.pQty, d.oQty, d.aQty, d.sQty, calcConv(d.oQty, d.pQty), calcConv(d.oRev, d.pRev)]
+    );
+
+    buildStaffSheet('STAFF WISE LG-AMC', 
+        ['BRANCH', 'BDM', 'Staff', 'Product', 'Product Qty', 'AMC Qty', 'AMC Qty Conv%', 'AMC Val Conv%'],
+        d => [d.branch, d.bdm, d.staff, d.product, d.lgPQty, d.aQty, calcConv(d.aQty, d.lgPQty), calcConv(d.aRev, d.lgPRev)]
+    );
+
+    buildStaffSheet('STAFF WISE SAMSUNG', 
+        ['BRANCH', 'BDM', 'Staff', 'Product', 'Product Qty', 'SAMSUNG Qty', 'SAMSUNG Qty Conv%', 'SAMSUNG Val Conv%'],
+        d => [d.branch, d.bdm, d.staff, d.product, d.samPQty, d.sQty, calcConv(d.sQty, d.samPQty), calcConv(d.sRev, d.samPRev)]
+    );
+
+    XLSX.writeFile(wb, 'Future_Stores_Report.xlsx');
+}
 
     // ---- PRODUCT DETAILS PAGE ----
     $('btnPDRefresh').addEventListener('click', renderProductDetailsPage);
@@ -4920,7 +4591,7 @@
         if (selBDM) filtP = filtP.filter(r => r.bdm === selBDM);
         if (selProduct) filtP = filtP.filter(r => r.product === selProduct);
 
-        // Build invoice lookup from product data ” only count OSG entries that match a product invoice
+        // Build invoice lookup from product data Ã¢â‚¬Â only count OSG entries that match a product invoice
         const productInvoices = new Set();
         filtP.forEach(r => { if (r.invoice) productInvoices.add(r.invoice); });
 
@@ -4962,8 +4633,8 @@
             <div class="lc-kpi"><span class="lc-kpi-label">Products</span><span class="lc-kpi-val">${uniqueProducts}</span></div>
             <div class="lc-kpi"><span class="lc-kpi-label">Qty Conversion</span><span class="lc-kpi-val conversion-text">${overallQtyConv.toFixed(2)}%</span></div>
             <div class="lc-kpi"><span class="lc-kpi-label">Val Conversion</span><span class="lc-kpi-val conversion-text">${overallValConv.toFixed(2)}%</span></div>
-            <div class="lc-kpi"><span class="lc-kpi-label">Product Revenue</span><span class="lc-kpi-val">${fmtShort(totalPRev)}</span></div>
-            <div class="lc-kpi"><span class="lc-kpi-label">OSG Revenue</span><span class="lc-kpi-val">${fmtShort(totalORev)}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Product Revenue</span><span class="lc-kpi-val">${fmtShortHtml(totalPRev)}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">OSG Revenue</span><span class="lc-kpi-val">${fmtShortHtml(totalORev)}</span></div>
             <div class="lc-kpi"><span class="lc-kpi-label">Product Qty</span><span class="lc-kpi-val">${formatNumber(totalPQty)}</span></div>
         `;
 
@@ -4986,8 +4657,8 @@
                     <td class="number-cell">${formatNumber(e.oQty)}</td>
                     <td class="number-cell ${convCls}">${e.qtyConv.toFixed(2)}%</td>
                     <td class="number-cell conv-val">${e.valConv.toFixed(2)}%</td>
-                    <td class="number-cell">${fmtShort(e.pRev)}</td>
-                    <td class="number-cell">${fmtShort(e.oRev)}</td>
+                    <td class="number-cell">${fmtShortHtml(e.pRev)}</td>
+                    <td class="number-cell">${fmtShortHtml(e.oRev)}</td>
                 </tr>`;
             });
             html += '</tbody></table>';
@@ -5014,8 +4685,8 @@
                     <td class="number-cell">${formatNumber(e.oQty)}</td>
                     <td class="number-cell profit-val">${e.qtyConv.toFixed(2)}%</td>
                     <td class="number-cell profit-val">${e.valConv.toFixed(2)}%</td>
-                    <td class="number-cell">${fmtShort(e.pRev)}</td>
-                    <td class="number-cell">${fmtShort(e.oRev)}</td>
+                    <td class="number-cell">${fmtShortHtml(e.pRev)}</td>
+                    <td class="number-cell">${fmtShortHtml(e.oRev)}</td>
                 </tr>`;
             });
             html += '</tbody></table>';
@@ -5431,7 +5102,7 @@
                 html += `<td style="padding:12px 6px;border:${cellBorder};font-weight:${cnt > 0 ? '700' : '500'};color:${cnt > 0 ? '#e2e8f0' : '#475569'};font-size:0.9rem;">${cnt > 0 ? cnt : '-'}</td>`;
             });
 
-            html += `<td style="padding:12px 10px;border:${cellBorder};text-align:right;font-weight:800;color:${callerCfg.color};font-family:'JetBrains Mono',monospace;font-size:0.9rem;">${fmtShort(cd.totalValue)}</td>`;
+            html += `<td style="padding:12px 10px;border:${cellBorder};text-align:right;font-weight:800;color:${callerCfg.color};font-family:'JetBrains Mono',monospace;font-size:0.9rem;">${fmtShortHtml(cd.totalValue)}</td>`;
             html += `<td style="padding:12px 10px;border:${cellBorder};font-weight:800;color:${callerCfg.color};font-size:0.95rem;">${cd.totalCount}</td>`;
             html += `</tr>`;
         });
@@ -5443,7 +5114,7 @@
             html += `<td style="padding:14px 6px;font-weight:800;color:#fff;font-size:0.95rem;border:1px solid rgba(255,255,255,0.15);">${colTotals[c] > 0 ? colTotals[c] : '-'}</td>`;
         });
 
-        html += `<td style="padding:14px 10px;text-align:right;font-weight:800;color:#fff;font-size:1rem;font-family:'JetBrains Mono',monospace;border:1px solid rgba(255,255,255,0.15);">${fmtShort(grandValue)}</td>
+        html += `<td style="padding:14px 10px;text-align:right;font-weight:800;color:#fff;font-size:1rem;font-family:'JetBrains Mono',monospace;border:1px solid rgba(255,255,255,0.15);">${fmtShortHtml(grandValue)}</td>
             <td style="padding:14px 10px;font-weight:800;color:#fff;font-size:1.1rem;border:1px solid rgba(255,255,255,0.15);">${grandCount}</td>
             </tr>`;
 
@@ -5456,7 +5127,7 @@
                 <div style="font-size:0.78rem;color:var(--text-muted);margin-top:3px;">Total Records${selectedCaller ? ' \u2014 ' + selectedCaller : ''}</div>
             </div>
             <div style="flex:1;min-width:140px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;border-top:3px solid #16a34a;">
-                <div style="font-size:1.8rem;font-weight:800;color:#16a34a;">${fmtShort(grandValue)}</div>
+                <div style="font-size:1.8rem;font-weight:800;color:#16a34a;">${fmtShortHtml(grandValue)}</div>
                 <div style="font-size:0.78rem;color:var(--text-muted);margin-top:3px;">Total Value</div>
             </div>
         </div>`;
@@ -5515,7 +5186,7 @@
                 html += `<td style="padding:12px 6px;border:${cellBorder};font-weight:${cnt > 0 ? '700' : '500'};color:${cnt > 0 ? '#e2e8f0' : '#475569'};font-size:0.9rem;">${cnt > 0 ? cnt : '-'}</td>`;
             });
 
-            html += `<td style="padding:12px 10px;border:${cellBorder};text-align:right;font-weight:800;color:#60a5fa;font-family:'JetBrains Mono',monospace;font-size:0.9rem;">${fmtShort(grp.totalValue)}</td>`;
+            html += `<td style="padding:12px 10px;border:${cellBorder};text-align:right;font-weight:800;color:#60a5fa;font-family:'JetBrains Mono',monospace;font-size:0.9rem;">${fmtShortHtml(grp.totalValue)}</td>`;
             html += `<td style="padding:12px 10px;border:${cellBorder};font-weight:800;color:#60a5fa;font-size:0.95rem;">${grp.totalCount}</td>`;
             html += '</tr>';
         });
@@ -5527,7 +5198,7 @@
             html += `<td style="padding:14px 6px;font-weight:800;color:#fff;font-size:0.95rem;border:1px solid rgba(255,255,255,0.15);">${colTotals[c] > 0 ? colTotals[c] : '-'}</td>`;
         });
 
-        html += `<td style="padding:14px 10px;text-align:right;font-weight:800;color:#fff;font-size:1rem;font-family:'JetBrains Mono',monospace;border:1px solid rgba(255,255,255,0.15);">${fmtShort(grandValue)}</td>
+        html += `<td style="padding:14px 10px;text-align:right;font-weight:800;color:#fff;font-size:1rem;font-family:'JetBrains Mono',monospace;border:1px solid rgba(255,255,255,0.15);">${fmtShortHtml(grandValue)}</td>
             <td style="padding:14px 10px;font-weight:800;color:#fff;font-size:1.1rem;border:1px solid rgba(255,255,255,0.15);">${grandCount}</td>
         </tr>`;
 
@@ -5540,7 +5211,7 @@
                 <div style="font-size:0.78rem;color:var(--text-muted);margin-top:3px;">Total Records</div>
             </div>
             <div style="flex:1;min-width:140px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;border-top:3px solid #16a34a;">
-                <div style="font-size:1.8rem;font-weight:800;color:#16a34a;">${fmtShort(grandValue)}</div>
+                <div style="font-size:1.8rem;font-weight:800;color:#16a34a;">${fmtShortHtml(grandValue)}</div>
                 <div style="font-size:0.78rem;color:var(--text-muted);margin-top:3px;">Total Value</div>
             </div>
         </div>`;
@@ -5566,8 +5237,8 @@
                 ? `Caller_Report_${selectedCaller}_${dateStr}.xlsx`
                 : `Caller_Report_All_${dateStr}.xlsx`;
             const sheetTitle = selectedCaller
-                ? `WITHOUT OSG CALLER REPORT — ${dateStr} — ${selectedCaller.toUpperCase()}`
-                : `WITHOUT OSG CALLER REPORT — ${dateStr}`;
+                ? `WITHOUT OSG CALLER REPORT — ${dateStr} — ${selectedCaller.toUpperCase()}`
+                : `WITHOUT OSG CALLER REPORT — ${dateStr}`;
 
             // Build AOA
             const aoa = [];
@@ -5678,7 +5349,7 @@
                         const rowBg = callerIdx % 2 === 0 ? '0F172A' : '1E293B';
 
                         if (C === 0) {
-                            // Caller name cell — colored left border + avatar-style bg
+                            // Caller name cell — colored left border + avatar-style bg
                             ws[addr].s = {
                                 fill: { patternType: 'solid', fgColor: { rgb: rowBg } },
                                 font: { color: { rgb: callerHex }, bold: true, sz: 10, name: 'Calibri' },
@@ -5735,7 +5406,7 @@
 
         if (tab === 'main') {
             if (!window._wosgMainData) return;
-            title = 'WITHOUT OSG MAIN REPORT — ' + dateStr;
+            title = 'WITHOUT OSG MAIN REPORT — ' + dateStr;
             fileName = 'Without_OSG_Main_Report_' + dateStr + '.xlsx';
             aoa.push([title]);
             aoa.push(['SUMMARY', ...cols, 'TOTAL VALUE', 'TOTAL COUNT']);
@@ -5757,7 +5428,7 @@
             });
         } else if (tab === 'caller') {
             if (!window._wosgCallerData || !window._wosgCallers) return;
-            title = 'WITHOUT OSG CALLER REPORT — ' + dateStr;
+            title = 'WITHOUT OSG CALLER REPORT — ' + dateStr;
             fileName = 'Without_OSG_Caller_Report_' + dateStr + '.xlsx';
             aoa.push([title]);
             aoa.push(['CALLER', ...cols, 'TOTAL VALUE', 'TOTAL COUNT']);
@@ -5780,7 +5451,7 @@
             });
         } else if (tab === 'daily') {
             if (!window._wosgDailyData) return;
-            title = 'WITHOUT OSG DAILY REPORT — ' + dateStr;
+            title = 'WITHOUT OSG DAILY REPORT — ' + dateStr;
             fileName = 'Without_OSG_Daily_Report_' + dateStr + '.xlsx';
             aoa.push([title]);
             aoa.push(['DATE', ...cols, 'TOTAL VALUE', 'TOTAL COUNT']);
@@ -5802,7 +5473,7 @@
             });
         } else if (tab === 'monthly') {
             if (!window._wosgMonthlyData) return;
-            title = 'WITHOUT OSG MONTHLY REPORT — ' + dateStr;
+            title = 'WITHOUT OSG MONTHLY REPORT — ' + dateStr;
             fileName = 'Without_OSG_Monthly_Report_' + dateStr + '.xlsx';
             aoa.push([title]);
             aoa.push(['MONTH', ...cols, 'TOTAL VALUE', 'TOTAL COUNT']);
@@ -5856,10 +5527,10 @@
             window.coDueTodayFilter = !window.coDueTodayFilter;
             if (window.coDueTodayFilter) {
                 btnDue.style.boxShadow = '0 0 0 3px rgba(239,68,68,0.5)';
-                btnDue.innerHTML = '❌ Clear Due Today';
+                btnDue.innerHTML = 'Ã¢ÂÅ’ Clear Due Today';
             } else {
                 btnDue.style.boxShadow = '0 2px 8px rgba(239,68,68,0.3)';
-                btnDue.innerHTML = '🔥 Due Today';
+                btnDue.innerHTML = 'Ã°Å¸â€Â¥ Due Today';
             }
             renderCustomersOSGPage();
         });
@@ -5907,12 +5578,12 @@
                 coStatusMap[fbKey(inv)] = childSnap.val();
                 const st = coStatusMap[fbKey(inv)];
 
-                // If another caller made ANY selection → instantly remove from this caller's view
+                // If another caller made ANY selection Ã¢â€ â€™ instantly remove from this caller's view
                 if (st.calledBy && st.calledBy !== currentCaller) {
                     const rowEl = document.getElementById('co-row-' + fbKey(inv));
                     if (rowEl) rowEl.remove();
                 } else {
-                    // Own row or unclaimed → update status colour in-place
+                    // Own row or unclaimed Ã¢â€ â€™ update status colour in-place
                     const rowEl = document.getElementById('co-row-' + fbKey(inv));
                     if (rowEl && !rowEl.contains(document.activeElement)) {
                         const rowData = (coCurrentRows || []).find(r => fbKey(r.invoice) === inv);
@@ -5923,7 +5594,7 @@
                 if (typeof updateCoStatsInPlace === 'function') updateCoStatsInPlace();
             });
 
-            // ===== INITIAL FULL LOAD (once) — then render page =====
+            // ===== INITIAL FULL LOAD (once) — then render page =====
             coLiveRef.once('value', snap => {
                 const data = snap.val() || {};
                 Object.keys(data).forEach(inv => { coStatusMap[fbKey(inv)] = data[inv]; });
@@ -5971,7 +5642,7 @@
         banner.colSpan = 10;
         banner.style.cssText = `position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
             background:${claimBg};color:${claimColor};font-weight:700;font-size:0.85rem;gap:8px;border-radius:6px;`;
-        banner.innerHTML = `<span style="font-size:1.1rem;">🔒</span> Claimed by <strong>${callerName}</strong> — removing from your list...`;
+        banner.innerHTML = `<span style="font-size:1.1rem;">Ã°Å¸â€â€™</span> Claimed by <strong>${callerName}</strong> — removing from your list...`;
         rowEl.innerHTML = '';
         rowEl.appendChild(banner);
         rowEl.classList.add('co-row-claiming');
@@ -6230,7 +5901,7 @@
             statusFiltered.forEach(r => missedUnique.push(r));
         }
 
-        // Apply manual caller filter dropdown (admin view — shows rows by a specific caller)
+        // Apply manual caller filter dropdown (admin view — shows rows by a specific caller)
         if (selCallerFilter) {
             const filtered = missedUnique.filter(r => {
                 const st = coStatusMap[fbKey(r.invoice)] || {};
@@ -6271,7 +5942,7 @@
         }
 
         if (missedUnique.length === 0) {
-            $('coMissedTable').innerHTML = noDataHTML('All invoices have OSG entries ” great conversion! °');
+            $('coMissedTable').innerHTML = noDataHTML('All invoices have OSG entries Ã¢â‚¬Â great conversion! Ã‚Â°');
             return;
         }
 
@@ -6332,7 +6003,7 @@
                 ">
                     <span style="width:24px;height:24px;border-radius:50%;background:${c.color};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;">${c.name[0]}</span>
                     ${c.name}
-                    ${currentCaller === c.name ? '<span style="font-size:0.7rem;opacity:0.8;">— Active</span>' : ''}
+                    ${currentCaller === c.name ? '<span style="font-size:0.7rem;opacity:0.8;">— Active</span>' : ''}
                 </button>`).join('')}
             </div>
             ${currentCaller
@@ -6366,7 +6037,7 @@
                     padding:10px 28px;border-radius:20px;border:1.5px solid var(--accent);
                     background:transparent;color:var(--accent);font-family:inherit;
                     font-size:0.88rem;font-weight:600;cursor:pointer;transition:all 0.2s;
-                ">⬇ Load ${Math.min(remaining, 100)} more (${remaining} remaining)</button>
+                ">Ã¢Â¬â€¡ Load ${Math.min(remaining, 100)} more (${remaining} remaining)</button>
                </div>` : '';
 
         $('coMissedTable').innerHTML = statsBar + callerSelector + tableHeader + rowsHTML + '</tbody></table></div>' + loadMoreBtn;
@@ -6412,7 +6083,7 @@
                     wrap.innerHTML = `<button onclick="window.coLoadMore()" style="
                         padding:10px 28px;border-radius:20px;border:1.5px solid var(--accent);
                         background:transparent;color:var(--accent);font-family:inherit;
-                        font-size:0.88rem;font-weight:600;cursor:pointer;">⬇ Load ${Math.min(remaining2, 100)} more (${remaining2} remaining)</button>`;
+                        font-size:0.88rem;font-weight:600;cursor:pointer;">Ã¢Â¬â€¡ Load ${Math.min(remaining2, 100)} more (${remaining2} remaining)</button>`;
                 } else {
                     wrap.remove();
                 }
@@ -6607,8 +6278,8 @@
         // Added 'follow-up' and 'bought' options to Interest
         const interestBtnOptions = `
             <option value="" ${!st.interest ? 'selected' : ''}>- Select -</option>
-            <option value="interested" ${st.interest === 'interested' ? 'selected' : ''}>✅ Interested</option>
-            <option value="not-interested" ${st.interest === 'not-interested' ? 'selected' : ''}>❌ Not Interested</option>
+            <option value="interested" ${st.interest === 'interested' ? 'selected' : ''}>Ã¢Å“â€¦ Interested</option>
+            <option value="not-interested" ${st.interest === 'not-interested' ? 'selected' : ''}>Ã¢ÂÅ’ Not Interested</option>
             <option value="follow-up" ${st.interest === 'follow-up' ? 'selected' : ''}>Follow-up</option>
             <option value="bought" ${st.interest === 'bought' ? 'selected' : ''}>Closed</option>
         `;
@@ -6646,8 +6317,8 @@
                     background:var(--bg-input); color:var(--text-primary); outline:none; max-width:140px; ${opcStyle}">
                     <option value="" ${!st.callStatus ? 'selected' : ''}>- Status -</option>
                     <option value="connected" ${st.callStatus === 'connected' ? 'selected' : ''}>Connected</option>
-                    <option value="not-connected" ${st.callStatus === 'not-connected' ? 'selected' : ''}>🔴 Not Connected</option>
-                    <option value="disconnected" ${st.callStatus === 'disconnected' ? 'selected' : ''}>📵 Disconnected</option>
+                    <option value="not-connected" ${st.callStatus === 'not-connected' ? 'selected' : ''}>Ã°Å¸â€Â´ Not Connected</option>
+                    <option value="disconnected" ${st.callStatus === 'disconnected' ? 'selected' : ''}>Ã°Å¸â€œÂµ Disconnected</option>
                 </select>
                 ${callerInfo}
             </div>` : '';
@@ -6693,7 +6364,7 @@
                 const prod = r.product || 'your product';
                 const inv = r.invoice || '';
                 const val = r.soldPrice && r.soldPrice > 0 ? ' (worth ₹' + r.soldPrice.toLocaleString('en-IN') + ')' : '';
-                const msg = 'Dear ' + name + ',\n\nGreetings from myG 😊\n\nThank you for your recent purchase of *' + prod + '*' + val + ' (Invoice: ' + inv + ').\n\n We noticed your purchase does not yet include an *OSG Extended Warranty* plan. OSG covers:\n\n✅ Extended protection beyond manufacturer warranty\n✅ Free doorstep repair service\n✅ Zero hidden charges\n✅ Instant claim processing\n\nSecuring your device takes just a minute — and gives you complete peace of mind! \n\nWould you be interested? Reply *YES* and we will take care of everything.\n\nWarm regards,\nmyG Team';
+                const msg = 'Dear ' + name + ',\n\nGreetings from myG Ã°Å¸ËœÅ \n\nThank you for your recent purchase of *' + prod + '*' + val + ' (Invoice: ' + inv + ').\n\n We noticed your purchase does not yet include an *OSG Extended Warranty* plan. OSG covers:\n\nÃ¢Å“â€¦ Extended protection beyond manufacturer warranty\nÃ¢Å“â€¦ Free doorstep repair service\nÃ¢Å“â€¦ Zero hidden charges\nÃ¢Å“â€¦ Instant claim processing\n\nSecuring your device takes just a minute — and gives you complete peace of mind! \n\nWould you be interested? Reply *YES* and we will take care of everything.\n\nWarm regards,\nmyG Team';
                 return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
             })()}" target="_blank" title="WhatsApp (English)" style="color:#25D366;display:flex;padding:5px;border-radius:50%;background:rgba(37,211,102,0.12);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>` : ''}
                     ${r.customerNo ? `<a href="${(function () {
@@ -6701,8 +6372,8 @@
                 const name = (r.customerName || 'Customer').split(' ')[0];
                 const prod = r.product || 'your product';
                 const inv = r.invoice || '';
-                const valML = r.soldPrice && r.soldPrice > 0 ? ' (₹' + r.soldPrice.toLocaleString('en-IN') + ')' : '';
-                const msgML = 'പ്രിയ ' + name + ',\n\nmyG-ൽ നിന്നുള്ള ആശംസകൾ 😊\n\nനിങ്ങൾ അടുത്തിടെ വാങ്ങിയ *' + prod + '*' + valML + ' ന് നന്ദി. (ഇൻവോയ്സ്: ' + inv + ').\n\n നിങ്ങളുടെ പർച്ചേസിൽ ഇതുവരെ *OSG എക്സ്റ്റൻഡഡ് വാറൻ്റി* പ്ലാൻ ഉൾപ്പെടുത്തിയിട്ടില്ല എന്ന് ഞങ്ങൾ ശ്രദ്ധിച്ചു. OSG വഴി നിങ്ങൾക്ക് ലഭിക്കുന്നത്:\n\n✅ കമ്പനി വാറൻ്റിക്ക് ശേഷവും പരിരക്ഷ\n✅ സൗജന്യ ഡോർസ്റ്റെപ്പ് റിപ്പയർ സേവനം\n✅ ഹിഡൻ ചാർജുകൾ ഇല്ല\n✅ വേഗത്തിലുള്ള ക്ലെയിം പ്രോസസ്സിംഗ്\n\nനിങ്ങളുടെ ഡിവൈസ് സുരക്ഷിതമാക്കാൻ വെറും ഒരു മിനിറ്റ് മതി — ഒപ്പം നിങ്ങൾക്ക് പൂർണ്ണ സമാധാനവും ലഭിക്കും! \n\nനിങ്ങൾക്ക് താല്പര്യമുണ്ടോ? *YES* എന്ന് മറുപടി നൽകുക, ബാക്കി കാര്യങ്ങൾ ഞങ്ങൾ ചെയ്തു തരാം.\n\nസ്നേഹത്തോടെ,\nmyG ടീം';
+                const priceStr = r.soldPrice && r.soldPrice > 0 ? ' (₹' + r.soldPrice.toLocaleString('en-IN') + ')' : '';
+                const msgML = '\u0d2a\u0d4d\u0d30\u0d3f\u0d2f ' + name + ',\n\nmyG-\u0d7d \u0d28\u0d3f\u0d28\u0d4d\u0d28\u0d41\u0d33\u0d4d\u0d33 \u0d06\u0d36\u0d02\u0d38\u0d15\u0d7e\n\n\u0d28\u0d3f\u0d19\u0d4d\u0d19\u0d7e \u0d05\u0d1f\u0d41\u0d24\u0d4d\u0d24\u0d3f\u0d1f\u0d46 \u0d35\u0d3e\u0d19\u0d4d\u0d19\u0d3f\u0d2f ' + prod + priceStr + ' \u0d28\u0d4d \u0d28\u0d28\u0d4d\u0d26\u0d3f. (\u0d07\u0d7b\u0d35\u0d4b\u0d2f\u0d4d\u0d38\u0d4d: ' + inv + ').\n\n \u0d28\u0d3f\u0d19\u0d4d\u0d19\u0d33\u0d41\u0d1f\u0d46 \u0d2a\u0d7c\u0d1a\u0d4d\u0d1a\u0d47\u0d38\u0d3f\u0d7d \u0d07\u0d24\u0d41\u0d35\u0d30\u0d46 OSG \u0d0e\u0d15\u0d4d\u0d38\u0d4d\u0d31\u0d4d\u0d1f\u0d7b\u0d21\u0d21\u0d4d \u0d35\u0d3e\u0d31\u0d7b\u0d4d\u0d31\u0d3f \u0d2a\u0d4d\u0d32\u0d3e\u0d7b \u0d09\u0d7e\u0d2a\u0d4d\u0d2a\u0d46\u0d1f\u0d41\u0d24\u0d4d\u0d24\u0d3f\u0d2f\u0d3f\u0d1f\u0d4d\u0d1f\u0d3f\u0d32\u0d4d\u0d32 \u0d0e\u0d28\u0d4d\u0d28\u0d4d \u0d1e\u0d19\u0d4d\u0d19\u0d7e \u0d36\u0d4d\u0d30\u0d26\u0d4d\u0d27\u0d3f\u0d1a\u0d4d\u0d1a\u0d41. OSG \u0d35\u0d34\u0d3f \u0d28\u0d3f\u0d19\u0d4d\u0d19\u0d7e\u0d15\u0d4d\u0d15\u0d4d \u0d32\u0d2d\u0d3f\u0d15\u0d4d\u0d15\u0d41\u0d28\u0d4d\u0d28\u0d24\u0d4d:\n\u0d28\u0d3f\u0d19\u0d4d\u0d19\u0d7e\u0d15\u0d4d\u0d15\u0d4d \u0d24\u0d3e\u0d32\u0d4d\u0d2a\u0d30\u0d4d\u0d2f\u0d2e\u0d41\u0d23\u0d4d\u0d1f\u0d4b? YES \u0d0e\u0d28\u0d4d\u0d28\u0d4d \u0d2e\u0d31\u0d41\u0d2a\u0d1f\u0d3f \u0d28\u0d7d\u0d15\u0d41\u0d15, \u0d2c\u0d3e\u0d15\u0d4d\u0d15\u0d3f \u0d15\u0d3e\u0d30\u0d4d\u0d2f\u0d19\u0d4d\u0d19\u0d7e \u0d1e\u0d19\u0d4d\u0d19\u0d7e \u0d1a\u0d46\u0d2f\u0d4d\u0d24\u0d41 \u0d24\u0d30\u0d3e\u0d02.\n\n\u0d38\u0d4d\u0d28\u0d47\u0d39\u0d24\u0d4d\u0d24\u0d4b\u0d1f\u0d46,\n\u0d1f\u0d40\u0d02 myG';
                 return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msgML);
             })()}" target="_blank" title="WhatsApp (Malayalam)" style="color:#25D366;display:flex;padding:3px 6px;border-radius:12px;background:rgba(37,211,102,0.12);font-size:0.75rem;font-weight:700;text-decoration:none;align-items:center;">ML</a>` : ''}
                 </div>
@@ -6711,7 +6382,7 @@
             <td style="padding:12px 10px;">${remarksInput}</td>
             <td style="padding:12px 10px;color:var(--text-secondary);font-size:0.85rem;">${r.branch || '-'}</td>
             <td style="padding:12px 10px;color:var(--text-secondary);font-size:0.85rem;">${r.product || '-'}</td>
-            <td style="padding:12px 10px;text-align:right;font-weight:600;color:var(--text-primary);font-size:0.88rem;white-space:nowrap;">${fmtShort(Math.abs(r.soldPrice || 0))}</td>
+            <td style="padding:12px 10px;text-align:right;font-weight:600;color:var(--text-primary);font-size:0.88rem;white-space:nowrap;">${fmtShortHtml(Math.abs(r.soldPrice || 0))}</td>
         </tr>`;
     }
     function exportCustomersOSGExcel() {
@@ -6863,9 +6534,12 @@
         if (Math.abs(n) >= 1e3) return '₹' + (n / 1e3).toFixed(1) + 'K';
         return '₹' + n.toFixed(0);
     }
+            function fmtShortHtml(n) {
+        return '<span title="₹' + Number(n).toLocaleString('en-IN') + '" style="cursor:help; border-bottom:1px dotted #94a3b8;">' + fmtShort(n) + '</span>';
+    }
     function formatNumber(n) { return n.toLocaleString('en-IN'); }
     function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
-    function truncate(s, len) { return s.length > len ? s.substring(0, len) + '…' : s; }
+    function truncate(s, len) { return s.length > len ? s.substring(0, len) + 'Ã¢â‚¬Â¦' : s; }
     function showLoading(show) { loadingOverlay.classList.toggle('active', show); }
     function q(s) { return '"' + (s || '').replace(/"/g, '""') + '"'; }
 
@@ -6935,16 +6609,16 @@
         html += '<h3 style="margin-top:0; color:var(--loss); display:flex; align-items:center; gap:8px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Critical Focus Areas</h3>';
 
         html += '<div style="margin-bottom: 16px;"><strong> High Volume, Low Conversion Branches:</strong><ul style="margin:8px 0 0 20px; color:var(--text-muted); line-height: 1.6;">';
-        if (worstBranches.length) worstBranches.forEach(b => html += `<li><strong>${b.branch}</strong>: ${b.pQ} products sold but only ${b.oQ} OSG attached (${b.conv.toFixed(1)}%). Estimated missed tracking revenue: ${fmtShort(b.valP * 0.1)}</li>`);
+        if (worstBranches.length) worstBranches.forEach(b => html += `<li><strong>${b.branch}</strong>: ${b.pQ} products sold but only ${b.oQ} OSG attached (${b.conv.toFixed(1)}%). Estimated missed tracking revenue: ${fmtShortHtml(b.valP * 0.1)}</li>`);
         else html += '<li>No significantly underperforming branches detected.</li>';
         html += '</ul></div>';
 
-        html += '<div style="margin-bottom: 16px;"><strong>💎 Missed Premium Device Attachments:</strong><ul style="margin:8px 0 0 20px; color:var(--text-muted); line-height: 1.6;">';
-        if (premiumMisses.length) premiumMisses.forEach(m => html += `<li><strong>${m.staff} (${m.branch})</strong> sold a ${m.product} for ${fmtShort(m.soldPrice)} without OSG (Inv: ${m.invoice}).</li>`);
+        html += '<div style="margin-bottom: 16px;"><strong>Ã°Å¸â€™Å½ Missed Premium Device Attachments:</strong><ul style="margin:8px 0 0 20px; color:var(--text-muted); line-height: 1.6;">';
+        if (premiumMisses.length) premiumMisses.forEach(m => html += `<li><strong>${m.staff} (${m.branch})</strong> sold a ${m.product} for ${fmtShortHtml(m.soldPrice)} without OSG (Inv: ${m.invoice}).</li>`);
         else html += '<li>Great job! High-value premium products seem to be attached correctly.</li>';
         html += '</ul></div>';
 
-        html += '<div><strong>👤 Highest Opportunity Staff:</strong><ul style="margin:8px 0 0 20px; color:var(--text-muted); line-height: 1.6;">';
+        html += '<div><strong>Ã°Å¸â€˜Â¤ Highest Opportunity Staff:</strong><ul style="margin:8px 0 0 20px; color:var(--text-muted); line-height: 1.6;">';
         if (worstStaff.length) worstStaff.forEach(s => html += `<li><strong>${s.staff} (${s.branch})</strong>: Delivered ${s.pQ} units physically but achieved only ${s.conv.toFixed(1)}% conversion.</li>`);
         else html += '<li>Staff metrics look solid across the board (or volume threshold not met).</li>';
         html += '</ul></div>';
@@ -7009,7 +6683,7 @@
             });
         });
 
-        // Filter change → re-render
+        // Filter change Ã¢â€ â€™ re-render
         ['fsDashRBM', 'fsDashBDM', 'fsDashBranch', 'fsDashStaff'].forEach(id => {
             const el = $(id);
             if (el) el.addEventListener('change', () => renderFsExportDashboard(false));
@@ -7256,8 +6930,8 @@
                 <td><strong>${grp.name}</strong></td>
                 <td class="col-num">${grp.pQ}</td>
                 <td class="col-num">${grp.aQ}</td>
-                <td class="col-num">${fmtShort(grp.pR)}</td>
-                <td class="col-num">${fmtShort(grp.aR)}</td>
+                <td class="col-num">${fmtShortHtml(grp.pR)}</td>
+                <td class="col-num">${fmtShortHtml(grp.aR)}</td>
                 <td class="col-num">${qConv}%</td>
                 <td class="col-num">${vConv}%</td>
             </tr>`;
@@ -7292,8 +6966,8 @@
                 <td><strong>${grp.name}</strong></td>
                 <td class="col-num">${grp.pQ}</td>
                 <td class="col-num">${grp.sQ}</td>
-                <td class="col-num">${fmtShort(grp.pR)}</td>
-                <td class="col-num">${fmtShort(grp.sR)}</td>
+                <td class="col-num">${fmtShortHtml(grp.pR)}</td>
+                <td class="col-num">${fmtShortHtml(grp.sR)}</td>
                 <td class="col-num">${qConv}%</td>
                 <td class="col-num">${vConv}%</td>
             </tr>`;
@@ -7512,7 +7186,7 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
                 // Status colour
                 const onTrack = currentConv >= targetConv;
                 const statusColor = onTrack ? '#10b981' : (currentConv >= targetConv * 0.8 ? '#f59e0b' : '#ef4444');
-                const statusLabel = onTrack ? '🎯 On Target!' : (daysLeft === 0 ? '⛔ Month Ended' : '⚠️ Behind Target');
+                const statusLabel = onTrack ? 'Ã°Å¸Å½Â¯ On Target!' : (daysLeft === 0 ? 'Ã¢â€ºâ€ Month Ended' : 'Ã¢Å¡Â Ã¯Â¸Â Behind Target');
 
                 // KPI cards
                 const kpiDefs = [
@@ -7634,7 +7308,7 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
                                     <td style="text-align:right;">${r.pQty.toLocaleString('en-IN')}</td>
                                     <td style="text-align:right;">${r.oQty.toLocaleString('en-IN')}</td>
                                     <td style="text-align:right;font-weight:700;color:${r.isOnTrack?'#10b981':'#ef4444'};">${r.conv.toFixed(1)}%</td>
-                                    <td style="text-align:right;color:${r.rbmGap>0?'#ef4444':'#10b981'};font-weight:600;">${r.rbmGap > 0 ? r.rbmGap.toLocaleString('en-IN') : '✓ Done'}</td>
+                                    <td style="text-align:right;color:${r.rbmGap>0?'#ef4444':'#10b981'};font-weight:600;">${r.rbmGap > 0 ? r.rbmGap.toLocaleString('en-IN') : 'Ã¢Å“â€œ Done'}</td>
                                     <td style="text-align:right;font-weight:700;color:${r.rbmDaily>0?'#f97316':'#10b981'};">${r.rbmDaily > 0 ? r.rbmDaily : '-'}</td>
                                     <td style="text-align:center;"><span style="padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:700;background:${r.isOnTrack?'rgba(16,185,129,0.12)':'rgba(239,68,68,0.12)'};color:${r.isOnTrack?'#10b981':'#ef4444'};">${r.isOnTrack?'On Track':'Behind'}</span></td>
                                 </tr>`).join('')}
@@ -7662,11 +7336,11 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
         // Expose globally so onclick attribute in HTML can call it
         window.renderForecastPage = renderForecastPage;
 
-        // Nav click — auto-render when switching to this page
+        // Nav click — auto-render when switching to this page
         var fcNavBtn = document.querySelector('[data-section="forecast-section"]');
         if (fcNavBtn) fcNavBtn.addEventListener('click', function() { setTimeout(renderForecastPage, 100); });
 
-        // Calculate button — use getElementById directly (most reliable)
+        // Calculate button — use getElementById directly (most reliable)
         var fcCalcBtn = document.getElementById('btnForecastCalc');
         if (fcCalcBtn) fcCalcBtn.addEventListener('click', renderForecastPage);
     })();
