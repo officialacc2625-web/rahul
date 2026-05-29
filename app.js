@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 // Analytics Portal Ã¢â‚¬Â Conversion Reports
 // Dual-file: Product Data + OSG Data
 // Value Conversion = OSG Sold Price / Product Sold Price
@@ -2720,6 +2720,7 @@
 
         const minQty = parseFloat($('lcMinQty').value) || 0;
         const maxConv = parseFloat($('lcMaxConv').value);
+        const minOsgQty = parseInt($('lcMinOsgQty').value) || 0;
         const selRBM = $('lcRBM').value;
         const selBDM = $('lcBDM').value;
 
@@ -2739,9 +2740,10 @@
         bdmEl.innerHTML = '<option value="">All BDMs</option>' +
             bdmSet.map(b => `<option value="${b}" ${b === prevBDM ? 'selected' : ''}>${b}</option>`).join('');
 
-        // Filter: minQty, maxConv, optional RBM, optional BDM
+        // Filter: minQty, maxConv, minOsgQty, optional RBM, optional BDM
         const filtered = allStats
             .filter(s => s.pQty >= minQty && s.qtyConv <= maxConv)
+            .filter(s => s.oQty >= minOsgQty)
             .filter(s => !selRBM || s.rbm === selRBM)
             .filter(s => !selBDM || s.bdm === selBDM)
             .sort((a, b) => {
@@ -2802,11 +2804,13 @@
         if (productData.length === 0) return;
         const minQty = parseFloat($('lcMinQty').value) || 0;
         const maxConv = parseFloat($('lcMaxConv').value);
+        const minOsgQty = parseInt($('lcMinOsgQty').value) || 0;
         const selRBM = $('lcRBM').value;
         const selBDM = $('lcBDM').value;
         const allStats = buildStaffStats();
         const filtered = allStats
             .filter(s => s.pQty >= minQty && s.qtyConv <= maxConv)
+            .filter(s => s.oQty >= minOsgQty)
             .filter(s => !selRBM || s.rbm === selRBM)
             .filter(s => !selBDM || s.bdm === selBDM)
             .sort((a, b) => a.qtyConv - b.qtyConv || b.pQty - a.pQty);
@@ -3437,6 +3441,7 @@
 
         const minQty = parseFloat($('lcMinQty').value) || 0;
         const maxConv = parseFloat($('lcMaxConv').value);
+        const minOsgQty = parseInt($('lcMinOsgQty').value) || 0;
         const selRBM = $('lcRBM').value;
         const selBDM = $('lcBDM').value;
 
@@ -3456,9 +3461,10 @@
         bdmEl.innerHTML = '<option value="">All BDMs</option>' +
             bdmSet.map(b => `<option value="${b}" ${b === prevBDM ? 'selected' : ''}>${b}</option>`).join('');
 
-        // Filter: minQty, maxConv, optional RBM, optional BDM
+        // Filter: minQty, maxConv, minOsgQty, optional RBM, optional BDM
         const filtered = allStats
             .filter(s => s.pQty >= minQty && s.qtyConv <= maxConv)
+            .filter(s => s.oQty >= minOsgQty)
             .filter(s => !selRBM || s.rbm === selRBM)
             .filter(s => !selBDM || s.bdm === selBDM)
             .sort((a, b) => {
@@ -3519,11 +3525,13 @@
         if (productData.length === 0) return;
         const minQty = parseFloat($('lcMinQty').value) || 0;
         const maxConv = parseFloat($('lcMaxConv').value);
+        const minOsgQty = parseInt($('lcMinOsgQty').value) || 0;
         const selRBM = $('lcRBM').value;
         const selBDM = $('lcBDM').value;
         const allStats = buildStaffStats();
         const filtered = allStats
             .filter(s => s.pQty >= minQty && s.qtyConv <= maxConv)
+            .filter(s => s.oQty >= minOsgQty)
             .filter(s => !selRBM || s.rbm === selRBM)
             .filter(s => !selBDM || s.bdm === selBDM)
             .sort((a, b) => a.qtyConv - b.qtyConv || b.pQty - a.pQty);
@@ -4532,18 +4540,18 @@ function exportFutureStoresCSV() {
     };
 
     buildStaffSheet('STAFF WISE OSG', 
-        ['BRANCH', 'BDM', 'Staff', 'Product', 'Product Qty', 'OSG Qty', 'AMC Qty', 'SAMSUNG Qty', 'Osg Qty Conv%', 'Osg Val Conv%'],
-        d => [d.branch, d.bdm, d.staff, d.product, d.pQty, d.oQty, d.aQty, d.sQty, calcConv(d.oQty, d.pQty), calcConv(d.oRev, d.pRev)]
+        ['BRANCH', 'RBM', 'BDM', 'Staff', 'Product', 'Product Qty', 'OSG Qty', 'AMC Qty', 'SAMSUNG Qty', 'Osg Qty Conv%', 'Osg Val Conv%'],
+        d => [d.branch, d.rbm, d.bdm, d.staff, d.product, d.pQty, d.oQty, d.aQty, d.sQty, calcConv(d.oQty, d.pQty), calcConv(d.oRev, d.pRev)]
     );
 
     buildStaffSheet('STAFF WISE LG-AMC', 
-        ['BRANCH', 'BDM', 'Staff', 'Product', 'Product Qty', 'AMC Qty', 'AMC Qty Conv%', 'AMC Val Conv%'],
-        d => [d.branch, d.bdm, d.staff, d.product, d.lgPQty, d.aQty, calcConv(d.aQty, d.lgPQty), calcConv(d.aRev, d.lgPRev)]
+        ['BRANCH', 'RBM', 'BDM', 'Staff', 'Product', 'Product Qty', 'AMC Qty', 'AMC Qty Conv%', 'AMC Val Conv%'],
+        d => [d.branch, d.rbm, d.bdm, d.staff, d.product, d.lgPQty, d.aQty, calcConv(d.aQty, d.lgPQty), calcConv(d.aRev, d.lgPRev)]
     );
 
     buildStaffSheet('STAFF WISE SAMSUNG', 
-        ['BRANCH', 'BDM', 'Staff', 'Product', 'Product Qty', 'SAMSUNG Qty', 'SAMSUNG Qty Conv%', 'SAMSUNG Val Conv%'],
-        d => [d.branch, d.bdm, d.staff, d.product, d.samPQty, d.sQty, calcConv(d.sQty, d.samPQty), calcConv(d.sRev, d.samPRev)]
+        ['BRANCH', 'RBM', 'BDM', 'Staff', 'Product', 'Product Qty', 'SAMSUNG Qty', 'SAMSUNG Qty Conv%', 'SAMSUNG Val Conv%'],
+        d => [d.branch, d.rbm, d.bdm, d.staff, d.product, d.samPQty, d.sQty, calcConv(d.sQty, d.samPQty), calcConv(d.sRev, d.samPRev)]
     );
 
     XLSX.writeFile(wb, 'Future_Stores_Report.xlsx');
