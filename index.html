@@ -643,6 +643,28 @@
                         </select>
                     </div>
                     <div class="lowconv-control-group">
+                        <label>Products</label>
+                        <div id="lcProductMultiWrapper" style="position: relative; min-width: 140px;">
+                            <div id="lcProductSelectBtn" style="padding: 9px 14px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem;" onclick="document.getElementById('lcProductDropdown').style.display = document.getElementById('lcProductDropdown').style.display === 'none' ? 'block' : 'none'">
+                                <span id="lcProductLabel" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 8px;">All Products</span>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;"><polyline points="6 9 12 15 18 9"/></svg>
+                            </div>
+                            <div id="lcProductDropdown" style="display: none; position: absolute; top: 100%; left: 0; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-top: 4px; padding: 8px; z-index: 999; max-height: 250px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.2); width: max-content; min-width: 100%;">
+                                <label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="ALL" checked onchange="window.toggleAllLcProducts(this)"> <strong>All Products</strong></label>
+                                <hr style="margin: 4px 0; border: none; border-top: 1px solid var(--border);">
+                                <label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="AC" checked class="lc-prod-cb" onchange="window.updateLcProductLabel()"> AC</label>
+                                <label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="AUDIO SYSTEM" checked class="lc-prod-cb" onchange="window.updateLcProductLabel()"> Audio System</label>
+                                <label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="DISH WASHER" checked class="lc-prod-cb" onchange="window.updateLcProductLabel()"> Dish Washer</label>
+                                <label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="DRYER" checked class="lc-prod-cb" onchange="window.updateLcProductLabel()"> Dryer</label>
+                                <label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="HOME APPLIANCE" checked class="lc-prod-cb" onchange="window.updateLcProductLabel()"> Home Appliance</label>
+                                <label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="MICROWAVE OVEN" checked class="lc-prod-cb" onchange="window.updateLcProductLabel()"> Microwave Oven</label>
+                                <label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="REFRIGERATOR" checked class="lc-prod-cb" onchange="window.updateLcProductLabel()"> Refrigerator</label>
+                                <label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="TV" checked class="lc-prod-cb" onchange="window.updateLcProductLabel()"> TV</label>
+                                <label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="WASHING MACHINE" checked class="lc-prod-cb" onchange="window.updateLcProductLabel()"> Washing Machine</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="lowconv-control-group">
                         <label for="lcRBM">RBM</label>
                         <select id="lcRBM">
                             <option value="">All RBMs</option>
