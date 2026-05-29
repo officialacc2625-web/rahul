@@ -2669,15 +2669,56 @@
         };
     };
 
+    window.getLcSelectedProducts = function() {
+        if (!document.getElementById('lcProductDropdown')) return null;
+        const cbs = document.querySelectorAll('.lc-prod-cb');
+        const selected = [];
+        cbs.forEach(cb => { if (cb.checked) selected.push(cb.value); });
+        if (selected.length === cbs.length || document.querySelector('#lcProductDropdown input[value="ALL"]')?.checked) return null; // All products selected
+        return selected;
+    };
+
+    window.toggleAllLcProducts = function(allCb) {
+        document.querySelectorAll('.lc-prod-cb').forEach(cb => cb.checked = allCb.checked);
+        window.updateLcProductLabel();
+    };
+
+    window.updateLcProductLabel = function() {
+        const cbs = Array.from(document.querySelectorAll('.lc-prod-cb'));
+        const allCb = document.querySelector('#lcProductDropdown input[value="ALL"]');
+        const checked = cbs.filter(cb => cb.checked);
+        const label = document.getElementById('lcProductLabel');
+        if (checked.length === cbs.length) {
+            if (allCb) allCb.checked = true;
+            label.textContent = "All Products";
+        } else if (checked.length === 0) {
+            if (allCb) allCb.checked = false;
+            label.textContent = "None Selected";
+        } else {
+            if (allCb) allCb.checked = false;
+            label.textContent = checked.length + " Selected";
+        }
+    };
+
+    // Close dropdown on click outside
+    document.addEventListener('click', function(e) {
+        const wrapper = document.getElementById('lcProductMultiWrapper');
+        if (wrapper && !wrapper.contains(e.target)) {
+            const dropdown = document.getElementById('lcProductDropdown');
+            if(dropdown) dropdown.style.display = 'none';
+        }
+    });
+
     // ---- LOW CONV STAFF LOGIC ----
-    function buildStaffStats() {
-        // Build invoice Ã¢â€ â€™ staff lookup from ALL product data (unfiltered)
-        const invoiceStaff = {};
-        productData.forEach(r => { if (r.invoice && r.staff) invoiceStaff[r.invoice] = r.staff; });
+    function buildStaffStats(selectedProducts = null) {
+        // Build invoice -> {staff, product} lookup from ALL product data
+        const invoiceData = {};
+        productData.forEach(r => { if (r.invoice) invoiceData[r.invoice] = { staff: r.staff || 'Unknown', product: r.name }; });
 
         // Group product data by staff
         const pByStaff = {};
         productData.forEach(r => {
+            if (selectedProducts && !selectedProducts.includes(r.name)) return;
             const s = r.staff || 'Unknown';
             if (!pByStaff[s]) pByStaff[s] = { branch: r.branch, rbm: r.rbm, bdm: r.bdm, rows: [] };
             pByStaff[s].rows.push(r);
@@ -2686,8 +2727,11 @@
         // Group OSG data by staff via invoice mapping
         const oByStaff = {};
         osgData.forEach(r => {
-            const s = r.invoice ? (invoiceStaff[r.invoice] || null) : null;
+            const inv = r.invoice ? invoiceData[r.invoice] : null;
+            const s = inv ? inv.staff : null;
+            const pName = inv ? inv.product : null;
             if (!s) return;
+            if (selectedProducts && !selectedProducts.includes(pName)) return;
             if (!oByStaff[s]) oByStaff[s] = [];
             oByStaff[s].push(r);
         });
