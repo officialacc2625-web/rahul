@@ -4114,7 +4114,6 @@ function exportFutureStoresCSV() {
     const selBDM = $('fsBDM').value;
     const selBranch = $('fsBranch').value;
 
-    const isFuture = (b) => b && b.toUpperCase().includes('FUTURE');
     const invoiceMeta = {};
     productData.forEach(r => {
         if (r.invoice) {
@@ -4129,9 +4128,7 @@ function exportFutureStoresCSV() {
     });
 
     const getMeta = (r) => {
-        if (r.invoice && invoiceMeta[r.invoice]) {
-            return invoiceMeta[r.invoice];
-        }
+        if (r.invoice && invoiceMeta[r.invoice]) return invoiceMeta[r.invoice];
         const m = window.getBranchMeta(r);
         return {
             branch: m ? m.origBranch : (r.branch || ''),
@@ -4142,7 +4139,6 @@ function exportFutureStoresCSV() {
     };
 
     const passFilters = (m) => {
-        // if (!isFuture(m.branch)) return false;
         if (selRBM && m.rbm !== selRBM) return false;
         if (selBDM && m.bdm !== selBDM) return false;
         if (selBranch && m.branch !== selBranch) return false;
@@ -4179,16 +4175,19 @@ function exportFutureStoresCSV() {
         if (b.includes('LG')) { obj.lgPQty += (r.qty || 0); obj.lgPRev += (r.soldPrice || 0); }
         if (b.includes('SAMSUNG') && samAllowed.includes(prod.toUpperCase().trim())) { obj.samPQty += (r.qty || 0); obj.samPRev += (r.soldPrice || 0); }
     });
+
     fO.forEach(r => {
-        const prod = r.category || window.normalizeProductCategory(r.product) || 'Unknown';
+        const prod = r.product || 'Unknown';
         const obj = getObj(r._m.rbm, r._m.bdm, r._m.branch, r._m.staff, prod);
         obj.oQty += (r.qty || 0); obj.oRev += (r.soldPrice || 0);
     });
+
     fA.forEach(r => {
         const prod = r.product || 'Unknown';
         const obj = getObj(r._m.rbm, r._m.bdm, r._m.branch, r._m.staff, prod);
         obj.aQty += (r.qty || 0); obj.aRev += (r.soldPrice || 0);
     });
+
     fS.forEach(r => {
         const prod = r.product || 'Unknown';
         const obj = getObj(r._m.rbm, r._m.bdm, r._m.branch, r._m.staff, prod);
@@ -4196,409 +4195,298 @@ function exportFutureStoresCSV() {
     });
 
     const flatDataAll = [];
-    for (const rbm in H) {
-        for (const bdm in H[rbm]) {
-            for (const branch in H[rbm][bdm]) {
-                for (const staff in H[rbm][bdm][branch]) {
-                    for (const p in H[rbm][bdm][branch][staff]) {
-                        const d = H[rbm][bdm][branch][staff][p];
-                        if (d.pQty>0 || d.oQty>0 || d.aQty>0 || d.sQty>0) {
-                            flatDataAll.push({ rbm, bdm, branch, staff, product: d.name, ...d });
-                        }
-                    }
-                }
-            }
-        }
-    }
+    const flatDataFuture = [];
+    Object.keys(H).forEach(rbm => {
+        Object.keys(H[rbm]).forEach(bdm => {
+            Object.keys(H[rbm][bdm]).forEach(branch => {
+                const isFuture = branch.toUpperCase().includes('FUTURE');
+                Object.keys(H[rbm][bdm][branch]).forEach(staff => {
+                    Object.keys(H[rbm][bdm][branch][staff]).forEach(prod => {
+                        const d = H[rbm][bdm][branch][staff][prod];
+                        const row = { rbm, bdm, branch, staff, product: prod, ...d };
+                        flatDataAll.push(row);
+                        if (isFuture) flatDataFuture.push(row);
+                    });
+                });
+            });
+        });
+    });
 
-    const flatDataFuture = flatDataAll.filter(d => isFuture(d.branch));
+    const calcConv = (n, d) => (d > 0) ? (n / d * 100) : 0;
 
-    const calcConv = (n, d) => d > 0 ? (n / d) * 100 : 0;
-    const wb = XLSX.utils.book_new();
+    const buildBrandWorkbook = (brandType) => {
+        const wb = XLSX.utils.book_new();
 
-    const applyDesignStyles = (ws, merges, isSheet1 = false, groupCol = -1) => {
-        if (!ws['!merges']) ws['!merges'] = [];
-        if (merges) ws['!merges'].push(...merges);
+        const applyDesignStyles = (ws, merges, isSheet1 = false, groupCol = -1) => {
+            if (!ws['!merges']) ws['!merges'] = [];
+            merges.forEach(m => ws['!merges'].push(m));
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            const colWidths = [];
+            for (let C = range.s.c; C <= range.e.c; ++C) colWidths[C] = 13;
 
-        const NAVY   = "132448";
-        const GOLD   = "FFD700";
-        const WHITE  = "FFFFFF";
-        const LTBLUE = "D6E4F2";
-        const DKTXT  = "1A1A2E";
+            const rowTypes = {};
+            let isTotalNext = false;
+            let altIdx = 0;
+            let groupMap = {};
+            let curGrp = '';
+            let curGrpIdx = -1;
 
-        const border = { top:{style:"thin",color:{rgb:"9DB2CC"}}, bottom:{style:"thin",color:{rgb:"9DB2CC"}}, left:{style:"thin",color:{rgb:"9DB2CC"}}, right:{style:"thin",color:{rgb:"9DB2CC"}} };
-        const borderDark = { top:{style:"thin",color:{rgb:"000000"}}, bottom:{style:"thin",color:{rgb:"000000"}}, left:{style:"thin",color:{rgb:"000000"}}, right:{style:"thin",color:{rgb:"000000"}} };
+            const sTitle = { font: { bold: true, color: { rgb: "FFFFFF" }, sz: 12 }, fill: { fgColor: { rgb: "0A2240" } }, alignment: { horizontal: "center", vertical: "center" } };
+            const sHeader = { font: { bold: true, color: { rgb: "FFE600" }, sz: 10 }, fill: { fgColor: { rgb: "0A2240" } }, alignment: { horizontal: "center", vertical: "center", wrapText: true } };
+            const sTotal = { font: { bold: true, color: { rgb: "FFFFFF" }, sz: 11 }, fill: { fgColor: { rgb: "0A2240" } }, alignment: { horizontal: "center", vertical: "center" } };
+            const sDataW = { font: { color: { rgb: "000000" }, sz: 10 }, fill: { fgColor: { rgb: "FFFFFF" } }, alignment: { horizontal: "center", vertical: "center" }, border: { top: { style: 'thin', color: { rgb: 'B0C4DE' } }, bottom: { style: 'thin', color: { rgb: 'B0C4DE' } }, left: { style: 'thin', color: { rgb: 'B0C4DE' } }, right: { style: 'thin', color: { rgb: 'B0C4DE' } } } };
+            const sDataL = { font: { color: { rgb: "000000" }, sz: 10 }, fill: { fgColor: { rgb: "E9F0F8" } }, alignment: { horizontal: "center", vertical: "center" }, border: { top: { style: 'thin', color: { rgb: 'B0C4DE' } }, bottom: { style: 'thin', color: { rgb: 'B0C4DE' } }, left: { style: 'thin', color: { rgb: 'B0C4DE' } }, right: { style: 'thin', color: { rgb: 'B0C4DE' } } } };
 
-        const sTitle  = { fill:{fgColor:{rgb:NAVY}}, font:{color:{rgb:WHITE}, bold:true, name:"Calibri", sz:13}, alignment:{horizontal:"center",vertical:"center"}, border:borderDark };
-        const sHeader = { fill:{fgColor:{rgb:NAVY}}, font:{color:{rgb:GOLD},  bold:true, name:"Calibri", sz:11}, alignment:{horizontal:"center",vertical:"center"}, border:borderDark };
-        const sTotal  = { fill:{fgColor:{rgb:NAVY}}, font:{color:{rgb:WHITE}, bold:true, name:"Calibri", sz:11}, alignment:{horizontal:"center",vertical:"center"}, border:borderDark };
-        const sDataW  = { fill:{fgColor:{rgb:WHITE}},  font:{color:{rgb:DKTXT}, name:"Calibri", sz:11}, alignment:{horizontal:"center",vertical:"center"}, border:border };
-        const sDataL  = { fill:{fgColor:{rgb:LTBLUE}}, font:{color:{rgb:DKTXT}, name:"Calibri", sz:11}, alignment:{horizontal:"center",vertical:"center"}, border:border };
-
-        const range = XLSX.utils.decode_range(ws['!ref']);
-        const colWidths = [];
-        for (let C = range.s.c; C <= range.e.c; C++) colWidths[C] = 10;
-
-
-
-        const titleTexts = ['SALES DETAILS','CONVERSION DETAILS','WARRANTY','OVERVIEW'];
-        const rowTypes = {};
-        for (let R = range.s.r; R <= range.e.r; R++) {
-            const cellRef0 = XLSX.utils.encode_cell({ r: R, c: 0 });
-            const val0 = ws[cellRef0] ? String(ws[cellRef0].v).toUpperCase().trim() : '';
-            const cellRef6 = XLSX.utils.encode_cell({ r: R, c: 6 });
-            const val6 = ws[cellRef6] ? String(ws[cellRef6].v).toUpperCase().trim() : '';
-
-            if (isSheet1) {
-                let isTitleRow = false;
-                const titleKw = ['WARRANTY OVERVIEW','OSG-OVERVIEW','SAMSUNG-OVERVIEW','LG_AMC-OVERVIEW'];
-                for (let c = range.s.c; c <= range.e.c; c++) {
-                    const cr = XLSX.utils.encode_cell({r:R, c:c});
-                    if (ws[cr] && titleKw.some(t => String(ws[cr].v).toUpperCase().includes(t))) { isTitleRow = true; break; }
-                }
-                if (isTitleRow) rowTypes[R] = 'title';
-                else if (rowTypes[R-1] === 'title') rowTypes[R] = 'header';
-                else if (val0 === 'TOTAL' || val6 === 'TOTAL') rowTypes[R] = 'total';
-                else {
-                    let hasAnyContent = false;
-                    for (let c = range.s.c; c <= range.e.c; c++) {
-                        const cr = XLSX.utils.encode_cell({r:R, c:c});
-                        if (ws[cr] && String(ws[cr].v).trim() !== '') { hasAnyContent = true; break; }
-                    }
-                    rowTypes[R] = hasAnyContent ? 'data' : 'empty';
-                }
-            } else {
-                const isTitleText = titleTexts.some(t => val0.includes(t)) || val0.includes('FUTURE STORE');
-                if (isTitleText) {
-                    rowTypes[R] = 'title';
-                } else if (R === 0 || (rowTypes[R-1] === 'title')) {
-                    rowTypes[R] = 'header';
-                } else if (val0 === 'TOTAL' || val0 === 'OVERALL') {
-                    rowTypes[R] = 'total';
-                } else {
-                    rowTypes[R] = 'data';
-                }
-            }
-        }
-
-        const groupMap = {};
-        if (groupCol >= 0) {
-            let lastVal = null, gIdx = 0;
             for (let R = range.s.r; R <= range.e.r; R++) {
-                if (rowTypes[R] !== 'data') continue;
-                const cr = XLSX.utils.encode_cell({r:R, c:groupCol});
-                const val = ws[cr] ? String(ws[cr].v).trim() : '';
-                if (val !== lastVal) { gIdx++; lastVal = val; }
-                groupMap[R] = gIdx;
-            }
-        }
+                const cellRef0 = XLSX.utils.encode_cell({r: R, c: 0});
+                const cell0 = ws[cellRef0];
+                const val0 = cell0 ? (typeof cell0.v === 'string' ? cell0.v.toUpperCase() : String(cell0.v)) : '';
+                
+                let rType = 'data';
+                if (!isSheet1) {
+                    if (R === 0) rType = 'title';
+                    else if (R === 1) rType = 'header';
+                    else if (isTotalNext || val0 === 'TOTAL' || val0.includes('OVERALL')) { rType = 'total'; isTotalNext = false; }
+                    else if (val0 === '') rType = 'data'; 
+                    else {
+                        const gcRef = XLSX.utils.encode_cell({r: R, c: groupCol >= 0 ? groupCol : 0});
+                        const gcVal = ws[gcRef] ? ws[gcRef].v : '';
+                        if (gcVal !== curGrp) { curGrp = gcVal; curGrpIdx++; }
+                        groupMap[R] = curGrpIdx;
+                        rType = 'data';
+                        altIdx++;
+                    }
+                }
 
-        let altIdx = 0;
-        for (let R = range.s.r; R <= range.e.r; R++) {
-            const rType = rowTypes[R];
-            if (rType === 'data' && groupCol < 0) altIdx++;
-            
-            const cellRef0 = XLSX.utils.encode_cell({ r: R, c: 0 });
-            const val0 = ws[cellRef0] ? String(ws[cellRef0].v).toUpperCase().trim() : '';
-            const cellRef6 = XLSX.utils.encode_cell({ r: R, c: 6 });
-            const val6 = ws[cellRef6] ? String(ws[cellRef6].v).toUpperCase().trim() : '';
+                rowTypes[R] = rType;
 
-            for (let C = range.s.c; C <= range.e.c; C++) {
-                const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
-                if (!ws[cellRef]) continue;
-                if (ws[cellRef].v === '' || ws[cellRef].v === undefined || ws[cellRef].v === null) continue;
+                for (let C = range.s.c; C <= range.e.c; ++C) {
+                    const cellRef = XLSX.utils.encode_cell({r: R, c: C});
+                    if (!ws[cellRef]) ws[cellRef] = { t: 's', v: '' };
 
-                const valStr = String(ws[cellRef].v);
-                valStr.split('\n').forEach(l => { if (l.length + 2 > colWidths[C]) colWidths[C] = l.length + 2; });
+                    const valStr = String(ws[cellRef].v);
+                    valStr.split('\n').forEach(l => { if (l.length + 2 > colWidths[C]) colWidths[C] = l.length + 2; });
 
-                let cType = rType;
-                if (isSheet1) {
-                    if (C <= 4) {
-                        if (R === 0 || R === 7) cType = 'title';
-                        else if (R === 1 || R === 8) cType = 'header';
+                    let cType = rType;
+                    if (isSheet1) {
+                        if (R === 0 || R === 7 || R === 8) cType = 'title';
+                        else if (R === 1 || R === 9) cType = 'header';
                         else if (val0 === 'TOTAL') cType = 'total';
                         else cType = 'data';
-                    } else if (C >= 6) {
-                        if (R === 0 || R === 7) cType = 'title';
-                        else if (R === 1 || R === 8) cType = 'header';
-                        else if (val6 === 'TOTAL') cType = 'total';
-                        else cType = 'data';
                     }
-                }
 
-                let style;
-                if (cType === 'title')  style = JSON.parse(JSON.stringify(sTitle));
-                else if (cType === 'header') style = JSON.parse(JSON.stringify(sHeader));
-                else if (cType === 'total') style = JSON.parse(JSON.stringify(sTotal));
-                else {
-                    const idx = isSheet1 ? R : (groupCol >= 0 ? (groupMap[R] || 0) : altIdx);
-                    style = JSON.parse(JSON.stringify(idx % 2 === 0 ? sDataL : sDataW));
-                }
+                    let style;
+                    if (cType === 'title')  style = JSON.parse(JSON.stringify(sTitle));
+                    else if (cType === 'header') style = JSON.parse(JSON.stringify(sHeader));
+                    else if (cType === 'total') style = JSON.parse(JSON.stringify(sTotal));
+                    else {
+                        const idx = isSheet1 ? R : (groupCol >= 0 ? (groupMap[R] || 0) : altIdx);
+                        style = JSON.parse(JSON.stringify(idx % 2 === 0 ? sDataL : sDataW));
+                    }
 
-                const isLabelCol = (isSheet1 && (C === 0 || C === 6)) || (!isSheet1 && C <= 1);
-                if (isLabelCol && cType !== 'title') {
-                    style.alignment = { ...style.alignment, horizontal: "left" };
-                }
+                    const isLabelCol = (isSheet1 && C === 0) || (!isSheet1 && C <= 1);
+                    if (isLabelCol && cType !== 'title') {
+                        style.alignment = { ...style.alignment, horizontal: "left" };
+                    }
 
-                ws[cellRef].s = style;
+                    ws[cellRef].s = style;
 
-                if (!isNaN(ws[cellRef].v) && ws[cellRef].v !== '') {
-                    let numVal = Number(ws[cellRef].v);
-                    
-                    let isConv = false;
-                    for (let hR = R; hR >= range.s.r; hR--) {
-                        if (rowTypes[hR] === 'header') {
-                            const hCellRef = XLSX.utils.encode_cell({r: hR, c: C});
-                            if (ws[hCellRef] && typeof ws[hCellRef].v === 'string') {
-                                const v = ws[hCellRef].v.toUpperCase();
-                                if (v.includes('CONV') || v.includes('%')) isConv = true;
+                    if (!isNaN(ws[cellRef].v) && ws[cellRef].v !== '') {
+                        let numVal = Number(ws[cellRef].v);
+                        
+                        let isConv = false;
+                        for (let hR = R; hR >= range.s.r; hR--) {
+                            if (rowTypes[hR] === 'header') {
+                                const hCellRef = XLSX.utils.encode_cell({r: hR, c: C});
+                                if (ws[hCellRef] && typeof ws[hCellRef].v === 'string') {
+                                    const v = ws[hCellRef].v.toUpperCase();
+                                    if (v.includes('CONV') || v.includes('%')) isConv = true;
+                                }
+                                break;
                             }
-                            break;
                         }
-                    }
 
-                    ws[cellRef].v = isConv ? numVal : Math.round(numVal);
-                    ws[cellRef].t = 'n';
-                    ws[cellRef].z = isConv ? "0.00" : "0";
+                        ws[cellRef].v = isConv ? numVal : Math.round(numVal);
+                        ws[cellRef].t = 'n';
+                        ws[cellRef].z = isConv ? "0.00" : "0";
+                    }
                 }
             }
-        }
 
-        ws['!cols'] = colWidths.map((w, idx) => {
-            if (isSheet1 && idx === 5) return { wch: 3 };
-            return { wch: Math.min(Math.max(w, 13), 28) };
-        });
+            ws['!cols'] = colWidths.map(w => ({ wch: Math.min(Math.max(w, 13), 28) }));
+            ws['!rows'] = [];
+            for (let R = range.s.r; R <= range.e.r; R++) {
+                if (rowTypes[R] === 'title') ws['!rows'][R] = { hpt: 22 };
+                else if (rowTypes[R] === 'header') ws['!rows'][R] = { hpt: 20 };
+                else ws['!rows'][R] = { hpt: 18 };
+            }
+        };
 
-        ws['!rows'] = [];
-        for (let R = range.s.r; R <= range.e.r; R++) {
-            if (rowTypes[R] === 'title') ws['!rows'][R] = { hpt: 22 };
-            else if (rowTypes[R] === 'header') ws['!rows'][R] = { hpt: 20 };
-            else ws['!rows'][R] = { hpt: 18 };
-        }
-    };
-    const addSheet = (name, aoa, merges, isSheet1 = false, groupCol = -1) => {
-        const ws = XLSX.utils.aoa_to_sheet(aoa);
-        applyDesignStyles(ws, merges, isSheet1, groupCol);
-        XLSX.utils.book_append_sheet(wb, ws, name.substring(0, 31));
-        return ws;
-    };
+        const addSheet = (name, aoa, merges, isSheet1 = false, groupCol = -1) => {
+            const ws = XLSX.utils.aoa_to_sheet(aoa);
+            applyDesignStyles(ws, merges, isSheet1, groupCol);
+            XLSX.utils.book_append_sheet(wb, ws, name.substring(0, 31));
+            return ws;
+        };
 
-    // Sheet 1: WARRANTY_Overview
-    const s1ProdMap = {};
-    let tPQty=0, tOQty=0, tAQty=0, tSQty=0, tPRev=0, tORev=0, tARev=0, tSRev=0;
-    let tLgPQty=0, tLgPRev=0, tSamPQty=0, tSamPRev=0;
-    flatDataAll.forEach(d => {
-        if (!s1ProdMap[d.product]) s1ProdMap[d.product] = { oQ:0, oR:0, aQ:0, aR:0, sQ:0, sR:0, pQ:0, pR:0, lgPQ:0, lgPR:0, samPQ:0, samPR:0 };
-        const p = s1ProdMap[d.product];
-        p.pQ+=d.pQty; p.pR+=d.pRev; p.oQ+=d.oQty; p.oR+=d.oRev;
-        p.aQ+=d.aQty; p.aR+=d.aRev; p.sQ+=d.sQty; p.sR+=d.sRev;
-        p.lgPQ+=d.lgPQty; p.lgPR+=d.lgPRev; p.samPQ+=d.samPQty; p.samPR+=d.samPRev;
-        tPQty+=d.pQty; tPRev+=d.pRev; tOQty+=d.oQty; tORev+=d.oRev;
-        tAQty+=d.aQty; tARev+=d.aRev; tSQty+=d.sQty; tSRev+=d.sRev;
-        tLgPQty+=d.lgPQty; tLgPRev+=d.lgPRev; tSamPQty+=d.samPQty; tSamPRev+=d.samPRev;
-    });
-
-    const aoa1 = [['WARRANTY OVERVIEW', '', '', '', '', '', 'SAMSUNG-OVERVIEW', '', '', '', '']];
-    aoa1.push(['WARRANTY', 'SOLD QTY', 'SOLD PRICE', 'QTY-CONV', 'VALUE-CONV', '', 'PRODUCT', 'SOLD QTY', 'SOLD PRICE', 'QTY-CONV', 'VALUE-CONV']);
-    
-    const wRows = [
-        ['OSG', tOQty, tORev, calcConv(tOQty, tPQty), calcConv(tORev, tPRev)],
-        ['LG AMC', tAQty, tARev, calcConv(tAQty, tLgPQty), calcConv(tARev, tLgPRev)],
-        ['SAMSUNG', tSQty, tSRev, calcConv(tSQty, tSamPQty), calcConv(tSRev, tSamPRev)],
-        ['TOTAL', tOQty+tAQty+tSQty, tORev+tARev+tSRev, calcConv(tOQty+tAQty+tSQty, tPQty), calcConv(tORev+tARev+tSRev, tPRev)]
-    ];
-
-    const prods = Object.keys(s1ProdMap).sort();
-    const osgRows=[], amcRows=[], samRows=[];
-    prods.forEach(k => {
-        const p = s1ProdMap[k];
-        if (p.oQ>0 || p.oR>0) osgRows.push([k, p.oQ, p.oR, calcConv(p.oQ, p.pQ), calcConv(p.oR, p.pR)]);
-        if (p.aQ>0 || p.aR>0) amcRows.push([k, p.aQ, p.aR, calcConv(p.aQ, p.lgPQ), calcConv(p.aR, p.lgPR)]);
-        if (p.sQ>0 || p.sR>0) samRows.push([k, p.sQ, p.sR, calcConv(p.sQ, p.samPQ), calcConv(p.sR, p.samPR)]);
-    });
-    osgRows.push(['TOTAL', tOQty, tORev, calcConv(tOQty, tPQty), calcConv(tORev, tPRev)]);
-    amcRows.push(['TOTAL', tAQty, tARev, calcConv(tAQty, tLgPQty), calcConv(tARev, tLgPRev)]);
-    samRows.push(['TOTAL', tSQty, tSRev, calcConv(tSQty, tSamPQty), calcConv(tSRev, tSamPRev)]);
-
-    for (let i=0; i<Math.max(wRows.length, samRows.length); i++) {
-        const left = wRows[i] || ['', '', '', '', ''];
-        const right = samRows[i] || ['', '', '', '', ''];
-        aoa1.push([...left, '', ...right]);
-    }
-    
-    aoa1.push([]);
-    
-    const botLeftStartR = aoa1.length;
-    aoa1.push(['OSG-OVERVIEW', '', '', '', '', '', 'LG_AMC-OVERVIEW', '', '', '', '']);
-    aoa1.push(['PRODUCT', 'SOLD QTY', 'SOLD PRICE', 'QTY-CONV', 'VALUE-CONV', '', 'PRODUCT', 'SOLD QTY', 'SOLD PRICE', 'QTY-CONV', 'VALUE-CONV']);
-
-    let maxBotR = Math.max(osgRows.length, amcRows.length);
-    for (let i=0; i<maxBotR; i++) {
-        const left = osgRows[i] || ['', '', '', '', ''];
-        const right = amcRows[i] || ['', '', '', '', ''];
-        aoa1.push([...left, '', ...right]);
-    }
-
-    const merges1 = [
-        {s:{r:0,c:0}, e:{r:0,c:4}}, 
-        {s:{r:0,c:6}, e:{r:0,c:10}}, 
-        {s:{r:botLeftStartR, c:0}, e:{r:botLeftStartR, c:4}}, 
-        {s:{r:botLeftStartR, c:6}, e:{r:botLeftStartR, c:10}}
-    ];
-
-    addSheet('WARRANTY_Overview', aoa1, merges1, true);
-
-    // Sheet 2: RBM_SALE AND CONVESION
-    const rbmMap = {};
-    flatDataAll.forEach(d => {
-        if (d.rbm && d.rbm.toUpperCase() === 'GENERAL') return; if (!rbmMap[d.rbm]) rbmMap[d.rbm] = { pQ:0, pR:0, lgPQ:0, lgPR:0, samPQ:0, samPR:0, oQ:0, oR:0, aQ:0, aR:0, sQ:0, sR:0 };
-        const p = rbmMap[d.rbm];
-        p.pQ+=d.pQty; p.pR+=d.pRev; p.oQ+=d.oQty; p.oR+=d.oRev;
-        p.aQ+=d.aQty; p.aR+=d.aRev; p.sQ+=d.sQty; p.sR+=d.sRev;
-        p.lgPQ+=d.lgPQty; p.lgPR+=d.lgPRev; p.samPQ+=d.samPQty; p.samPR+=d.samPRev;
-    });
-
-    const aoa2 = [['SALES DETAILS']];
-    aoa2.push(['RBM', 'OSG QTY', 'OSG SALE', 'LG-AMC QTY', 'LG-AMC SALE', 'SAMSUNG QTY', 'SAMSUNG SALE']);
-    Object.keys(rbmMap).sort().forEach(r => {
-        const d = rbmMap[r];
-        aoa2.push([r, d.oQ, d.oR, d.aQ, d.aR, d.sQ, d.sR]);
-    });
-    aoa2.push([]);
-    aoa2.push(['CONVERSION DETAILS']);
-    aoa2.push(['RBM', 'OSG VAL CONV', 'OSG QTY CONV', 'LG-AMC VAL CONV', 'LG-AMC QTY CONV', 'SAMSUNG VAL CONV', 'SAMSUNG QTY CONV']);
-    Object.keys(rbmMap).sort().forEach(r => {
-        const d = rbmMap[r];
-        aoa2.push([r, calcConv(d.oR, d.pR), calcConv(d.oQ, d.pQ), calcConv(d.aR, d.lgPR), calcConv(d.aQ, d.lgPQ), calcConv(d.sR, d.samPR), calcConv(d.sQ, d.samPQ)]);
-    });
-    addSheet('RBM_Overview', aoa2, [{s:{r:0,c:0}, e:{r:0,c:6}}, {s:{r:aoa2.length-1 - Object.keys(rbmMap).length - 1, c:0}, e:{r:aoa2.length-1 - Object.keys(rbmMap).length - 1, c:6}}]);
-
-    const buildRbmProdSheet = (name, hdr, rowMapFn) => {
-        const aoa = [hdr];
-        const merges = [];
-        const rbmPMap = {};
+        // Aggregations for Overview and RBM Wise
+        const prodMap = {};
+        const rbmMap = {};
+        let tPQ=0, tQ=0, tPR=0, tR=0;
+        
         flatDataAll.forEach(d => {
-            if (d.rbm && d.rbm.toUpperCase() === 'GENERAL') return; if (!rbmPMap[d.rbm]) rbmPMap[d.rbm] = {};
-            if (!rbmPMap[d.rbm][d.product]) rbmPMap[d.rbm][d.product] = { pQ:0, oQ:0, aQ:0, sQ:0, pR:0, oR:0, aR:0, sR:0, lgPQ:0, lgPR:0, samPQ:0, samPR:0 };
-            const p = rbmPMap[d.rbm][d.product];
-            p.pQ+=d.pQty; p.oQ+=d.oQty; p.aQ+=d.aQty; p.sQ+=d.sQty;
-            p.pR+=d.pRev; p.oR+=d.oRev; p.aR+=d.aRev; p.sR+=d.sRev;
-            p.lgPQ+=d.lgPQty; p.lgPR+=d.lgPRev; p.samPQ+=d.samPQty; p.samPR+=d.samPRev;
+            if (!prodMap[d.product]) prodMap[d.product] = { pQ:0, pR:0, q:0, r:0 };
+            if (d.rbm && d.rbm.toUpperCase() !== 'GENERAL') {
+                if (!rbmMap[d.rbm]) rbmMap[d.rbm] = { pQ:0, pR:0, q:0, r:0, prods: {} };
+                if (!rbmMap[d.rbm].prods[d.product]) rbmMap[d.rbm].prods[d.product] = { pQ:0, pR:0, q:0, r:0 };
+            }
+            
+            let myPQ = 0, myPR = 0, myQ = 0, myR = 0;
+            if (brandType === 'OSG') { myPQ = d.pQty; myPR = d.pRev; myQ = d.oQty; myR = d.oRev; }
+            else if (brandType === 'LG_AMC') { myPQ = d.lgPQty; myPR = d.lgPRev; myQ = d.aQty; myR = d.aRev; }
+            else if (brandType === 'SAMSUNG') { myPQ = d.samPQty; myPR = d.samPRev; myQ = d.sQty; myR = d.sRev; }
+
+            prodMap[d.product].pQ += myPQ; prodMap[d.product].pR += myPR;
+            prodMap[d.product].q += myQ; prodMap[d.product].r += myR;
+            
+            if (d.rbm && d.rbm.toUpperCase() !== 'GENERAL') {
+                rbmMap[d.rbm].pQ += myPQ; rbmMap[d.rbm].pR += myPR;
+                rbmMap[d.rbm].q += myQ; rbmMap[d.rbm].r += myR;
+                rbmMap[d.rbm].prods[d.product].pQ += myPQ; rbmMap[d.rbm].prods[d.product].pR += myPR;
+                rbmMap[d.rbm].prods[d.product].q += myQ; rbmMap[d.rbm].prods[d.product].r += myR;
+            }
+            
+            tPQ += myPQ; tPR += myPR; tQ += myQ; tR += myR;
         });
 
-        let rIdx = 1;
-        Object.keys(rbmPMap).sort().forEach(r => {
+        // 1. OVERVIEW Sheet
+        const aoa1 = [];
+        let titleName = '';
+        let qtyName = '';
+        if (brandType === 'OSG') { titleName = 'OSG-OVERVIEW'; qtyName = 'OSG QTY'; }
+        if (brandType === 'LG_AMC') { titleName = 'LG-AMC OVERVIEW'; qtyName = 'LG-AMC QTY'; }
+        if (brandType === 'SAMSUNG') { titleName = 'SAMSUNG CARE+ OVERVIEW'; qtyName = 'SAMSUNG QTY'; }
+
+        aoa1.push([titleName, '', '', '', '']);
+        aoa1.push(['PRODUCT', 'QTY', 'PRICE', 'QTY-CONV', 'VALUE-CONV']);
+        
+        Object.keys(prodMap).sort().forEach(k => {
+            const p = prodMap[k];
+            if (p.q > 0 || p.r > 0) aoa1.push([k, p.q, p.r, calcConv(p.q, p.pQ), calcConv(p.r, p.pR)]);
+        });
+        aoa1.push(['TOTAL', tQ, tR, calcConv(tQ, tPQ), calcConv(tR, tPR)]);
+        
+        aoa1.push([]);
+        aoa1.push([]);
+        const botStartR = aoa1.length;
+        
+        aoa1.push(['RBM-OVERVIEW', '', '', '', '']);
+        aoa1.push(['RBM', 'QTY', 'SALE', 'QTY CONV', 'VALUE CONV']);
+        
+        Object.keys(rbmMap).sort().forEach(r => {
+            const d = rbmMap[r];
+            aoa1.push([r, d.q, d.r, calcConv(d.q, d.pQ), calcConv(d.r, d.pR)]);
+        });
+        
+        const merges1 = [
+            {s:{r:0,c:0}, e:{r:0,c:4}}, 
+            {s:{r:botStartR, c:0}, e:{r:botStartR, c:4}}
+        ];
+        addSheet('OVERVIEW', aoa1, merges1, true);
+
+        // 2. RBM WISE Sheet
+        const aoa2 = [['RBM WISE OVERVIEW'], ['RBM', 'Product', 'Product Qty', qtyName, 'Qty Conv%', 'Val Conv%', 'OVERALL Qty Conv%', 'OVERALL Val Conv%']];
+        const merges2 = [{s:{r:0,c:0}, e:{r:0,c:7}}];
+        let rIdx = 2;
+        Object.keys(rbmMap).sort().forEach(r => {
             let startR = rIdx;
-            let tPQ=0, tOQ=0, tAQ=0, tSQ=0, tPR=0, tOR=0, tAR=0, tSR=0, tLgPQ=0, tLgPR=0, tSamPQ=0, tSamPR=0;
-            const prods = Object.keys(rbmPMap[r]).sort();
+            const prods = Object.keys(rbmMap[r].prods).sort();
             prods.forEach(k => {
-                const p = rbmPMap[r][k];
-                tPQ+=p.pQ; tOQ+=p.oQ; tAQ+=p.aQ; tSQ+=p.sQ;
-                tPR+=p.pR; tOR+=p.oR; tAR+=p.aR; tSR+=p.sR;
-                tLgPQ+=p.lgPQ; tLgPR+=p.lgPR; tSamPQ+=p.samPQ; tSamPR+=p.samPR;
-                aoa.push(rowMapFn(r, k, p, null));
+                const p = rbmMap[r].prods[k];
+                aoa2.push([r, k, p.pQ, p.q, calcConv(p.q, p.pQ), calcConv(p.r, p.pR), '', '']);
                 rIdx++;
             });
-            if (rIdx > startR + 1) merges.push({s:{r:startR, c:0}, e:{r:rIdx-1, c:0}});
-            const ovals = rowMapFn(r, 'OVERALL', { pQ:tPQ, oQ:tOQ, aQ:tAQ, sQ:tSQ, pR:tPR, oR:tOR, aR:tAR, sR:tSR, lgPQ:tLgPQ, lgPR:tLgPR, samPQ:tSamPQ, samPR:tSamPR }, true);
-            for (let i=0; i<ovals.length; i++) {
-                if (ovals[i] !== undefined) aoa[startR][i] = ovals[i];
-                if (ovals[i] !== undefined && rIdx > startR + 1) merges.push({s:{r:startR, c:i}, e:{r:rIdx-1, c:i}});
+            if (rIdx > startR + 1) merges2.push({s:{r:startR, c:0}, e:{r:rIdx-1, c:0}});
+            
+            const oQtyConv = calcConv(rbmMap[r].q, rbmMap[r].pQ);
+            const oValConv = calcConv(rbmMap[r].r, rbmMap[r].pR);
+            aoa2[startR][6] = oQtyConv; aoa2[startR][7] = oValConv;
+            
+            if (rIdx > startR + 1) {
+                merges2.push({s:{r:startR, c:6}, e:{r:rIdx-1, c:6}});
+                merges2.push({s:{r:startR, c:7}, e:{r:rIdx-1, c:7}});
             }
         });
-        return addSheet(name, aoa, merges);
-    };
+        addSheet('RBM WISE', aoa2, merges2, false, 0);
 
-    buildRbmProdSheet('RBM_PRODUCT WISE OSG', 
-        ['RBM', 'Product', 'Product Qty', 'OSG Qty', 'LG-AMC Qty', 'SAMSUNG Qty', 'Osg Qty Conv%', 'Osg Val Conv%', 'OVERALL OSG Qty Conv%', 'OVERALL OSG Val Conv%'],
-        (r, k, p, isOverall) => {
-            if (isOverall) { const arr = new Array(10).fill(undefined); arr[8] = calcConv(p.oQ, p.pQ); arr[9] = calcConv(p.oR, p.pR); return arr; }
-            return [r, k, p.pQ, p.oQ, p.aQ, p.sQ, calcConv(p.oQ, p.pQ), calcConv(p.oR, p.pR), '', ''];
-        }
-    );
+        // 3. STORE WISE Sheet
+        const aoa3 = [['FUTURE STORES — STORE WISE'], ['BDM', 'Branch', 'Product', 'Product Qty', qtyName, 'Qty Conv%', 'Val Conv%', 'OVERALL Qty Conv%', 'OVERALL Val Conv%']];
+        const merges3 = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 8 } }];
+        
+        const bdmBranchMap = {};
+        flatDataFuture.forEach(d => {
+            if (!bdmBranchMap[d.bdm]) bdmBranchMap[d.bdm] = {};
+            if (!bdmBranchMap[d.bdm][d.branch]) bdmBranchMap[d.bdm][d.branch] = {};
+            if (!bdmBranchMap[d.bdm][d.branch][d.product]) bdmBranchMap[d.bdm][d.branch][d.product] = { pQ:0, pR:0, q:0, r:0 };
+            const p = bdmBranchMap[d.bdm][d.branch][d.product];
+            
+            let myPQ = 0, myPR = 0, myQ = 0, myR = 0;
+            if (brandType === 'OSG') { myPQ = d.pQty; myPR = d.pRev; myQ = d.oQty; myR = d.oRev; }
+            else if (brandType === 'LG_AMC') { myPQ = d.lgPQty; myPR = d.lgPRev; myQ = d.aQty; myR = d.aRev; }
+            else if (brandType === 'SAMSUNG') { myPQ = d.samPQty; myPR = d.samPRev; myQ = d.sQty; myR = d.sRev; }
+            
+            p.pQ+=myPQ; p.pR+=myPR; p.q+=myQ; p.r+=myR;
+        });
 
-    buildRbmProdSheet('RBM_PRODUCT WISE LG-AMC', 
-        ['RBM', 'Product', 'Product Qty', 'LG-AMC Qty', 'LG-AMC Qty Conv%', 'LG-AMC Val Conv%', 'OVERALL LG-AMC Qty Conv%', 'OVERALL LG-AMC Val Conv%'],
-        (r, k, p, isOverall) => {
-            if (isOverall) { const arr = new Array(8).fill(undefined); arr[6] = calcConv(p.aQ, p.lgPQ); arr[7] = calcConv(p.aR, p.lgPR); return arr; }
-            return [r, k, p.lgPQ, p.aQ, calcConv(p.aQ, p.lgPQ), calcConv(p.aR, p.lgPR), '', ''];
-        }
-    );
-
-    buildRbmProdSheet('RBM_PRODUCT WISE SAMSUNG', 
-        ['RBM', 'Product', 'Product Qty', 'SAMSUNG Qty', 'SAMSUNG Qty Conv%', 'SAMSUNG Val Conv%', 'OVERALL SAMSUNG Qty Conv%', 'OVERALL SAMSUNG Val Conv%'],
-        (r, k, p, isOverall) => {
-            if (isOverall) { const arr = new Array(8).fill(undefined); arr[6] = calcConv(p.sQ, p.samPQ); arr[7] = calcConv(p.sR, p.samPR); return arr; }
-            return [r, k, p.samPQ, p.sQ, calcConv(p.sQ, p.samPQ), calcConv(p.sR, p.samPR), '', ''];
-        }
-    );
-
-    const s6Hdr = ['BDM', 'Branch', 'Product', 'Product Qty', 'OSG Qty', 'LG-AMC Qty', 'SAMSUNG Qty', 'Osg Qty Conv%', 'Osg Val Conv%', 'OVERALL Osg Qty Conv%', 'OVERALL Osg Val Conv%', 'OVERALL LG-AMC Qty Conv%', 'OVERALL LG-AMC Val Conv%', 'OVERALL Samsung Qty Conv%', 'OVERALL Samsung Val Conv%'];
-    const aoa6 = [['FUTURE STORES — EXPORT CSV'], s6Hdr];
-    const merges6 = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 14 } }];
-    const bdmBranchMap = {};
-    flatDataFuture.forEach(d => {
-        if (!bdmBranchMap[d.bdm]) bdmBranchMap[d.bdm] = {};
-        if (!bdmBranchMap[d.bdm][d.branch]) bdmBranchMap[d.bdm][d.branch] = {};
-        if (!bdmBranchMap[d.bdm][d.branch][d.product]) bdmBranchMap[d.bdm][d.branch][d.product] = { pQ:0, oQ:0, aQ:0, sQ:0, pR:0, oR:0, aR:0, sR:0, lgPQ:0, lgPR:0, samPQ:0, samPR:0 };
-        const p = bdmBranchMap[d.bdm][d.branch][d.product];
-        p.pQ+=d.pQty; p.oQ+=d.oQty; p.aQ+=d.aQty; p.sQ+=d.sQty;
-        p.pR+=d.pRev; p.oR+=d.oRev; p.aR+=d.aRev; p.sR+=d.sRev;
-        p.lgPQ+=d.lgPQty; p.lgPR+=d.lgPRev; p.samPQ+=d.samPQty; p.samPR+=d.samPRev;
-    });
-
-    let bdmStart = 2;
-    Object.keys(bdmBranchMap).sort().forEach(bdm => {
-        let branchStart = bdmStart;
-        Object.keys(bdmBranchMap[bdm]).sort().forEach(branch => {
-            let pStart = branchStart;
-            let tPQ=0, tOQ=0, tAQ=0, tSQ=0, tPR=0, tOR=0, tAR=0, tSR=0, tLgPQ=0, tLgPR=0, tSamPQ=0, tSamPR=0;
-            const prods = Object.keys(bdmBranchMap[bdm][branch]).sort();
-            prods.forEach(k => {
-                const p = bdmBranchMap[bdm][branch][k];
-                tPQ+=p.pQ; tOQ+=p.oQ; tAQ+=p.aQ; tSQ+=p.sQ;
-                tPR+=p.pR; tOR+=p.oR; tAR+=p.aR; tSR+=p.sR;
-                tLgPQ+=p.lgPQ; tLgPR+=p.lgPR; tSamPQ+=p.samPQ; tSamPR+=p.samPR;
-                aoa6.push([bdm, branch, k, p.pQ, p.oQ, p.aQ, p.sQ, calcConv(p.oQ, p.pQ), calcConv(p.oR, p.pR), '', '', '', '', '', '']);
-                branchStart++;
+        let bdmStart = 2;
+        Object.keys(bdmBranchMap).sort().forEach(bdm => {
+            let branchStart = bdmStart;
+            Object.keys(bdmBranchMap[bdm]).sort().forEach(branch => {
+                let pStart = branchStart;
+                let t_pQ=0, t_pR=0, t_q=0, t_r=0;
+                const prods = Object.keys(bdmBranchMap[bdm][branch]).sort();
+                prods.forEach(k => {
+                    const p = bdmBranchMap[bdm][branch][k];
+                    t_pQ+=p.pQ; t_pR+=p.pR; t_q+=p.q; t_r+=p.r;
+                    aoa3.push([bdm, branch, k, p.pQ, p.q, calcConv(p.q, p.pQ), calcConv(p.r, p.pR), '', '']);
+                    branchStart++;
+                });
+                aoa3[pStart][7] = calcConv(t_q, t_pQ); aoa3[pStart][8] = calcConv(t_r, t_pR);
+                if (branchStart > pStart + 1) {
+                    merges3.push({ s: { r: pStart, c: 1 }, e: { r: branchStart - 1, c: 1 } });
+                    merges3.push({ s: { r: pStart, c: 7 }, e: { r: branchStart - 1, c: 7 } });
+                    merges3.push({ s: { r: pStart, c: 8 }, e: { r: branchStart - 1, c: 8 } });
+                }
             });
-            aoa6[pStart][9] = calcConv(tOQ, tPQ); aoa6[pStart][10] = calcConv(tOR, tPR);
-            aoa6[pStart][11] = calcConv(tAQ, tLgPQ); aoa6[pStart][12] = calcConv(tAR, tLgPR);
-            aoa6[pStart][13] = calcConv(tSQ, tSamPQ); aoa6[pStart][14] = calcConv(tSR, tSamPR);
-
-            if (branchStart > pStart + 1) {
-                merges6.push({ s: { r: pStart, c: 1 }, e: { r: branchStart - 1, c: 1 } });
-                for (let i = 9; i <= 14; i++) merges6.push({ s: { r: pStart, c: i }, e: { r: branchStart - 1, c: i } });
-            }
+            if (branchStart > bdmStart + 1) merges3.push({ s: { r: bdmStart, c: 0 }, e: { r: branchStart - 1, c: 0 } });
+            bdmStart = branchStart;
         });
-        if (branchStart > bdmStart + 1) merges6.push({ s: { r: bdmStart, c: 0 }, e: { r: branchStart - 1, c: 0 } });
-        bdmStart = branchStart;
-    });
-    addSheet('FUTURE STORE_PRODUCT WISE', aoa6, merges6);
+        addSheet('STORE WISE', aoa3, merges3, false, 0);
 
-    const buildStaffSheet = (name, hdr, rowMapFn) => {
-        const aoa = [hdr];
+        // 4. STAFF WISE Sheet
+        const aoa4 = [['BRANCH', 'RBM', 'BDM', 'Staff', 'Product', 'Product Qty', qtyName, 'Qty Conv%', 'Val Conv%']];
         const flatSorted = [...flatDataFuture].sort((a,b) => a.branch.localeCompare(b.branch) || a.bdm.localeCompare(b.bdm) || a.staff.localeCompare(b.staff) || a.product.localeCompare(b.product));
-        flatSorted.forEach(d => { aoa.push(rowMapFn(d)); });
-        return addSheet(name, aoa, [], false, 2);
+        flatSorted.forEach(d => {
+            let myPQ = 0, myPR = 0, myQ = 0, myR = 0;
+            if (brandType === 'OSG') { myPQ = d.pQty; myPR = d.pRev; myQ = d.oQty; myR = d.oRev; }
+            else if (brandType === 'LG_AMC') { myPQ = d.lgPQty; myPR = d.lgPRev; myQ = d.aQty; myR = d.aRev; }
+            else if (brandType === 'SAMSUNG') { myPQ = d.samPQty; myPR = d.samPRev; myQ = d.sQty; myR = d.sRev; }
+            
+            aoa4.push([d.branch, d.rbm, d.bdm, d.staff, d.product, myPQ, myQ, calcConv(myQ, myPQ), calcConv(myR, myPR)]);
+        });
+        addSheet('STAFF WISE', aoa4, [], false, 2);
+
+        let filename = 'Future_Stores_Report.xlsx';
+        if (brandType === 'OSG') filename = 'Future_Stores_OSG.xlsx';
+        if (brandType === 'LG_AMC') filename = 'Future_Stores_LG_AMC.xlsx';
+        if (brandType === 'SAMSUNG') filename = 'Future_Stores_Samsung.xlsx';
+        
+        XLSX.writeFile(wb, filename);
     };
 
-    buildStaffSheet('STAFF WISE OSG', 
-        ['BRANCH', 'RBM', 'BDM', 'Staff', 'Product', 'Product Qty', 'OSG Qty', 'AMC Qty', 'SAMSUNG Qty', 'Osg Qty Conv%', 'Osg Val Conv%'],
-        d => [d.branch, d.rbm, d.bdm, d.staff, d.product, d.pQty, d.oQty, d.aQty, d.sQty, calcConv(d.oQty, d.pQty), calcConv(d.oRev, d.pRev)]
-    );
-
-    buildStaffSheet('STAFF WISE LG-AMC', 
-        ['BRANCH', 'RBM', 'BDM', 'Staff', 'Product', 'Product Qty', 'AMC Qty', 'AMC Qty Conv%', 'AMC Val Conv%'],
-        d => [d.branch, d.rbm, d.bdm, d.staff, d.product, d.lgPQty, d.aQty, calcConv(d.aQty, d.lgPQty), calcConv(d.aRev, d.lgPRev)]
-    );
-
-    buildStaffSheet('STAFF WISE SAMSUNG', 
-        ['BRANCH', 'RBM', 'BDM', 'Staff', 'Product', 'Product Qty', 'SAMSUNG Qty', 'SAMSUNG Qty Conv%', 'SAMSUNG Val Conv%'],
-        d => [d.branch, d.rbm, d.bdm, d.staff, d.product, d.samPQty, d.sQty, calcConv(d.sQty, d.samPQty), calcConv(d.sRev, d.samPRev)]
-    );
-
-    XLSX.writeFile(wb, 'Future_Stores_Report.xlsx');
+    exportBrandWorkbook('OSG');
+    exportBrandWorkbook('LG_AMC');
+    exportBrandWorkbook('SAMSUNG');
 }
 
     // ---- PRODUCT DETAILS PAGE ----
