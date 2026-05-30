@@ -2465,26 +2465,7 @@
         });
     }
 
-    // ---- EXPORT CSV ----
-    document.querySelectorAll('.btn-export').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const type = btn.dataset.export;
-            if (type === 'conversion') { exportConversionCSV(); return; }
-            let rows = filteredAll;
-            exportCSV(rows, type + '_report.csv');
-        });
-    });
-
-    function exportCSV(rows, filename) {
-        if (rows.length === 0) return;
-        const hdr = ['Branch', 'RBM', 'BDM', 'Staff', 'Product', 'Brand', 'Sold Price', 'Taxable Value', 'Tax', 'QTY', 'Profit/Loss'];
-        const lines = [hdr.join(',')];
-        rows.forEach(r => {
-            lines.push([q(r.branch), q(r.rbm), q(r.bdm), q(r.staff), q(r.product), q(r.brand),
-            r.soldPrice, r.taxableVal, r.tax, r.qty, r.profit.toFixed(2)].join(','));
-        });
-        downloadCSV(lines.join('\n'), filename);
-    }
+    // Generic EXPORT CSV listener removed to prevent undefined_report.csv bugs
 
     function exportConversionCSV() {
         const pG = groupBy(filteredProduct, 'branch');
