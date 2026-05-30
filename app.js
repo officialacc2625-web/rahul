@@ -4237,6 +4237,14 @@ function exportFutureStoresCSV() {
                         rType = 'data';
                         altIdx++;
                     }
+                } else {
+                    // Content-based detection for OVERVIEW sheet (no hardcoded row indices)
+                    const val1Ref = XLSX.utils.encode_cell({r: R, c: 1});
+                    const val1 = ws[val1Ref] ? String(ws[val1Ref].v).toUpperCase() : '';
+                    if (val0.includes('OVERVIEW')) rType = 'title';
+                    else if (val0 === 'PRODUCT' || (val0 === 'RBM' && val1 === 'QTY')) rType = 'header';
+                    else if (val0 === 'TOTAL') rType = 'total';
+                    else if (val0 !== '') { rType = 'data'; altIdx++; }
                 }
 
                 rowTypes[R] = rType;
@@ -4249,19 +4257,13 @@ function exportFutureStoresCSV() {
                     valStr.split('\n').forEach(l => { if (l.length + 2 > colWidths[C]) colWidths[C] = l.length + 2; });
 
                     let cType = rType;
-                    if (isSheet1) {
-                        if (R === 0 || R === 7 || R === 8) cType = 'title';
-                        else if (R === 1 || R === 9) cType = 'header';
-                        else if (val0 === 'TOTAL') cType = 'total';
-                        else cType = 'data';
-                    }
 
                     let style;
                     if (cType === 'title')  style = JSON.parse(JSON.stringify(sTitle));
                     else if (cType === 'header') style = JSON.parse(JSON.stringify(sHeader));
                     else if (cType === 'total') style = JSON.parse(JSON.stringify(sTotal));
                     else {
-                        const idx = isSheet1 ? R : (groupCol >= 0 ? (groupMap[R] || 0) : altIdx);
+                        const idx = groupCol >= 0 ? (groupMap[R] || 0) : altIdx;
                         style = JSON.parse(JSON.stringify(idx % 2 === 0 ? sDataL : sDataW));
                     }
 
