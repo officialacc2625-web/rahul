@@ -4465,9 +4465,9 @@ function exportFutureStoresCSV() {
         XLSX.writeFile(wb, filename);
     };
 
-    exportBrandWorkbook('OSG');
-    exportBrandWorkbook('LG_AMC');
-    exportBrandWorkbook('SAMSUNG');
+    buildBrandWorkbook('OSG');
+    buildBrandWorkbook('LG_AMC');
+    buildBrandWorkbook('SAMSUNG');
 }
 
     // ---- PRODUCT DETAILS PAGE ----
