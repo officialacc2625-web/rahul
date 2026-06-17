@@ -1,5 +1,5 @@
-// ============================================================
-// Analytics Portal Ã¢â‚¬Â Conversion Reports
+﻿// ============================================================
+// Analytics Portal ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Conversion Reports
 // Dual-file: Product Data + OSG Data
 // Value Conversion = OSG Sold Price / Product Sold Price
 // Qty Conversion   = OSG Quantity  / Product Quantity
@@ -394,7 +394,7 @@
             e.preventDefault();
             const section = item.dataset.section;
 
-            // Check if page needs auth Ã¢â‚¬Â Upload Data and Customers Without OSG are public
+            // Check if page needs auth ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Upload Data and Customers Without OSG are public
             const isPublicPage = section === 'customers-osg-section' || section === 'upload-section' || section === 'wosg-dashboard-section';
             if (!isPublicPage && !isAuthenticated) {
                 // Intercept navigation and show password modal
@@ -475,7 +475,7 @@
             savedAt: new Date().toISOString()
         };
         await saveMonthlyDataToDB(month, snapshot);
-        alert(`Ã¢Å“â€¦ Data for ${month} saved successfully!`);
+        alert(`ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Data for ${month} saved successfully!`);
         renderTrendsDashboard();
     });
 
@@ -643,7 +643,7 @@
     function setupUploadZone(zone, input, onFiles) {
         console.log('[UPLOAD] setupUploadZone registered for', input.id);
         // Only open the file picker on bare zone clicks (not on label/button/input)
-        // The label's native `for` attribute already opens the input — no manual click needed
+        // The label's native `for` attribute already opens the input â€”Â no manual click needed
         zone.addEventListener('click', (e) => {
             if (e.target === input) return;
             if (e.target.tagName === 'LABEL' || e.target.closest('label')) return;
@@ -734,7 +734,7 @@
                     var bShr = document.getElementById('btnShare');
                     var bRst = document.getElementById('btnReset');
                     if (fcb) fcb.style.display = 'flex';
-                    if (fct) fct.textContent = allData.length + ' product Ã‚Â· ' + osgData.length + ' OSG';
+                    if (fct) fct.textContent = allData.length + ' product Ãƒâ€šÃ‚Â· ' + osgData.length + ' OSG';
                     if (bShr) bShr.style.display = 'flex';
                     if (bRst) bRst.style.display = 'flex';
 
@@ -862,8 +862,8 @@
     }
 
     // ---- SAMSUNG PRODUCT NAME NORMALIZER ----
-    // Maps raw Samsung Care+ product strings Ã¢â€ â€™ standard category names
-    // e.g. "Samsung Care+ EW WM Auto TopLoad 1Year" Ã¢â€ â€™ "WASHING MACHINE"
+    // Maps raw Samsung Care+ product strings ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ standard category names
+    // e.g. "Samsung Care+ EW WM Auto TopLoad 1Year" ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ "WASHING MACHINE"
     function mapSamsungProductCategory(rawName) {
         if (!rawName) return rawName;
         const name = rawName.toUpperCase();
@@ -886,7 +886,7 @@
     }
 
     // ---- UNIVERSAL CATEGORY NORMALIZER (for Product & OSG files) ----
-    // Maps raw category column values Ã¢â€ â€™ one of the 9 standard categories
+    // Maps raw category column values ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ one of the 9 standard categories
     function normalizeProductCategory(raw) {
         if (!raw) return raw;
         const c = raw.toUpperCase().trim();
@@ -906,13 +906,13 @@
             || c.includes('PURIFIER') || c.includes('WATER HEATER') || c.includes('GEYSER')
             || c.includes('HOME APPLIANCE')) return 'HOME APPLIANCE';
         if (c.includes('DISH WASHER') || c.includes('DISHWASHER')) return 'DISH WASHER';
-        // Return the original if not matched — keeps custom categories intact
+        // Return the original if not matched â€”Â keeps custom categories intact
         return raw;
     }
 
     // ---- LG-AMC PRODUCT NAME NORMALIZER ----
-    // Maps full LG product names Ã¢â€ â€™ standard category names.
-    // Audio-related Ã¢â€ â€™ AUDIO SYSTEM; anything else not in the 6 known categories Ã¢â€ â€™ SMALL APPLIANCE
+    // Maps full LG product names ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ standard category names.
+    // Audio-related ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ AUDIO SYSTEM; anything else not in the 6 known categories ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ SMALL APPLIANCE
     function mapLGAMCProductCategory(rawName) {
         if (!rawName) return rawName;
         const name = rawName.toUpperCase();
@@ -926,7 +926,7 @@
             || name.includes('FRONT LOAD') || name.includes('TOP LOAD') || name.includes('FL WM')
             || name.includes('TL WM') || name.includes('F/L') || name.includes('T/L') 
             || /\bSA\b/.test(name) || name.includes('SEMI') || name.includes('FL DRYER') || name.includes('DRYER')) {
-            // Dryer is laundry but separate — return DRYER
+            // Dryer is laundry but separate â€”Â return DRYER
             if (name.includes('DRYER') && !name.includes('WASHER') && !name.includes('WASHING')) return 'DRYER';
             return 'WASHING MACHINE';
         }
@@ -968,7 +968,7 @@
         // --- Laptop ---
         if (name.includes('LAPTOP') || name.includes('GRAM') || name.includes('NOTEBOOK')) return 'LAPTOP';
 
-        // --- Everything else Ã¢â€ â€™ Small Appliance ---
+        // --- Everything else ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Small Appliance ---
         // (Styler, WashTower, other niche products)
         return 'SMALL APPLIANCE';
     }
@@ -1033,7 +1033,7 @@
             r.rbm = strVal(row, mapping.rbm);
             r.bdm = strVal(row, mapping.bdm);
             r.staff = strVal(row, mapping.staff);
-            // Normalize the raw LG product name Ã¢â€ â€™ standard category
+            // Normalize the raw LG product name ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ standard category
             const rawProduct = strVal(row, mapping.product);
             r.product = rawProduct;
             r.rawProduct = rawProduct;  // keep original for debugging
@@ -1070,7 +1070,7 @@
             const r = {};
             r.branch = strVal(row, mapping.branch);
             r.storeCode = strVal(row, mapping.storeCode);
-            // Normalize the raw product name Ã¢â€ â€™ standard category
+            // Normalize the raw product name ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ standard category
             const rawProduct = strVal(row, mapping.product);
             r.product = rawProduct;
             r.rawProduct = rawProduct;  // keep original for debugging
@@ -1100,9 +1100,9 @@
         if (typeof XLSX === 'undefined') {
             return Promise.reject(new Error(
                 'The XLSX library failed to load.\n\n' +
-                'Ã¢Å“â€¦ Fix: Check your internet connection and reload the page.\n' +
+                'ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Fix: Check your internet connection and reload the page.\n' +
                 '   The library loads from cdn.jsdelivr.net on first use.\n\n' +
-                'Ã°Å¸â€™Â¡ Alternative: Convert your file to CSV first:\n' +
+                'ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¡ Alternative: Convert your file to CSV first:\n' +
                 '   python convert.py "your_file.xlsx"'
             ));
         }
@@ -1229,7 +1229,7 @@
         // Warn about critical unmapped columns
         const critical = ['soldPrice', 'qty', 'branch', 'product'];
         critical.forEach(k => {
-            if (!mapping[k]) console.warn(`[Ã¢Å¡Â  Column NOT FOUND] '${k}' Ã¢â‚¬Â no matching header. Available headers:`, headers.join(', '));
+            if (!mapping[k]) console.warn(`[ÃƒÂ¢Ã…Â¡Ã‚Â  Column NOT FOUND] '${k}' ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â no matching header. Available headers:`, headers.join(', '));
         });
 
         console.log('[Column Mapping]', JSON.stringify(mapping));
@@ -1254,7 +1254,7 @@
     function populateFilters() {
         populateSelect(filterRBM, uniqueVals(allData, 'rbm'), 'All RBMs');
         populateSelect(filterBranch, uniqueVals([...allData, ...osgData], 'branch'), 'All Branches');
-        // Product dropdown is predefined Ã¢â‚¬Â keep as-is, just reset selection
+        // Product dropdown is predefined ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â keep as-is, just reset selection
         filterProduct.value = '';
         // Brand populated dynamically from uploaded data
         populateSelect(filterBrand, uniqueVals([...allData, ...osgData], 'brand'), 'All Brands');
@@ -1492,7 +1492,7 @@
         const amcConv = lgQty > 0 ? ((amcQty / lgQty) * 100).toFixed(2) : '0.00';
 
         // Samsung stats
-        const samCats = ['AC','MICROWAVE OVEN','REFRIGERATOR','WASHING MACHINE'];
+        const samCats = ['AC','MICROWAVE OVEN','REFRIGERATOR','WASHING MACHINE','TV'];
         const samProdQty = filteredProduct.reduce((s, r) => { const p = (r.product || '').toUpperCase().trim(); return s + ((r.brand && r.brand.toUpperCase().includes('SAMSUNG') && samCats.includes(p)) ? (r.qty || 0) : 0); }, 0);
         const samOsgQty = filteredSamsung.reduce((s, r) => s + (r.qty || 0), 0);
         const samConv = samProdQty > 0 ? ((samOsgQty / samProdQty) * 100).toFixed(2) : '0.00';
@@ -1531,13 +1531,13 @@
                     <td style="padding:10px 12px; border:1px solid #e2e8f0; font-weight:600;">Total Product Qty</td>
                     <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right;">${formatNumber(totalQty)}</td>
                     <td style="padding:10px 12px; border:1px solid #e2e8f0; font-weight:600;">Total Product Revenue</td>
-                    <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right;">₹${fmtShortHtml(totalRev)}</td>
+                    <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right;">â‚¹${fmtShortHtml(totalRev)}</td>
                 </tr>
                 <tr>
                     <td style="padding:10px 12px; border:1px solid #e2e8f0; font-weight:600;">OSG Qty</td>
                     <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right;">${formatNumber(osgQty)}</td>
                     <td style="padding:10px 12px; border:1px solid #e2e8f0; font-weight:600;">OSG Revenue</td>
-                    <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right;">₹${fmtShortHtml(osgRev)}</td>
+                    <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right;">â‚¹${fmtShortHtml(osgRev)}</td>
                 </tr>
                 <tr style="background:#f8fafc;">
                     <td style="padding:10px 12px; border:1px solid #e2e8f0; font-weight:600;">Qty Conversion</td>
@@ -1564,7 +1564,7 @@
                     <tr style="background:${i % 2 === 0 ? '#f8fafc' : '#fff'};">
                         <td style="padding:8px 12px; border:1px solid #e2e8f0; font-weight:600;">${name}</td>
                         <td style="padding:8px 12px; border:1px solid #e2e8f0; text-align:right;">${formatNumber(d.qty)}</td>
-                        <td style="padding:8px 12px; border:1px solid #e2e8f0; text-align:right;">₹${fmtShortHtml(d.rev)}</td>
+                        <td style="padding:8px 12px; border:1px solid #e2e8f0; text-align:right;">â‚¹${fmtShortHtml(d.rev)}</td>
                     </tr>
                 `).join('')}
             </table>
@@ -1668,7 +1668,7 @@
             const kpiAmcConv = document.getElementById('kpiAmcConv');
 
             if (kpiAmcTotal) kpiAmcTotal.textContent = formatNumber(amcTotalQty);
-            if (kpiAmcSale) kpiAmcSale.textContent = '₹' + fmtShort(amcTotalSale);
+            if (kpiAmcSale) kpiAmcSale.textContent = 'â‚¹' + fmtShort(amcTotalSale);
             if (kpiAmcWithout) kpiAmcWithout.textContent = formatNumber(withoutAmcQty);
             if (kpiAmcConv) kpiAmcConv.textContent = amcConvPct.toFixed(2) + '%';
         } else if (lgAmcKpiRow) {
@@ -1680,7 +1680,7 @@
         if (samsungData && samsungData.length > 0 && samsungKpiRow) {
             samsungKpiRow.style.display = 'block';
 
-            const samsungAllowedCats = ['AC', 'MICROWAVE OVEN', 'REFRIGERATOR', 'WASHING MACHINE'];
+            const samsungAllowedCats = ['AC', 'MICROWAVE OVEN', 'REFRIGERATOR', 'WASHING MACHINE', 'TV'];
 
             const samsungBrandTotalQty = filteredProduct.reduce((s, r) => {
                 const p = r.product ? r.product.toUpperCase().trim() : '';
@@ -1704,7 +1704,7 @@
             const kpiSamsungConv = document.getElementById('kpiSamsungConv');
 
             if (kpiSamsungTotal) kpiSamsungTotal.textContent = formatNumber(samsungOsgTotalQty);
-            if (kpiSamsungSale) kpiSamsungSale.textContent = '₹' + fmtShort(samsungOsgTotalSale);
+            if (kpiSamsungSale) kpiSamsungSale.textContent = 'â‚¹' + fmtShort(samsungOsgTotalSale);
             if (kpiSamsungWithout) kpiSamsungWithout.textContent = formatNumber(withoutSamsungQty);
             if (kpiSamsungConv) kpiSamsungConv.textContent = samsungConvPct.toFixed(2) + '%';
         } else if (samsungKpiRow) {
@@ -1778,7 +1778,7 @@
         const elC = document.getElementById('prodKpiCategories');
         const elA = document.getElementById('prodKpiAvgConv');
         if (elQ) elQ.textContent = formatNumber(totalQty);
-        if (elR) elR.textContent = '₹' + fmtShort(totalRev);
+        if (elR) elR.textContent = 'â‚¹' + fmtShort(totalRev);
         if (elC) elC.textContent = cats.length;
         if (elA) elA.textContent = avgConv.toFixed(2) + '%';
 
@@ -1811,7 +1811,7 @@
                 data: {
                     labels,
                     datasets: [{
-                        label: 'Revenue (₹)',
+                        label: 'Revenue (â‚¹)',
                         data: revData,
                         backgroundColor: CHART_COLORS,
                         borderRadius: 6,
@@ -1822,9 +1822,9 @@
                     ...chartDefaults,
                     scales: {
                         x: { ticks: { color: '#94a3b8', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                        y: { ticks: { color: '#94a3b8', callback: v => '₹' + fmtShort(v) }, grid: { color: 'rgba(255,255,255,0.07)' } }
+                        y: { ticks: { color: '#94a3b8', callback: v => 'â‚¹' + fmtShort(v) }, grid: { color: 'rgba(255,255,255,0.07)' } }
                     },
-                    plugins: { ...chartDefaults.plugins, tooltip: { callbacks: { label: ctx => '₹' + formatNumber(ctx.parsed.y) } } }
+                    plugins: { ...chartDefaults.plugins, tooltip: { callbacks: { label: ctx => 'â‚¹' + formatNumber(ctx.parsed.y) } } }
                 }
             });
         }
@@ -1895,12 +1895,12 @@
                     ${c.name}
                 </td>
                 <td class="text-right">${formatNumber(c.pQty)}</td>
-                <td class="text-right">₹${fmtShortHtml(c.pRev)}</td>
+                <td class="text-right">â‚¹${fmtShortHtml(c.pRev)}</td>
                 <td class="text-right">${formatNumber(c.oQty)}</td>
                 <td class="text-right">${fmtPct(c.osgConv)}</td>
                 <td class="text-right">${formatNumber(c.aQty)}</td>
                 <td class="text-right">${fmtPct(c.amcConv)}</td>
-                <td class="text-right">₹${fmtShortHtml(c.avgPrice)}</td>
+                <td class="text-right">â‚¹${fmtShortHtml(c.avgPrice)}</td>
             </tr>
         `).join('');
     }
@@ -1993,7 +1993,7 @@
                 data: {
                     labels,
                     datasets: [{
-                        label: 'Total Revenue (₹)',
+                        label: 'Total Revenue (â‚¹)',
                         data: revData,
                         borderColor: '#10b981',
                         backgroundColor: 'rgba(16,185,129,0.15)',
@@ -2005,11 +2005,11 @@
                     ...chartDefaults,
                     scales: {
                         ...chartDefaults.scales,
-                        y: { ...chartDefaults.scales.y, ticks: { ...chartDefaults.scales.y.ticks, callback: v => '₹' + fmtShort(v) } }
+                        y: { ...chartDefaults.scales.y, ticks: { ...chartDefaults.scales.y.ticks, callback: v => 'â‚¹' + fmtShort(v) } }
                     },
                     plugins: {
                         ...chartDefaults.plugins,
-                        tooltip: { callbacks: { label: ctx => '₹' + formatNumber(ctx.parsed.y) } }
+                        tooltip: { callbacks: { label: ctx => 'â‚¹' + formatNumber(ctx.parsed.y) } }
                     }
                 }
             });
@@ -2075,7 +2075,7 @@
             }
         });
 
-        const samsungAllowedCats = ['AC', 'MICROWAVE OVEN', 'REFRIGERATOR', 'WASHING MACHINE'];
+        const samsungAllowedCats = ['AC', 'MICROWAVE OVEN', 'REFRIGERATOR', 'WASHING MACHINE', 'TV'];
         const stats = Object.values(pincodeGroups).sort((a, b) => {
             // Default sort by Total Product Qty descending
             const aQty = a.pRows.reduce((s, r) => s + (r.qty || 0), 0);
@@ -2113,7 +2113,7 @@
                         ${pincodeAreaCache[grp.pincode] ? pincodeAreaCache[grp.pincode] : 'Loading...'}
                     </td>
                     <td class="text-right">${fmtNum(pQty)}</td>
-                    <td class="text-right">₹${fmtShortHtml(pRev)}</td>
+                    <td class="text-right">â‚¹${fmtShortHtml(pRev)}</td>
                     <td class="text-right">${fmtNum(oQty)}</td>
                     <td class="text-right">${fmtPct(osgQtyC)}</td>
                     <td class="text-right">${fmtNum(aQty)}</td>
@@ -2179,7 +2179,7 @@
         if (OSG_NATIVE_FIELDS.has(key)) {
             oGrouped = groupBy(filteredOSG, key);
         } else {
-            // Build invoice Ã¢â€ â€™ key value lookup from filtered product data
+            // Build invoice ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ key value lookup from filtered product data
             const invoiceToKey = {};
             filteredProduct.forEach(r => {
                 if (r.invoice && r[key]) invoiceToKey[r.invoice] = r[key];
@@ -2193,7 +2193,7 @@
                     if (!oGrouped[groupName]) oGrouped[groupName] = [];
                     oGrouped[groupName].push(r);
                 }
-                // Skip OSG rows that can't be attributed Ã¢â‚¬Â no "Unknown"
+                // Skip OSG rows that can't be attributed ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â no "Unknown"
             });
         }
 
@@ -2245,7 +2245,7 @@
 
 
     function renderConversionReport() {
-        // Group by branch Ã¢â‚¬Â show value and qty conversion
+        // Group by branch ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â show value and qty conversion
         const pGrouped = groupBy(filteredProduct, 'branch');
         const oGrouped = groupBy(filteredOSG, 'branch');
         const allKeys = new Set([...Object.keys(pGrouped), ...Object.keys(oGrouped)]);
@@ -2380,13 +2380,13 @@
         destroyChart('qtyConvRBM');
         const pG = groupBy(filteredProduct, 'rbm');
 
-        // Map OSG Ã¢â€ â€™ RBM via invoice lookup (same as renderConvTable)
+        // Map OSG ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ RBM via invoice lookup (same as renderConvTable)
         const invoiceToRBM = {};
         filteredProduct.forEach(r => { if (r.invoice && r.rbm) invoiceToRBM[r.invoice] = r.rbm; });
         const osgByRBM = {};
         filteredOSG.forEach(r => {
             const rbm = r.invoice ? (invoiceToRBM[r.invoice] || null) : null;
-            if (!rbm) return; // skip unattributable rows Ã¢â‚¬Â no "Unknown"
+            if (!rbm) return; // skip unattributable rows ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â no "Unknown"
             if (!osgByRBM[rbm]) osgByRBM[rbm] = [];
             osgByRBM[rbm].push(r);
         });
@@ -2792,7 +2792,7 @@
         `;
 
         if (filtered.length === 0) {
-            $('lcTableWrapper').innerHTML = noDataHTML(`No staff found with ≥${minQty} product qty and Ã¢â€°Â¤${maxConv}% qty conversion.`);
+            $('lcTableWrapper').innerHTML = noDataHTML(`No staff found with â‰¥${minQty} product qty and ÃƒÂ¢Ã¢â‚¬Â°Ã‚Â¤${maxConv}% qty conversion.`);
             return;
         }
 
@@ -3053,7 +3053,7 @@
         let html = '';
 
         // ---- Card 1: Overall Summary ----
-        html += insightCard('Ã°Å¸â€œÅ ', 'Overall Performance Summary', 'info', `
+        html += insightCard('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…Â ', 'Overall Performance Summary', 'info', `
             <div class="insight-metrics">
                 <div class="insight-metric"><span class="metric-val">${formatNumber(productData.length)}</span><span class="metric-label">Total Transactions</span></div>
                 <div class="insight-metric"><span class="metric-val">${totalStaff}</span><span class="metric-label">Active Staff</span></div>
@@ -3069,7 +3069,7 @@
             const zeroTotalQty = zeroConvStaff.reduce((s, r) => s + r.pQty, 0);
             const zeroTotalRev = zeroConvStaff.reduce((s, r) => s + r.pRev, 0);
             const topZero = zeroConvStaff.sort((a, b) => b.pQty - a.pQty).slice(0, 5);
-            html += insightCard('', `Zero Conversion Alert Ã¢â‚¬Â ${zeroConvStaff.length} Staff`, 'danger', `
+            html += insightCard('', `Zero Conversion Alert ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ${zeroConvStaff.length} Staff`, 'danger', `
                 <p><strong>${zeroConvStaff.length} staff</strong> have sold <strong>${formatNumber(zeroTotalQty)} products</strong> (${fmtShortHtml(zeroTotalRev)} revenue) but <strong>zero OSG/warranty conversion</strong>.</p>
                 <div class="insight-tag-row">
                     ${topZero.map(s => `<span class="insight-tag danger">${s.name} (${s.pQty} qty)</span>`).join('')}
@@ -3083,7 +3083,7 @@
 
         // ---- Card 3: Top Performers ----
         if (topQty.length > 0) {
-            html += insightCard('Ã‚Â ', 'Top Performers Ã¢â‚¬Â Best Qty Conversion', 'success', `
+            html += insightCard('Ãƒâ€šÃ‚Â ', 'Top Performers ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Best Qty Conversion', 'success', `
                 <div class="insight-list">
                     ${topQty.map((s, i) => `
                         <div class="insight-list-item">
@@ -3104,7 +3104,7 @@
         // ---- Card 4: Underperforming Branches ----
         const weakBranches = branchStats.filter(b => b.pQty >= 10 && b.qtyConv < 2).sort((a, b) => a.qtyConv - b.qtyConv).slice(0, 5);
         if (weakBranches.length > 0) {
-            html += insightCard('Ã°Å¸â€œâ€°', 'Underperforming Branches', 'warning', `
+            html += insightCard('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â°', 'Underperforming Branches', 'warning', `
                 <p>These branches have significant product sales but very low OSG conversion:</p>
                 <table class="data-table insight-table"><thead><tr>
                     <th>Branch</th><th>Prod Qty</th><th>OSG Qty</th><th>Qty Conv%</th>
@@ -3123,7 +3123,7 @@
             const best = rbmSorted[0];
             const worst = rbmSorted[rbmSorted.length - 1];
             const gap = best.qtyConv - worst.qtyConv;
-            html += insightCard('Ã°Å¸â€˜Â¥', 'RBM Performance Gap', gap > 5 ? 'warning' : 'info', `
+            html += insightCard('ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ‚Â¥', 'RBM Performance Gap', gap > 5 ? 'warning' : 'info', `
                 <div class="insight-compare">
                     <div class="compare-box success-bg">
                         <span class="compare-label">Best RBM</span>
@@ -3149,7 +3149,7 @@
         const weakProds = prodSorted.slice(0, 3);
         const strongProds = prodSorted.slice(-3).reverse();
         if (prodSorted.length > 0) {
-            html += insightCard('Ã°Å¸â€œâ€¹', 'Product Category Analysis', 'info', `
+            html += insightCard('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¹', 'Product Category Analysis', 'info', `
                 <div class="insight-compare">
                     <div class="compare-box success-bg" style="flex:1;">
                         <span class="compare-label">Strong Categories</span>
@@ -3169,12 +3169,12 @@
         // ---- Card 7: Revenue Concentration Risk ----
         if (branchRevShare.length >= 3) {
             const top3Share = branchRevShare.slice(0, 3).reduce((s, b) => s + b.share, 0);
-            html += insightCard('Ã¢Å¡â€“Ã¯Â¸Â', 'Revenue Concentration', top3Share > 50 ? 'warning' : 'info', `
+            html += insightCard('ÃƒÂ¢Ã…Â¡Ã¢â‚¬â€œÃƒÂ¯Ã‚Â¸Ã‚Â', 'Revenue Concentration', top3Share > 50 ? 'warning' : 'info', `
                 <p>Top 3 branches contribute <strong>${top3Share.toFixed(1)}%</strong> of total product revenue:</p>
                 <div class="insight-tag-row">
                     ${branchRevShare.slice(0, 5).map(b => `<span class="insight-tag info">${b.name}: ${b.share.toFixed(1)}%</span>`).join('')}
                 </div>
-                ${top3Share > 50 ? '<p class="text-warning"> High concentration risk Ã¢â‚¬Â underperformance in these branches would significantly impact overall numbers.</p>' : '<p class="text-success">Ã¢Å“â€¦ Revenue is fairly distributed Ã¢â‚¬Â good diversification.</p>'}
+                ${top3Share > 50 ? '<p class="text-warning"> High concentration risk ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â underperformance in these branches would significantly impact overall numbers.</p>' : '<p class="text-success">ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Revenue is fairly distributed ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â good diversification.</p>'}
                 <div class="insight-solution">
                     <strong> Recommendation:</strong> ${top3Share > 50 ? 'Invest in growing smaller branches. Reduce dependency on top branches by improving performance of bottom 50%.' : 'Maintain balanced growth across all branches.'}
                 </div>
@@ -3239,7 +3239,7 @@
         }
         deepAnalysisHtml += `</ul>`;
 
-        html += insightCard('Ã°Å¸â€Â', 'Deep Root Cause Analysis', 'danger', `
+        html += insightCard('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â', 'Deep Root Cause Analysis', 'danger', `
             <p style="margin-bottom:1rem; color:var(--text-primary); font-weight:500;">Based on combinatorial data analysis, the primary drivers of lost conversion are:</p>
             ${deepAnalysisHtml}
         `);
@@ -3248,12 +3248,12 @@
         const urgentActions = [];
         if (zeroConvStaff.length > 5) urgentActions.push(`Train ${zeroConvStaff.length} zero-conversion staff on OSG selling immediately`);
         if (weakBranches.length > 0) urgentActions.push(`Conduct branch visits to ${weakBranches.map(b => b.name).join(', ')}`);
-        if (conv.qtyConv < 5) urgentActions.push(`Overall qty conversion (${conv.qtyConv.toFixed(1)}%) is below target Ã¢â‚¬Â launch org-wide OSG campaign`);
+        if (conv.qtyConv < 5) urgentActions.push(`Overall qty conversion (${conv.qtyConv.toFixed(1)}%) is below target ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â launch org-wide OSG campaign`);
         urgentActions.push('Review and update staff-wise weekly conversion targets');
         urgentActions.push('Share top performer success stories in team meetings');
         if (topQty.length > 0) urgentActions.push(`Reward top converters: ${topQty.slice(0, 3).map(s => s.name).join(', ')}`);
 
-        html += insightCard('', 'Action Plan Ã¢â‚¬Â Next Steps', 'action', `
+        html += insightCard('', 'Action Plan ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Next Steps', 'action', `
             <ol class="insight-actions">
                 ${urgentActions.map(a => `<li>${a}</li>`).join('')}
             </ol>
@@ -3357,7 +3357,7 @@
             const samProdCounts = {};
             const lgProdRev = {};
             const samProdRev = {};
-            const samsungAllowedCats = ['AC', 'MICROWAVE OVEN', 'REFRIGERATOR', 'WASHING MACHINE'];
+            const samsungAllowedCats = ['AC', 'MICROWAVE OVEN', 'REFRIGERATOR', 'WASHING MACHINE', 'TV'];
 
             pInfo.rows.forEach(r => {
                 const originalP = r.product || 'Unknown';
@@ -3513,7 +3513,7 @@
         `;
 
         if (filtered.length === 0) {
-            $('lcTableWrapper').innerHTML = noDataHTML(`No staff found with ≥${minQty} product qty and Ã¢â€°Â¤${maxConv}% qty conversion.`);
+            $('lcTableWrapper').innerHTML = noDataHTML(`No staff found with â‰¥${minQty} product qty and ÃƒÂ¢Ã¢â‚¬Â°Ã‚Â¤${maxConv}% qty conversion.`);
             return;
         }
 
@@ -3774,7 +3774,7 @@
         let html = '';
 
         // ---- Card 1: Overall Summary ----
-        html += insightCard('Ã°Å¸â€œÅ ', 'Overall Performance Summary', 'info', `
+        html += insightCard('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…Â ', 'Overall Performance Summary', 'info', `
             <div class="insight-metrics">
                 <div class="insight-metric"><span class="metric-val">${formatNumber(productData.length)}</span><span class="metric-label">Total Transactions</span></div>
                 <div class="insight-metric"><span class="metric-val">${totalStaff}</span><span class="metric-label">Active Staff</span></div>
@@ -3790,7 +3790,7 @@
             const zeroTotalQty = zeroConvStaff.reduce((s, r) => s + r.pQty, 0);
             const zeroTotalRev = zeroConvStaff.reduce((s, r) => s + r.pRev, 0);
             const topZero = zeroConvStaff.sort((a, b) => b.pQty - a.pQty).slice(0, 5);
-            html += insightCard('', `Zero Conversion Alert Ã¢â‚¬Â ${zeroConvStaff.length} Staff`, 'danger', `
+            html += insightCard('', `Zero Conversion Alert ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ${zeroConvStaff.length} Staff`, 'danger', `
                 <p><strong>${zeroConvStaff.length} staff</strong> have sold <strong>${formatNumber(zeroTotalQty)} products</strong> (${fmtShortHtml(zeroTotalRev)} revenue) but <strong>zero OSG/warranty conversion</strong>.</p>
                 <div class="insight-tag-row">
                     ${topZero.map(s => `<span class="insight-tag danger">${s.name} (${s.pQty} qty)</span>`).join('')}
@@ -3804,7 +3804,7 @@
 
         // ---- Card 3: Top Performers ----
         if (topQty.length > 0) {
-            html += insightCard('Ã‚Â ', 'Top Performers Ã¢â‚¬Â Best Qty Conversion', 'success', `
+            html += insightCard('Ãƒâ€šÃ‚Â ', 'Top Performers ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Best Qty Conversion', 'success', `
                 <div class="insight-list">
                     ${topQty.map((s, i) => `
                         <div class="insight-list-item">
@@ -3825,7 +3825,7 @@
         // ---- Card 4: Underperforming Branches ----
         const weakBranches = branchStats.filter(b => b.pQty >= 10 && b.qtyConv < 2).sort((a, b) => a.qtyConv - b.qtyConv).slice(0, 5);
         if (weakBranches.length > 0) {
-            html += insightCard('Ã°Å¸â€œâ€°', 'Underperforming Branches', 'warning', `
+            html += insightCard('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â°', 'Underperforming Branches', 'warning', `
                 <p>These branches have significant product sales but very low OSG conversion:</p>
                 <table class="data-table insight-table"><thead><tr>
                     <th>Branch</th><th>Prod Qty</th><th>OSG Qty</th><th>Qty Conv%</th>
@@ -3844,7 +3844,7 @@
             const best = rbmSorted[0];
             const worst = rbmSorted[rbmSorted.length - 1];
             const gap = best.qtyConv - worst.qtyConv;
-            html += insightCard('Ã°Å¸â€˜Â¥', 'RBM Performance Gap', gap > 5 ? 'warning' : 'info', `
+            html += insightCard('ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ‚Â¥', 'RBM Performance Gap', gap > 5 ? 'warning' : 'info', `
                 <div class="insight-compare">
                     <div class="compare-box success-bg">
                         <span class="compare-label">Best RBM</span>
@@ -3870,7 +3870,7 @@
         const weakProds = prodSorted.slice(0, 3);
         const strongProds = prodSorted.slice(-3).reverse();
         if (prodSorted.length > 0) {
-            html += insightCard('Ã°Å¸â€œâ€¹', 'Product Category Analysis', 'info', `
+            html += insightCard('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¹', 'Product Category Analysis', 'info', `
                 <div class="insight-compare">
                     <div class="compare-box success-bg" style="flex:1;">
                         <span class="compare-label">Strong Categories</span>
@@ -3890,12 +3890,12 @@
         // ---- Card 7: Revenue Concentration Risk ----
         if (branchRevShare.length >= 3) {
             const top3Share = branchRevShare.slice(0, 3).reduce((s, b) => s + b.share, 0);
-            html += insightCard('Ã¢Å¡â€“Ã¯Â¸Â', 'Revenue Concentration', top3Share > 50 ? 'warning' : 'info', `
+            html += insightCard('ÃƒÂ¢Ã…Â¡Ã¢â‚¬â€œÃƒÂ¯Ã‚Â¸Ã‚Â', 'Revenue Concentration', top3Share > 50 ? 'warning' : 'info', `
                 <p>Top 3 branches contribute <strong>${top3Share.toFixed(1)}%</strong> of total product revenue:</p>
                 <div class="insight-tag-row">
                     ${branchRevShare.slice(0, 5).map(b => `<span class="insight-tag info">${b.name}: ${b.share.toFixed(1)}%</span>`).join('')}
                 </div>
-                ${top3Share > 50 ? '<p class="text-warning"> High concentration risk Ã¢â‚¬Â underperformance in these branches would significantly impact overall numbers.</p>' : '<p class="text-success">Ã¢Å“â€¦ Revenue is fairly distributed Ã¢â‚¬Â good diversification.</p>'}
+                ${top3Share > 50 ? '<p class="text-warning"> High concentration risk ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â underperformance in these branches would significantly impact overall numbers.</p>' : '<p class="text-success">ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Revenue is fairly distributed ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â good diversification.</p>'}
                 <div class="insight-solution">
                     <strong> Recommendation:</strong> ${top3Share > 50 ? 'Invest in growing smaller branches. Reduce dependency on top branches by improving performance of bottom 50%.' : 'Maintain balanced growth across all branches.'}
                 </div>
@@ -3960,7 +3960,7 @@
         }
         deepAnalysisHtml += `</ul>`;
 
-        html += insightCard('Ã°Å¸â€Â', 'Deep Root Cause Analysis', 'danger', `
+        html += insightCard('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â', 'Deep Root Cause Analysis', 'danger', `
             <p style="margin-bottom:1rem; color:var(--text-primary); font-weight:500;">Based on combinatorial data analysis, the primary drivers of lost conversion are:</p>
             ${deepAnalysisHtml}
         `);
@@ -3969,12 +3969,12 @@
         const urgentActions = [];
         if (zeroConvStaff.length > 5) urgentActions.push(`Train ${zeroConvStaff.length} zero-conversion staff on OSG selling immediately`);
         if (weakBranches.length > 0) urgentActions.push(`Conduct branch visits to ${weakBranches.map(b => b.name).join(', ')}`);
-        if (conv.qtyConv < 5) urgentActions.push(`Overall qty conversion (${conv.qtyConv.toFixed(1)}%) is below target Ã¢â‚¬Â launch org-wide OSG campaign`);
+        if (conv.qtyConv < 5) urgentActions.push(`Overall qty conversion (${conv.qtyConv.toFixed(1)}%) is below target ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â launch org-wide OSG campaign`);
         urgentActions.push('Review and update staff-wise weekly conversion targets');
         urgentActions.push('Share top performer success stories in team meetings');
         if (topQty.length > 0) urgentActions.push(`Reward top converters: ${topQty.slice(0, 3).map(s => s.name).join(', ')}`);
 
-        html += insightCard('', 'Action Plan Ã¢â‚¬Â Next Steps', 'action', `
+        html += insightCard('', 'Action Plan ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Next Steps', 'action', `
             <ol class="insight-actions">
                 ${urgentActions.map(a => `<li>${a}</li>`).join('')}
             </ol>
@@ -4147,7 +4147,7 @@ function exportFutureStoresCSV() {
         return H[rbm][bdm][branch][staff][pName];
     };
 
-    const samAllowed = ['AC', 'MICROWAVE OVEN', 'REFRIGERATOR', 'WASHING MACHINE'];
+    const samAllowed = ['AC', 'MICROWAVE OVEN', 'REFRIGERATOR', 'WASHING MACHINE', 'TV'];
     fP.forEach(r => {
         const prod = r.product || 'Unknown';
         const obj = getObj(r._m.rbm, r._m.bdm, r._m.branch, r._m.staff, prod);
@@ -4403,7 +4403,7 @@ function exportFutureStoresCSV() {
         addSheet('RBM WISE', aoa2, merges2, false, 0);
 
         // 3. STORE WISE Sheet
-        const aoa3 = [['FUTURE STORES — STORE WISE'], ['BDM', 'Branch', 'Product', 'Product Qty', qtyName, 'Qty Conv%', 'Val Conv%', 'OVERALL Qty Conv%', 'OVERALL Val Conv%']];
+        const aoa3 = [['FUTURE STORES â€” STORE WISE'], ['BDM', 'Branch', 'Product', 'Product Qty', qtyName, 'Qty Conv%', 'Val Conv%', 'OVERALL Qty Conv%', 'OVERALL Val Conv%']];
         const merges3 = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 8 } }];
         
         const bdmBranchMap = {};
@@ -4514,7 +4514,7 @@ function exportFutureStoresCSV() {
         if (selBDM) filtP = filtP.filter(r => r.bdm === selBDM);
         if (selProduct) filtP = filtP.filter(r => r.product === selProduct);
 
-        // Build invoice lookup from product data Ã¢â‚¬Â only count OSG entries that match a product invoice
+        // Build invoice lookup from product data ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â only count OSG entries that match a product invoice
         const productInvoices = new Set();
         filtP.forEach(r => { if (r.invoice) productInvoices.add(r.invoice); });
 
@@ -5160,8 +5160,8 @@ function exportFutureStoresCSV() {
                 ? `Caller_Report_${selectedCaller}_${dateStr}.xlsx`
                 : `Caller_Report_All_${dateStr}.xlsx`;
             const sheetTitle = selectedCaller
-                ? `WITHOUT OSG CALLER REPORT — ${dateStr} — ${selectedCaller.toUpperCase()}`
-                : `WITHOUT OSG CALLER REPORT — ${dateStr}`;
+                ? `WITHOUT OSG CALLER REPORT â€”Â ${dateStr} â€”Â ${selectedCaller.toUpperCase()}`
+                : `WITHOUT OSG CALLER REPORT â€”Â ${dateStr}`;
 
             // Build AOA
             const aoa = [];
@@ -5272,7 +5272,7 @@ function exportFutureStoresCSV() {
                         const rowBg = callerIdx % 2 === 0 ? '0F172A' : '1E293B';
 
                         if (C === 0) {
-                            // Caller name cell — colored left border + avatar-style bg
+                            // Caller name cell â€”Â colored left border + avatar-style bg
                             ws[addr].s = {
                                 fill: { patternType: 'solid', fgColor: { rgb: rowBg } },
                                 font: { color: { rgb: callerHex }, bold: true, sz: 10, name: 'Calibri' },
@@ -5329,7 +5329,7 @@ function exportFutureStoresCSV() {
 
         if (tab === 'main') {
             if (!window._wosgMainData) return;
-            title = 'WITHOUT OSG MAIN REPORT — ' + dateStr;
+            title = 'WITHOUT OSG MAIN REPORT â€”Â ' + dateStr;
             fileName = 'Without_OSG_Main_Report_' + dateStr + '.xlsx';
             aoa.push([title]);
             aoa.push(['SUMMARY', ...cols, 'TOTAL VALUE', 'TOTAL COUNT']);
@@ -5351,7 +5351,7 @@ function exportFutureStoresCSV() {
             });
         } else if (tab === 'caller') {
             if (!window._wosgCallerData || !window._wosgCallers) return;
-            title = 'WITHOUT OSG CALLER REPORT — ' + dateStr;
+            title = 'WITHOUT OSG CALLER REPORT â€”Â ' + dateStr;
             fileName = 'Without_OSG_Caller_Report_' + dateStr + '.xlsx';
             aoa.push([title]);
             aoa.push(['CALLER', ...cols, 'TOTAL VALUE', 'TOTAL COUNT']);
@@ -5374,7 +5374,7 @@ function exportFutureStoresCSV() {
             });
         } else if (tab === 'daily') {
             if (!window._wosgDailyData) return;
-            title = 'WITHOUT OSG DAILY REPORT — ' + dateStr;
+            title = 'WITHOUT OSG DAILY REPORT â€”Â ' + dateStr;
             fileName = 'Without_OSG_Daily_Report_' + dateStr + '.xlsx';
             aoa.push([title]);
             aoa.push(['DATE', ...cols, 'TOTAL VALUE', 'TOTAL COUNT']);
@@ -5396,7 +5396,7 @@ function exportFutureStoresCSV() {
             });
         } else if (tab === 'monthly') {
             if (!window._wosgMonthlyData) return;
-            title = 'WITHOUT OSG MONTHLY REPORT — ' + dateStr;
+            title = 'WITHOUT OSG MONTHLY REPORT â€”Â ' + dateStr;
             fileName = 'Without_OSG_Monthly_Report_' + dateStr + '.xlsx';
             aoa.push([title]);
             aoa.push(['MONTH', ...cols, 'TOTAL VALUE', 'TOTAL COUNT']);
@@ -5450,10 +5450,10 @@ function exportFutureStoresCSV() {
             window.coDueTodayFilter = !window.coDueTodayFilter;
             if (window.coDueTodayFilter) {
                 btnDue.style.boxShadow = '0 0 0 3px rgba(239,68,68,0.5)';
-                btnDue.innerHTML = 'Ã¢ÂÅ’ Clear Due Today';
+                btnDue.innerHTML = 'ÃƒÂ¢Ã‚ÂÃ…â€™ Clear Due Today';
             } else {
                 btnDue.style.boxShadow = '0 2px 8px rgba(239,68,68,0.3)';
-                btnDue.innerHTML = 'Ã°Å¸â€Â¥ Due Today';
+                btnDue.innerHTML = 'ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¥ Due Today';
             }
             renderCustomersOSGPage();
         });
@@ -5501,12 +5501,12 @@ function exportFutureStoresCSV() {
                 coStatusMap[fbKey(inv)] = childSnap.val();
                 const st = coStatusMap[fbKey(inv)];
 
-                // If another caller made ANY selection Ã¢â€ â€™ instantly remove from this caller's view
+                // If another caller made ANY selection ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ instantly remove from this caller's view
                 if (st.calledBy && st.calledBy !== currentCaller) {
                     const rowEl = document.getElementById('co-row-' + fbKey(inv));
                     if (rowEl) rowEl.remove();
                 } else {
-                    // Own row or unclaimed Ã¢â€ â€™ update status colour in-place
+                    // Own row or unclaimed ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ update status colour in-place
                     const rowEl = document.getElementById('co-row-' + fbKey(inv));
                     if (rowEl && !rowEl.contains(document.activeElement)) {
                         const rowData = (coCurrentRows || []).find(r => fbKey(r.invoice) === inv);
@@ -5517,7 +5517,7 @@ function exportFutureStoresCSV() {
                 if (typeof updateCoStatsInPlace === 'function') updateCoStatsInPlace();
             });
 
-            // ===== INITIAL FULL LOAD (once) — then render page =====
+            // ===== INITIAL FULL LOAD (once) â€”Â then render page =====
             coLiveRef.once('value', snap => {
                 const data = snap.val() || {};
                 Object.keys(data).forEach(inv => { coStatusMap[fbKey(inv)] = data[inv]; });
@@ -5565,7 +5565,7 @@ function exportFutureStoresCSV() {
         banner.colSpan = 10;
         banner.style.cssText = `position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
             background:${claimBg};color:${claimColor};font-weight:700;font-size:0.85rem;gap:8px;border-radius:6px;`;
-        banner.innerHTML = `<span style="font-size:1.1rem;">Ã°Å¸â€â€™</span> Claimed by <strong>${callerName}</strong> — removing from your list...`;
+        banner.innerHTML = `<span style="font-size:1.1rem;">ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬â„¢</span> Claimed by <strong>${callerName}</strong> â€”Â removing from your list...`;
         rowEl.innerHTML = '';
         rowEl.appendChild(banner);
         rowEl.classList.add('co-row-claiming');
@@ -5824,7 +5824,7 @@ function exportFutureStoresCSV() {
             statusFiltered.forEach(r => missedUnique.push(r));
         }
 
-        // Apply manual caller filter dropdown (admin view — shows rows by a specific caller)
+        // Apply manual caller filter dropdown (admin view â€”Â shows rows by a specific caller)
         if (selCallerFilter) {
             const filtered = missedUnique.filter(r => {
                 const st = coStatusMap[fbKey(r.invoice)] || {};
@@ -5865,7 +5865,7 @@ function exportFutureStoresCSV() {
         }
 
         if (missedUnique.length === 0) {
-            $('coMissedTable').innerHTML = noDataHTML('All invoices have OSG entries Ã¢â‚¬Â great conversion! Ã‚Â°');
+            $('coMissedTable').innerHTML = noDataHTML('All invoices have OSG entries ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â great conversion! Ãƒâ€šÃ‚Â°');
             return;
         }
 
@@ -5926,7 +5926,7 @@ function exportFutureStoresCSV() {
                 ">
                     <span style="width:24px;height:24px;border-radius:50%;background:${c.color};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;">${c.name[0]}</span>
                     ${c.name}
-                    ${currentCaller === c.name ? '<span style="font-size:0.7rem;opacity:0.8;">— Active</span>' : ''}
+                    ${currentCaller === c.name ? '<span style="font-size:0.7rem;opacity:0.8;">â€”Â Active</span>' : ''}
                 </button>`).join('')}
             </div>
             ${currentCaller
@@ -5960,7 +5960,7 @@ function exportFutureStoresCSV() {
                     padding:10px 28px;border-radius:20px;border:1.5px solid var(--accent);
                     background:transparent;color:var(--accent);font-family:inherit;
                     font-size:0.88rem;font-weight:600;cursor:pointer;transition:all 0.2s;
-                ">Ã¢Â¬â€¡ Load ${Math.min(remaining, 100)} more (${remaining} remaining)</button>
+                ">ÃƒÂ¢Ã‚Â¬Ã¢â‚¬Â¡ Load ${Math.min(remaining, 100)} more (${remaining} remaining)</button>
                </div>` : '';
 
         $('coMissedTable').innerHTML = statsBar + callerSelector + tableHeader + rowsHTML + '</tbody></table></div>' + loadMoreBtn;
@@ -6006,7 +6006,7 @@ function exportFutureStoresCSV() {
                     wrap.innerHTML = `<button onclick="window.coLoadMore()" style="
                         padding:10px 28px;border-radius:20px;border:1.5px solid var(--accent);
                         background:transparent;color:var(--accent);font-family:inherit;
-                        font-size:0.88rem;font-weight:600;cursor:pointer;">Ã¢Â¬â€¡ Load ${Math.min(remaining2, 100)} more (${remaining2} remaining)</button>`;
+                        font-size:0.88rem;font-weight:600;cursor:pointer;">ÃƒÂ¢Ã‚Â¬Ã¢â‚¬Â¡ Load ${Math.min(remaining2, 100)} more (${remaining2} remaining)</button>`;
                 } else {
                     wrap.remove();
                 }
@@ -6201,8 +6201,8 @@ function exportFutureStoresCSV() {
         // Added 'follow-up' and 'bought' options to Interest
         const interestBtnOptions = `
             <option value="" ${!st.interest ? 'selected' : ''}>- Select -</option>
-            <option value="interested" ${st.interest === 'interested' ? 'selected' : ''}>Ã¢Å“â€¦ Interested</option>
-            <option value="not-interested" ${st.interest === 'not-interested' ? 'selected' : ''}>Ã¢ÂÅ’ Not Interested</option>
+            <option value="interested" ${st.interest === 'interested' ? 'selected' : ''}>ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Interested</option>
+            <option value="not-interested" ${st.interest === 'not-interested' ? 'selected' : ''}>ÃƒÂ¢Ã‚ÂÃ…â€™ Not Interested</option>
             <option value="follow-up" ${st.interest === 'follow-up' ? 'selected' : ''}>Follow-up</option>
             <option value="bought" ${st.interest === 'bought' ? 'selected' : ''}>Closed</option>
         `;
@@ -6240,8 +6240,8 @@ function exportFutureStoresCSV() {
                     background:var(--bg-input); color:var(--text-primary); outline:none; max-width:140px; ${opcStyle}">
                     <option value="" ${!st.callStatus ? 'selected' : ''}>- Status -</option>
                     <option value="connected" ${st.callStatus === 'connected' ? 'selected' : ''}>Connected</option>
-                    <option value="not-connected" ${st.callStatus === 'not-connected' ? 'selected' : ''}>Ã°Å¸â€Â´ Not Connected</option>
-                    <option value="disconnected" ${st.callStatus === 'disconnected' ? 'selected' : ''}>Ã°Å¸â€œÂµ Disconnected</option>
+                    <option value="not-connected" ${st.callStatus === 'not-connected' ? 'selected' : ''}>ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â´ Not Connected</option>
+                    <option value="disconnected" ${st.callStatus === 'disconnected' ? 'selected' : ''}>ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Âµ Disconnected</option>
                 </select>
                 ${callerInfo}
             </div>` : '';
@@ -6286,8 +6286,8 @@ function exportFutureStoresCSV() {
                 const name = (r.customerName || 'Customer').split(' ')[0];
                 const prod = r.product || 'your product';
                 const inv = r.invoice || '';
-                const val = r.soldPrice && r.soldPrice > 0 ? ' (worth ₹' + r.soldPrice.toLocaleString('en-IN') + ')' : '';
-                const msg = 'Dear ' + name + ',\n\nGreetings from myG Ã°Å¸ËœÅ \n\nThank you for your recent purchase of *' + prod + '*' + val + ' (Invoice: ' + inv + ').\n\n We noticed your purchase does not yet include an *OSG Extended Warranty* plan. OSG covers:\n\nÃ¢Å“â€¦ Extended protection beyond manufacturer warranty\nÃ¢Å“â€¦ Free doorstep repair service\nÃ¢Å“â€¦ Zero hidden charges\nÃ¢Å“â€¦ Instant claim processing\n\nSecuring your device takes just a minute — and gives you complete peace of mind! \n\nWould you be interested? Reply *YES* and we will take care of everything.\n\nWarm regards,\nmyG Team';
+                const val = r.soldPrice && r.soldPrice > 0 ? ' (worth â‚¹' + r.soldPrice.toLocaleString('en-IN') + ')' : '';
+                const msg = 'Dear ' + name + ',\n\nGreetings from myG ÃƒÂ°Ã…Â¸Ã‹Å“Ã…Â \n\nThank you for your recent purchase of *' + prod + '*' + val + ' (Invoice: ' + inv + ').\n\n We noticed your purchase does not yet include an *OSG Extended Warranty* plan. OSG covers:\n\nÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Extended protection beyond manufacturer warranty\nÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Free doorstep repair service\nÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Zero hidden charges\nÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Instant claim processing\n\nSecuring your device takes just a minute â€”Â and gives you complete peace of mind! \n\nWould you be interested? Reply *YES* and we will take care of everything.\n\nWarm regards,\nmyG Team';
                 return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
             })()}" target="_blank" title="WhatsApp (English)" style="color:#25D366;display:flex;padding:5px;border-radius:50%;background:rgba(37,211,102,0.12);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>` : ''}
                     ${r.customerNo ? `<a href="${(function () {
@@ -6295,7 +6295,7 @@ function exportFutureStoresCSV() {
                 const name = (r.customerName || 'Customer').split(' ')[0];
                 const prod = r.product || 'your product';
                 const inv = r.invoice || '';
-                const priceStr = r.soldPrice && r.soldPrice > 0 ? ' (₹' + r.soldPrice.toLocaleString('en-IN') + ')' : '';
+                const priceStr = r.soldPrice && r.soldPrice > 0 ? ' (â‚¹' + r.soldPrice.toLocaleString('en-IN') + ')' : '';
                 const msgML = '\u0d2a\u0d4d\u0d30\u0d3f\u0d2f ' + name + ',\n\nmyG-\u0d7d \u0d28\u0d3f\u0d28\u0d4d\u0d28\u0d41\u0d33\u0d4d\u0d33 \u0d06\u0d36\u0d02\u0d38\u0d15\u0d7e\n\n\u0d28\u0d3f\u0d19\u0d4d\u0d19\u0d7e \u0d05\u0d1f\u0d41\u0d24\u0d4d\u0d24\u0d3f\u0d1f\u0d46 \u0d35\u0d3e\u0d19\u0d4d\u0d19\u0d3f\u0d2f ' + prod + priceStr + ' \u0d28\u0d4d \u0d28\u0d28\u0d4d\u0d26\u0d3f. (\u0d07\u0d7b\u0d35\u0d4b\u0d2f\u0d4d\u0d38\u0d4d: ' + inv + ').\n\n \u0d28\u0d3f\u0d19\u0d4d\u0d19\u0d33\u0d41\u0d1f\u0d46 \u0d2a\u0d7c\u0d1a\u0d4d\u0d1a\u0d47\u0d38\u0d3f\u0d7d \u0d07\u0d24\u0d41\u0d35\u0d30\u0d46 OSG \u0d0e\u0d15\u0d4d\u0d38\u0d4d\u0d31\u0d4d\u0d1f\u0d7b\u0d21\u0d21\u0d4d \u0d35\u0d3e\u0d31\u0d7b\u0d4d\u0d31\u0d3f \u0d2a\u0d4d\u0d32\u0d3e\u0d7b \u0d09\u0d7e\u0d2a\u0d4d\u0d2a\u0d46\u0d1f\u0d41\u0d24\u0d4d\u0d24\u0d3f\u0d2f\u0d3f\u0d1f\u0d4d\u0d1f\u0d3f\u0d32\u0d4d\u0d32 \u0d0e\u0d28\u0d4d\u0d28\u0d4d \u0d1e\u0d19\u0d4d\u0d19\u0d7e \u0d36\u0d4d\u0d30\u0d26\u0d4d\u0d27\u0d3f\u0d1a\u0d4d\u0d1a\u0d41. OSG \u0d35\u0d34\u0d3f \u0d28\u0d3f\u0d19\u0d4d\u0d19\u0d7e\u0d15\u0d4d\u0d15\u0d4d \u0d32\u0d2d\u0d3f\u0d15\u0d4d\u0d15\u0d41\u0d28\u0d4d\u0d28\u0d24\u0d4d:\n\u0d28\u0d3f\u0d19\u0d4d\u0d19\u0d7e\u0d15\u0d4d\u0d15\u0d4d \u0d24\u0d3e\u0d32\u0d4d\u0d2a\u0d30\u0d4d\u0d2f\u0d2e\u0d41\u0d23\u0d4d\u0d1f\u0d4b? YES \u0d0e\u0d28\u0d4d\u0d28\u0d4d \u0d2e\u0d31\u0d41\u0d2a\u0d1f\u0d3f \u0d28\u0d7d\u0d15\u0d41\u0d15, \u0d2c\u0d3e\u0d15\u0d4d\u0d15\u0d3f \u0d15\u0d3e\u0d30\u0d4d\u0d2f\u0d19\u0d4d\u0d19\u0d7e \u0d1e\u0d19\u0d4d\u0d19\u0d7e \u0d1a\u0d46\u0d2f\u0d4d\u0d24\u0d41 \u0d24\u0d30\u0d3e\u0d02.\n\n\u0d38\u0d4d\u0d28\u0d47\u0d39\u0d24\u0d4d\u0d24\u0d4b\u0d1f\u0d46,\n\u0d1f\u0d40\u0d02 myG';
                 return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msgML);
             })()}" target="_blank" title="WhatsApp (Malayalam)" style="color:#25D366;display:flex;padding:3px 6px;border-radius:12px;background:rgba(37,211,102,0.12);font-size:0.75rem;font-weight:700;text-decoration:none;align-items:center;">ML</a>` : ''}
@@ -6423,7 +6423,7 @@ function exportFutureStoresCSV() {
                                 baseStyle = { ...baseStyle, font: { color: { rgb: "9A3412" }, bold: true }, fill: { fgColor: { rgb: "FEF08A" } } };
                             }
                         } else if (isCurrencyCol) {
-                            baseStyle.z = '"₹"#,##0'; // No decimals
+                            baseStyle.z = '"â‚¹"#,##0'; // No decimals
                         } else {
                             baseStyle.z = '#,##0'; // Commas, no decimals
                         }
@@ -6450,19 +6450,19 @@ function exportFutureStoresCSV() {
         arr.forEach(r => { const k = r[key] || 'Unknown'; if (!m[k]) m[k] = []; m[k].push(r); });
         return m;
     }
-    function formatCurrency(n) { return '₹' + n.toLocaleString('en-IN', { maximumFractionDigits: 0 }); }
+    function formatCurrency(n) { return 'â‚¹' + n.toLocaleString('en-IN', { maximumFractionDigits: 0 }); }
     function fmtShort(n) {
-        if (Math.abs(n) >= 1e7) return '₹' + (n / 1e7).toFixed(1) + 'Cr';
-        if (Math.abs(n) >= 1e5) return '₹' + (n / 1e5).toFixed(1) + 'L';
-        if (Math.abs(n) >= 1e3) return '₹' + (n / 1e3).toFixed(1) + 'K';
-        return '₹' + n.toFixed(0);
+        if (Math.abs(n) >= 1e7) return 'â‚¹' + (n / 1e7).toFixed(1) + 'Cr';
+        if (Math.abs(n) >= 1e5) return 'â‚¹' + (n / 1e5).toFixed(1) + 'L';
+        if (Math.abs(n) >= 1e3) return 'â‚¹' + (n / 1e3).toFixed(1) + 'K';
+        return 'â‚¹' + n.toFixed(0);
     }
             function fmtShortHtml(n) {
-        return '<span title="₹' + Number(n).toLocaleString('en-IN') + '" style="cursor:help; border-bottom:1px dotted #94a3b8;">' + fmtShort(n) + '</span>';
+        return '<span title="â‚¹' + Number(n).toLocaleString('en-IN') + '" style="cursor:help; border-bottom:1px dotted #94a3b8;">' + fmtShort(n) + '</span>';
     }
     function formatNumber(n) { return n.toLocaleString('en-IN'); }
     function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
-    function truncate(s, len) { return s.length > len ? s.substring(0, len) + 'Ã¢â‚¬Â¦' : s; }
+    function truncate(s, len) { return s.length > len ? s.substring(0, len) + 'ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦' : s; }
     function showLoading(show) { loadingOverlay.classList.toggle('active', show); }
     function q(s) { return '"' + (s || '').replace(/"/g, '""') + '"'; }
 
@@ -6536,12 +6536,12 @@ function exportFutureStoresCSV() {
         else html += '<li>No significantly underperforming branches detected.</li>';
         html += '</ul></div>';
 
-        html += '<div style="margin-bottom: 16px;"><strong>Ã°Å¸â€™Å½ Missed Premium Device Attachments:</strong><ul style="margin:8px 0 0 20px; color:var(--text-muted); line-height: 1.6;">';
+        html += '<div style="margin-bottom: 16px;"><strong>ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã…Â½ Missed Premium Device Attachments:</strong><ul style="margin:8px 0 0 20px; color:var(--text-muted); line-height: 1.6;">';
         if (premiumMisses.length) premiumMisses.forEach(m => html += `<li><strong>${m.staff} (${m.branch})</strong> sold a ${m.product} for ${fmtShortHtml(m.soldPrice)} without OSG (Inv: ${m.invoice}).</li>`);
         else html += '<li>Great job! High-value premium products seem to be attached correctly.</li>';
         html += '</ul></div>';
 
-        html += '<div><strong>Ã°Å¸â€˜Â¤ Highest Opportunity Staff:</strong><ul style="margin:8px 0 0 20px; color:var(--text-muted); line-height: 1.6;">';
+        html += '<div><strong>ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ‚Â¤ Highest Opportunity Staff:</strong><ul style="margin:8px 0 0 20px; color:var(--text-muted); line-height: 1.6;">';
         if (worstStaff.length) worstStaff.forEach(s => html += `<li><strong>${s.staff} (${s.branch})</strong>: Delivered ${s.pQ} units physically but achieved only ${s.conv.toFixed(1)}% conversion.</li>`);
         else html += '<li>Staff metrics look solid across the board (or volume threshold not met).</li>';
         html += '</ul></div>';
@@ -6554,7 +6554,7 @@ function exportFutureStoresCSV() {
             reasonHTML += `<li><strong>Systemic Branch Failure (${worstBranches[0].branch}):</strong> Conversion is near zero (${worstBranches[0].conv.toFixed(1)}%) despite moving ${worstBranches[0].pQ} units. This indicates a store-wide knowledge gap or a leadership failure to enforce pitching at the POS, rather than individual poor performance.</li>`;
         }
         if (premiumMisses.length >= 2) {
-            reasonHTML += `<li><strong>Premium Pitch Avoidance:</strong> Found multiple premium devices > ₹50K sold with no OSG attached. Sales reps might be avoiding the OSG pitch on high-ticket items out of fear of losing the primary sale due to total cart value shock.</li>`;
+            reasonHTML += `<li><strong>Premium Pitch Avoidance:</strong> Found multiple premium devices > â‚¹50K sold with no OSG attached. Sales reps might be avoiding the OSG pitch on high-ticket items out of fear of losing the primary sale due to total cart value shock.</li>`;
         }
         const topPerformers = staffStats.filter(s => s.conv > 20);
         if (topPerformers.length > 0 && worstStaff.length > 0) {
@@ -6573,7 +6573,7 @@ function exportFutureStoresCSV() {
         html += '<h3 style="margin-top:0; color:var(--primary); display:flex; align-items:center; gap:8px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Immediate Action Plan</h3>';
         html += '<ol style="margin:8px 0 0 24px; color:var(--text-muted); line-height:1.8;">';
         if (worstBranches.length) html += `<li><strong>RBM/BDM Intercept:</strong> Immediately deploy regional trainers to ${worstBranches.map(b => `<strong>${b.branch}</strong>`).join(', ')} for POS floor shadowing.</li>`;
-        if (premiumMisses.length) html += `<li><strong>Premium Bundling Rule:</strong> Institute a strict rule that any manager override/discount on products over ₹50K ideally requires an OSG attachment commitment.</li>`;
+        if (premiumMisses.length) html += `<li><strong>Premium Bundling Rule:</strong> Institute a strict rule that any manager override/discount on products over â‚¹50K ideally requires an OSG attachment commitment.</li>`;
         if (worstStaff.length) html += `<li><strong>Targeted PIPs:</strong> Place <strong>${worstStaff.map(s => `${s.staff}`).join(', ')}</strong> on an accelerated 7-day OSG pitch improvement plan.</li>`;
         html += '<li><strong>Daily Morning Brief:</strong> Have branch managers physically review the "Customers Without OSG" dashboard list from yesterday\'s data before the store opens to identify missed pitch opportunities and contact customers via the WhatsApp quick-links.</li>';
         html += '</ol>';
@@ -6606,7 +6606,7 @@ function exportFutureStoresCSV() {
             });
         });
 
-        // Filter change Ã¢â€ â€™ re-render
+        // Filter change ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ re-render
         ['fsDashRBM', 'fsDashBDM', 'fsDashBranch', 'fsDashStaff'].forEach(id => {
             const el = $(id);
             if (el) el.addEventListener('change', () => renderFsExportDashboard(false));
@@ -6738,7 +6738,7 @@ function exportFutureStoresCSV() {
             const sR = grp.s.reduce((s, r) => s + r.soldPrice, 0);
 
             const lgPR = grp.p.reduce((s, r) => s + ((r.brand && r.brand.toUpperCase().includes('LG')) ? r.soldPrice : 0), 0);
-            const samsungAllowedCats = ['AC', 'MICROWAVE OVEN', 'REFRIGERATOR', 'WASHING MACHINE'];
+            const samsungAllowedCats = ['AC', 'MICROWAVE OVEN', 'REFRIGERATOR', 'WASHING MACHINE', 'TV'];
             const samPR = grp.p.reduce((s, r) => s + ((r.brand && r.brand.toUpperCase().includes('SAMSUNG') && r.product && samsungAllowedCats.includes(r.product.toUpperCase().trim())) ? r.soldPrice : 0), 0);
 
             const oConv = pR > 0 ? ((oR / pR) * 100).toFixed(2) : '0.00';
@@ -6805,7 +6805,7 @@ function exportFutureStoresCSV() {
             const sR = grp.s.reduce((s, r) => s + r.soldPrice, 0);
 
             const lgPR = grp.p.reduce((s, r) => s + ((r.brand && r.brand.toUpperCase().includes('LG')) ? r.soldPrice : 0), 0);
-            const samsungAllowedCats = ['AC', 'MICROWAVE OVEN', 'REFRIGERATOR', 'WASHING MACHINE'];
+            const samsungAllowedCats = ['AC', 'MICROWAVE OVEN', 'REFRIGERATOR', 'WASHING MACHINE', 'TV'];
             const samPR = grp.p.reduce((s, r) => s + ((r.brand && r.brand.toUpperCase().includes('SAMSUNG') && r.product && samsungAllowedCats.includes(r.product.toUpperCase().trim())) ? r.soldPrice : 0), 0);
 
             const oConv = pR > 0 ? ((oR / pR) * 100).toFixed(2) : '0.00';
@@ -6866,7 +6866,7 @@ function exportFutureStoresCSV() {
         // TAB 4: SAMSUNG (Group by Category)
         // ====================================================================
         const samProdGrp = {};
-        const samsungAllowedCats = ['AC', 'MICROWAVE OVEN', 'REFRIGERATOR', 'WASHING MACHINE'];
+        const samsungAllowedCats = ['AC', 'MICROWAVE OVEN', 'REFRIGERATOR', 'WASHING MACHINE', 'TV'];
         const pSam = fProduct.filter(r => r.brand && r.brand.toUpperCase().includes('SAMSUNG') && r.product && samsungAllowedCats.includes(r.product.toUpperCase().trim()));
         pSam.forEach(r => {
             const k = (r.product || 'Unknown').toUpperCase().trim();
@@ -7109,7 +7109,7 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
                 // Status colour
                 const onTrack = currentConv >= targetConv;
                 const statusColor = onTrack ? '#10b981' : (currentConv >= targetConv * 0.8 ? '#f59e0b' : '#ef4444');
-                const statusLabel = onTrack ? 'Ã°Å¸Å½Â¯ On Target!' : (daysLeft === 0 ? 'Ã¢â€ºâ€ Month Ended' : 'Ã¢Å¡Â Ã¯Â¸Â Behind Target');
+                const statusLabel = onTrack ? 'ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Â¯ On Target!' : (daysLeft === 0 ? 'ÃƒÂ¢Ã¢â‚¬ÂºÃ¢â‚¬Â Month Ended' : 'ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Behind Target');
 
                 // KPI cards
                 const kpiDefs = [
@@ -7231,7 +7231,7 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
                                     <td style="text-align:right;">${r.pQty.toLocaleString('en-IN')}</td>
                                     <td style="text-align:right;">${r.oQty.toLocaleString('en-IN')}</td>
                                     <td style="text-align:right;font-weight:700;color:${r.isOnTrack?'#10b981':'#ef4444'};">${r.conv.toFixed(1)}%</td>
-                                    <td style="text-align:right;color:${r.rbmGap>0?'#ef4444':'#10b981'};font-weight:600;">${r.rbmGap > 0 ? r.rbmGap.toLocaleString('en-IN') : 'Ã¢Å“â€œ Done'}</td>
+                                    <td style="text-align:right;color:${r.rbmGap>0?'#ef4444':'#10b981'};font-weight:600;">${r.rbmGap > 0 ? r.rbmGap.toLocaleString('en-IN') : 'ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Done'}</td>
                                     <td style="text-align:right;font-weight:700;color:${r.rbmDaily>0?'#f97316':'#10b981'};">${r.rbmDaily > 0 ? r.rbmDaily : '-'}</td>
                                     <td style="text-align:center;"><span style="padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:700;background:${r.isOnTrack?'rgba(16,185,129,0.12)':'rgba(239,68,68,0.12)'};color:${r.isOnTrack?'#10b981':'#ef4444'};">${r.isOnTrack?'On Track':'Behind'}</span></td>
                                 </tr>`).join('')}
@@ -7259,11 +7259,11 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
         // Expose globally so onclick attribute in HTML can call it
         window.renderForecastPage = renderForecastPage;
 
-        // Nav click — auto-render when switching to this page
+        // Nav click â€”Â auto-render when switching to this page
         var fcNavBtn = document.querySelector('[data-section="forecast-section"]');
         if (fcNavBtn) fcNavBtn.addEventListener('click', function() { setTimeout(renderForecastPage, 100); });
 
-        // Calculate button — use getElementById directly (most reliable)
+        // Calculate button â€”Â use getElementById directly (most reliable)
         var fcCalcBtn = document.getElementById('btnForecastCalc');
         if (fcCalcBtn) fcCalcBtn.addEventListener('click', renderForecastPage);
     })();
@@ -7351,7 +7351,7 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
     async function sendMessageToAI(userMessage) {
         var apiKey = localStorage.getItem('nova_ai_api_key');
         if (!apiKey) {
-            addMessage('I need an OpenRouter API Key to work. Click the ⚙️ Settings icon above to add it.', 'error');
+            addMessage('I need an OpenRouter API Key to work. Click the âš™ï¸ Settings icon above to add it.', 'error');
             return;
         }
         addMessage(userMessage, 'user');
