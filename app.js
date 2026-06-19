@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 // Analytics Portal ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Conversion Reports
 // Dual-file: Product Data + OSG Data
 // Value Conversion = OSG Sold Price / Product Sold Price
@@ -2681,6 +2681,70 @@
         }
     };
 
+    window.getLcSelectedBranches = function() {
+        if (!document.getElementById('lcBranchDropdown')) return null;
+        const cbs = document.querySelectorAll('.lc-branch-cb');
+        const selected = [];
+        cbs.forEach(cb => { if (cb.checked) selected.push(cb.value); });
+        if (selected.length === cbs.length || document.querySelector('#lcBranchDropdown input[value="ALL"]')?.checked) return null;
+        return selected;
+    };
+
+    window.toggleAllLcBranches = function(allCb) {
+        document.querySelectorAll('.lc-branch-cb').forEach(cb => cb.checked = allCb.checked);
+        window.updateLcBranchLabel();
+    };
+
+    window.updateLcBranchLabel = function() {
+        const cbs = Array.from(document.querySelectorAll('.lc-branch-cb'));
+        const allCb = document.querySelector('#lcBranchDropdown input[value="ALL"]');
+        const checked = cbs.filter(cb => cb.checked);
+        const label = document.getElementById('lcBranchLabel');
+        if (!label) return;
+        if (checked.length === cbs.length) {
+            if (allCb) allCb.checked = true;
+            label.textContent = "All Branches";
+        } else if (checked.length === 0) {
+            if (allCb) allCb.checked = false;
+            label.textContent = "None Selected";
+        } else {
+            if (allCb) allCb.checked = false;
+            label.textContent = checked.length + " Selected";
+        }
+    };
+
+    window.getTcSelectedBranches = function() {
+        if (!document.getElementById('tcBranchDropdown')) return null;
+        const cbs = document.querySelectorAll('.tc-branch-cb');
+        const selected = [];
+        cbs.forEach(cb => { if (cb.checked) selected.push(cb.value); });
+        if (selected.length === cbs.length || document.querySelector('#tcBranchDropdown input[value="ALL"]')?.checked) return null;
+        return selected;
+    };
+
+    window.toggleAllTcBranches = function(allCb) {
+        document.querySelectorAll('.tc-branch-cb').forEach(cb => cb.checked = allCb.checked);
+        window.updateTcBranchLabel();
+    };
+
+    window.updateTcBranchLabel = function() {
+        const cbs = Array.from(document.querySelectorAll('.tc-branch-cb'));
+        const allCb = document.querySelector('#tcBranchDropdown input[value="ALL"]');
+        const checked = cbs.filter(cb => cb.checked);
+        const label = document.getElementById('tcBranchLabel');
+        if (!label) return;
+        if (checked.length === cbs.length) {
+            if (allCb) allCb.checked = true;
+            label.textContent = "All Branches";
+        } else if (checked.length === 0) {
+            if (allCb) allCb.checked = false;
+            label.textContent = "None Selected";
+        } else {
+            if (allCb) allCb.checked = false;
+            label.textContent = checked.length + " Selected";
+        }
+    };
+
     // Close dropdown on click outside
     document.addEventListener('click', function(e) {
         const wrapper = document.getElementById('lcProductMultiWrapper');
@@ -2688,18 +2752,30 @@
             const dropdown = document.getElementById('lcProductDropdown');
             if(dropdown) dropdown.style.display = 'none';
         }
+
+        const lcBranchWrapper = document.getElementById('lcBranchMultiWrapper');
+        if (lcBranchWrapper && !lcBranchWrapper.contains(e.target)) {
+            const bDropdown = document.getElementById('lcBranchDropdown');
+            if (bDropdown) bDropdown.style.display = 'none';
+        }
+
+        const tcBranchWrapper = document.getElementById('tcBranchMultiWrapper');
+        if (tcBranchWrapper && !tcBranchWrapper.contains(e.target)) {
+            const tcDropdown = document.getElementById('tcBranchDropdown');
+            if (tcDropdown) tcDropdown.style.display = 'none';
+        }
     });
 
     // ---- LOW CONV STAFF LOGIC ----
     function buildStaffStats(selectedProducts = null) {
         // Build invoice -> {staff, product} lookup from ALL product data
         const invoiceData = {};
-        productData.forEach(r => { if (r.invoice) invoiceData[r.invoice] = { staff: r.staff || 'Unknown', product: r.name }; });
+        productData.forEach(r => { if (r.invoice) invoiceData[r.invoice] = { staff: r.staff || 'Unknown', product: r.category }; });
 
         // Group product data by staff
         const pByStaff = {};
         productData.forEach(r => {
-            if (selectedProducts && !selectedProducts.includes(r.name)) return;
+            if (selectedProducts && !selectedProducts.includes(r.category)) return;
             const s = r.staff || 'Unknown';
             if (!pByStaff[s]) pByStaff[s] = { branch: r.branch, rbm: r.rbm, bdm: r.bdm, rows: [] };
             pByStaff[s].rows.push(r);
@@ -2746,29 +2822,40 @@
         const minQty = parseFloat($('lcMinQty').value) || 0;
         const maxConv = parseFloat($('lcMaxConv').value);
         const minOsgQty = parseInt($('lcMinOsgQty').value) || 0;
+        const selectedBranches = window.getLcSelectedBranches();
         const selRBM = $('lcRBM').value;
         const selBDM = $('lcBDM').value;
 
-        const allStats = buildStaffStats();
+        const selectedProducts = window.getLcSelectedProducts();
+        const allStats = buildStaffStats(selectedProducts);
 
-        // Populate RBM dropdown (preserve selection)
+        // Populate dropdowns (preserve selection)
+        const branchSet = [...new Set(allStats.map(s => s.branch).filter(Boolean))].sort();
         const rbmSet = [...new Set(allStats.map(s => s.rbm).filter(Boolean))].sort();
         const bdmSet = [...new Set(allStats.map(s => s.bdm).filter(Boolean))].sort();
 
+        const branchDrop = $('lcBranchDropdown');
         const rbmEl = $('lcRBM');
         const bdmEl = $('lcBDM');
         const prevRBM = selRBM;
         const prevBDM = selBDM;
 
+        if (branchDrop) {
+            let bHtml = `<label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="ALL" ${!selectedBranches ? 'checked' : ''} onchange="window.toggleAllLcBranches(this)"> <strong>All Branches</strong></label><hr style="margin: 4px 0; border: none; border-top: 1px solid var(--border);">`;
+            bHtml += branchSet.map(b => `<label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="${b}" class="lc-branch-cb" ${!selectedBranches || selectedBranches.includes(b) ? 'checked' : ''} onchange="window.updateLcBranchLabel()"> ${b}</label>`).join('');
+            branchDrop.innerHTML = bHtml;
+            window.updateLcBranchLabel();
+        }
         rbmEl.innerHTML = '<option value="">All RBMs</option>' +
             rbmSet.map(r => `<option value="${r}" ${r === prevRBM ? 'selected' : ''}>${r}</option>`).join('');
         bdmEl.innerHTML = '<option value="">All BDMs</option>' +
             bdmSet.map(b => `<option value="${b}" ${b === prevBDM ? 'selected' : ''}>${b}</option>`).join('');
 
-        // Filter: minQty, maxConv, minOsgQty, optional RBM, optional BDM
+        // Filter: minQty, maxConv, minOsgQty, optional Branch, optional RBM, optional BDM
         const filtered = allStats
             .filter(s => s.pQty >= minQty && s.qtyConv <= maxConv)
             .filter(s => s.oQty >= minOsgQty)
+            .filter(s => !selectedBranches || selectedBranches.includes(s.branch))
             .filter(s => !selRBM || s.rbm === selRBM)
             .filter(s => !selBDM || s.bdm === selBDM)
             .sort((a, b) => {
@@ -2830,12 +2917,15 @@
         const minQty = parseFloat($('lcMinQty').value) || 0;
         const maxConv = parseFloat($('lcMaxConv').value);
         const minOsgQty = parseInt($('lcMinOsgQty').value) || 0;
+        const selectedBranches = window.getLcSelectedBranches();
         const selRBM = $('lcRBM').value;
         const selBDM = $('lcBDM').value;
-        const allStats = buildStaffStats();
+        const selectedProducts = window.getLcSelectedProducts();
+        const allStats = buildStaffStats(selectedProducts);
         const filtered = allStats
             .filter(s => s.pQty >= minQty && s.qtyConv <= maxConv)
             .filter(s => s.oQty >= minOsgQty)
+            .filter(s => !selectedBranches || selectedBranches.includes(s.branch))
             .filter(s => !selRBM || s.rbm === selRBM)
             .filter(s => !selBDM || s.bdm === selBDM)
             .sort((a, b) => a.qtyConv - b.qtyConv || b.pQty - a.pQty);
@@ -2867,14 +2957,23 @@
         const minQty = parseFloat($('tcMinQty').value) || 0;
         const sortBy = $('tcSortBy').value; // 'qtyConv' or 'valConv'
         const topN = parseInt($('tcTopN').value) || 50;
+        const selectedBranches = window.getTcSelectedBranches();
         const selRBM = $('tcRBM').value;
         const selBDM = $('tcBDM').value;
 
         const allStats = buildStaffStats();
 
         // Populate RBM and BDM dropdowns (preserve selection)
+        const branchSet = [...new Set(allStats.map(s => s.branch).filter(Boolean))].sort();
         const rbmSet = [...new Set(allStats.map(s => s.rbm).filter(Boolean))].sort();
         const bdmSet = [...new Set(allStats.map(s => s.bdm).filter(Boolean))].sort();
+        const branchDrop = $('tcBranchDropdown');
+        if (branchDrop) {
+            let bHtml = `<label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="ALL" ${!selectedBranches ? 'checked' : ''} onchange="window.toggleAllTcBranches(this)"> <strong>All Branches</strong></label><hr style="margin: 4px 0; border: none; border-top: 1px solid var(--border);">`;
+            bHtml += branchSet.map(b => `<label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="${b}" class="tc-branch-cb" ${!selectedBranches || selectedBranches.includes(b) ? 'checked' : ''} onchange="window.updateTcBranchLabel()"> ${b}</label>`).join('');
+            branchDrop.innerHTML = bHtml;
+            window.updateTcBranchLabel();
+        }
         $('tcRBM').innerHTML = '<option value="">All RBMs</option>' +
             rbmSet.map(r => `<option value="${r}" ${r === selRBM ? 'selected' : ''}>${r}</option>`).join('');
         $('tcBDM').innerHTML = '<option value="">All BDMs</option>' +
@@ -2954,11 +3053,13 @@
         const minQty = parseFloat($('tcMinQty').value) || 0;
         const sortBy = $('tcSortBy').value;
         const topN = parseInt($('tcTopN').value) || 50;
+        const selectedBranches = window.getTcSelectedBranches();
         const selRBM = $('tcRBM').value;
         const selBDM = $('tcBDM').value;
         const allStats = buildStaffStats();
         const filtered = allStats
             .filter(s => s.pQty >= minQty && s[sortBy] > 0)
+            .filter(s => !selectedBranches || selectedBranches.includes(s.branch))
             .filter(s => !selRBM || s.rbm === selRBM)
             .filter(s => !selBDM || s.bdm === selBDM)
             .sort((a, b) => {
@@ -3467,29 +3568,39 @@
         const minQty = parseFloat($('lcMinQty').value) || 0;
         const maxConv = parseFloat($('lcMaxConv').value);
         const minOsgQty = parseInt($('lcMinOsgQty').value) || 0;
+        const selectedBranches = window.getLcSelectedBranches();
         const selRBM = $('lcRBM').value;
         const selBDM = $('lcBDM').value;
 
         const allStats = buildStaffStats();
 
-        // Populate RBM dropdown (preserve selection)
+        // Populate dropdowns (preserve selection)
+        const branchSet = [...new Set(allStats.map(s => s.branch).filter(Boolean))].sort();
         const rbmSet = [...new Set(allStats.map(s => s.rbm).filter(Boolean))].sort();
         const bdmSet = [...new Set(allStats.map(s => s.bdm).filter(Boolean))].sort();
 
+        const branchDrop = $('lcBranchDropdown');
         const rbmEl = $('lcRBM');
         const bdmEl = $('lcBDM');
         const prevRBM = selRBM;
         const prevBDM = selBDM;
 
+        if (branchDrop) {
+            let bHtml = `<label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="ALL" ${!selectedBranches ? 'checked' : ''} onchange="window.toggleAllLcBranches(this)"> <strong>All Branches</strong></label><hr style="margin: 4px 0; border: none; border-top: 1px solid var(--border);">`;
+            bHtml += branchSet.map(b => `<label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="${b}" class="lc-branch-cb" ${!selectedBranches || selectedBranches.includes(b) ? 'checked' : ''} onchange="window.updateLcBranchLabel()"> ${b}</label>`).join('');
+            branchDrop.innerHTML = bHtml;
+            window.updateLcBranchLabel();
+        }
         rbmEl.innerHTML = '<option value="">All RBMs</option>' +
             rbmSet.map(r => `<option value="${r}" ${r === prevRBM ? 'selected' : ''}>${r}</option>`).join('');
         bdmEl.innerHTML = '<option value="">All BDMs</option>' +
             bdmSet.map(b => `<option value="${b}" ${b === prevBDM ? 'selected' : ''}>${b}</option>`).join('');
 
-        // Filter: minQty, maxConv, minOsgQty, optional RBM, optional BDM
+        // Filter: minQty, maxConv, minOsgQty, optional Branch, optional RBM, optional BDM
         const filtered = allStats
             .filter(s => s.pQty >= minQty && s.qtyConv <= maxConv)
             .filter(s => s.oQty >= minOsgQty)
+            .filter(s => !selectedBranches || selectedBranches.includes(s.branch))
             .filter(s => !selRBM || s.rbm === selRBM)
             .filter(s => !selBDM || s.bdm === selBDM)
             .sort((a, b) => {
@@ -3551,12 +3662,14 @@
         const minQty = parseFloat($('lcMinQty').value) || 0;
         const maxConv = parseFloat($('lcMaxConv').value);
         const minOsgQty = parseInt($('lcMinOsgQty').value) || 0;
+        const selectedBranches = window.getLcSelectedBranches();
         const selRBM = $('lcRBM').value;
         const selBDM = $('lcBDM').value;
         const allStats = buildStaffStats();
         const filtered = allStats
             .filter(s => s.pQty >= minQty && s.qtyConv <= maxConv)
             .filter(s => s.oQty >= minOsgQty)
+            .filter(s => !selectedBranches || selectedBranches.includes(s.branch))
             .filter(s => !selRBM || s.rbm === selRBM)
             .filter(s => !selBDM || s.bdm === selBDM)
             .sort((a, b) => a.qtyConv - b.qtyConv || b.pQty - a.pQty);
@@ -3588,22 +3701,32 @@
         const minQty = parseFloat($('tcMinQty').value) || 0;
         const sortBy = $('tcSortBy').value; // 'qtyConv' or 'valConv'
         const topN = parseInt($('tcTopN').value) || 50;
+        const selectedBranches = window.getTcSelectedBranches();
         const selRBM = $('tcRBM').value;
         const selBDM = $('tcBDM').value;
 
         const allStats = buildStaffStats();
 
         // Populate RBM and BDM dropdowns (preserve selection)
+        const branchSet = [...new Set(allStats.map(s => s.branch).filter(Boolean))].sort();
         const rbmSet = [...new Set(allStats.map(s => s.rbm).filter(Boolean))].sort();
         const bdmSet = [...new Set(allStats.map(s => s.bdm).filter(Boolean))].sort();
+        const branchDrop = $('tcBranchDropdown');
+        if (branchDrop) {
+            let bHtml = `<label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="ALL" ${!selectedBranches ? 'checked' : ''} onchange="window.toggleAllTcBranches(this)"> <strong>All Branches</strong></label><hr style="margin: 4px 0; border: none; border-top: 1px solid var(--border);">`;
+            bHtml += branchSet.map(b => `<label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="${b}" class="tc-branch-cb" ${!selectedBranches || selectedBranches.includes(b) ? 'checked' : ''} onchange="window.updateTcBranchLabel()"> ${b}</label>`).join('');
+            branchDrop.innerHTML = bHtml;
+            window.updateTcBranchLabel();
+        }
         $('tcRBM').innerHTML = '<option value="">All RBMs</option>' +
             rbmSet.map(r => `<option value="${r}" ${r === selRBM ? 'selected' : ''}>${r}</option>`).join('');
         $('tcBDM').innerHTML = '<option value="">All BDMs</option>' +
             bdmSet.map(b => `<option value="${b}" ${b === selBDM ? 'selected' : ''}>${b}</option>`).join('');
 
-        // Filter: must have >= minQty product qty AND conversion > 0, plus RBM/BDM filters
+        // Filter: must have >= minQty product qty AND conversion > 0, plus Branch/RBM/BDM filters
         const eligible = allStats
             .filter(s => s.pQty >= minQty && s[sortBy] > 0)
+            .filter(s => !selectedBranches || selectedBranches.includes(s.branch))
             .filter(s => !selRBM || s.rbm === selRBM)
             .filter(s => !selBDM || s.bdm === selBDM);
 
@@ -3675,11 +3798,13 @@
         const minQty = parseFloat($('tcMinQty').value) || 0;
         const sortBy = $('tcSortBy').value;
         const topN = parseInt($('tcTopN').value) || 50;
+        const selectedBranches = window.getTcSelectedBranches();
         const selRBM = $('tcRBM').value;
         const selBDM = $('tcBDM').value;
         const allStats = buildStaffStats();
         const filtered = allStats
             .filter(s => s.pQty >= minQty && s[sortBy] > 0)
+            .filter(s => !selectedBranches || selectedBranches.includes(s.branch))
             .filter(s => !selRBM || s.rbm === selRBM)
             .filter(s => !selBDM || s.bdm === selBDM)
             .sort((a, b) => {
