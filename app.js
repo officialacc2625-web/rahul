@@ -2962,7 +2962,21 @@
             return;
         }
         
-        const validStaffNames = new Set(filteredStaff.map(s => s.name));
+        // Sort worst staff first
+        filteredStaff.sort((a, b) => a.qtyConv - b.qtyConv || b.pQty - a.pQty);
+        
+        const maxStaffPerBranch = parseInt($('lcMaxStaffPerBranch')?.value) || 2;
+        const staffCounts = {};
+        const validStaffNames = new Set();
+        
+        for (const s of filteredStaff) {
+            if (!staffCounts[s.branch]) staffCounts[s.branch] = 0;
+            if (staffCounts[s.branch] < maxStaffPerBranch) {
+                staffCounts[s.branch]++;
+                validStaffNames.add(s.name);
+            }
+        }
+        
         const detailedMap = {};
         
         productData.forEach(r => {
