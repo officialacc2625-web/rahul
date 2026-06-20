@@ -2978,14 +2978,14 @@
         }
         
         const detailedMap = {};
+        const displayProduct = selectedProducts && selectedProducts.length > 0 ? selectedProducts.join(', ') : 'All Products';
         
         productData.forEach(r => {
             const s = r.staff || 'Unknown';
             if (!validStaffNames.has(s)) return;
             if (selectedProducts && !selectedProducts.includes(r.category)) return;
             
-            const cat = r.category || 'Unknown';
-            const key = s + '|||' + cat;
+            const key = s;
             
             if (!detailedMap[key]) {
                 detailedMap[key] = {
@@ -2993,7 +2993,7 @@
                     rbm: r.rbm || 'Unknown',
                     bdm: r.bdm || 'Unknown',
                     staff: s,
-                    product: cat,
+                    product: displayProduct,
                     pQty: 0,
                     oQty: 0,
                     lgOsgQty: 0,
@@ -3017,7 +3017,7 @@
             if (!validStaffNames.has(s)) return;
             if (selectedProducts && !selectedProducts.includes(cat)) return;
             
-            const key = s + '|||' + cat;
+            const key = s;
             if (detailedMap[key]) {
                 const qty = r.qty || 0;
                 detailedMap[key].oQty += qty;
@@ -3031,7 +3031,7 @@
         amcData.forEach(r => {
             const inv = r.invoice ? invoiceData[r.invoice] : null;
             if (!inv) return;
-            const key = inv.staff + '|||' + inv.product;
+            const key = inv.staff;
             if (detailedMap[key]) {
                 const qty = r.qty || 0;
                 detailedMap[key].lgOsgQty += qty;
@@ -3041,7 +3041,7 @@
         samsungData.forEach(r => {
             const inv = r.invoice ? invoiceData[r.invoice] : null;
             if (!inv) return;
-            const key = inv.staff + '|||' + inv.product;
+            const key = inv.staff;
             if (detailedMap[key]) {
                 const qty = r.qty || 0;
                 detailedMap[key].samsungOsgQty += qty;
