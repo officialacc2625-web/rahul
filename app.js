@@ -1531,13 +1531,13 @@
                     <td style="padding:10px 12px; border:1px solid #e2e8f0; font-weight:600;">Total Product Qty</td>
                     <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right;">${formatNumber(totalQty)}</td>
                     <td style="padding:10px 12px; border:1px solid #e2e8f0; font-weight:600;">Total Product Revenue</td>
-                    <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right;">â‚¹${fmtShortHtml(totalRev)}</td>
+                    <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right;">\u20B9${fmtShortHtml(totalRev)}</td>
                 </tr>
                 <tr>
                     <td style="padding:10px 12px; border:1px solid #e2e8f0; font-weight:600;">OSG Qty</td>
                     <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right;">${formatNumber(osgQty)}</td>
                     <td style="padding:10px 12px; border:1px solid #e2e8f0; font-weight:600;">OSG Revenue</td>
-                    <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right;">â‚¹${fmtShortHtml(osgRev)}</td>
+                    <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right;">\u20B9${fmtShortHtml(osgRev)}</td>
                 </tr>
                 <tr style="background:#f8fafc;">
                     <td style="padding:10px 12px; border:1px solid #e2e8f0; font-weight:600;">Qty Conversion</td>
@@ -1564,7 +1564,7 @@
                     <tr style="background:${i % 2 === 0 ? '#f8fafc' : '#fff'};">
                         <td style="padding:8px 12px; border:1px solid #e2e8f0; font-weight:600;">${name}</td>
                         <td style="padding:8px 12px; border:1px solid #e2e8f0; text-align:right;">${formatNumber(d.qty)}</td>
-                        <td style="padding:8px 12px; border:1px solid #e2e8f0; text-align:right;">â‚¹${fmtShortHtml(d.rev)}</td>
+                        <td style="padding:8px 12px; border:1px solid #e2e8f0; text-align:right;">\u20B9${fmtShortHtml(d.rev)}</td>
                     </tr>
                 `).join('')}
             </table>
@@ -1668,7 +1668,7 @@
             const kpiAmcConv = document.getElementById('kpiAmcConv');
 
             if (kpiAmcTotal) kpiAmcTotal.textContent = formatNumber(amcTotalQty);
-            if (kpiAmcSale) kpiAmcSale.textContent = 'â‚¹' + fmtShort(amcTotalSale);
+            if (kpiAmcSale) kpiAmcSale.textContent = '\u20B9' + fmtShort(amcTotalSale);
             if (kpiAmcWithout) kpiAmcWithout.textContent = formatNumber(withoutAmcQty);
             if (kpiAmcConv) kpiAmcConv.textContent = amcConvPct.toFixed(2) + '%';
         } else if (lgAmcKpiRow) {
@@ -1704,7 +1704,7 @@
             const kpiSamsungConv = document.getElementById('kpiSamsungConv');
 
             if (kpiSamsungTotal) kpiSamsungTotal.textContent = formatNumber(samsungOsgTotalQty);
-            if (kpiSamsungSale) kpiSamsungSale.textContent = 'â‚¹' + fmtShort(samsungOsgTotalSale);
+            if (kpiSamsungSale) kpiSamsungSale.textContent = '\u20B9' + fmtShort(samsungOsgTotalSale);
             if (kpiSamsungWithout) kpiSamsungWithout.textContent = formatNumber(withoutSamsungQty);
             if (kpiSamsungConv) kpiSamsungConv.textContent = samsungConvPct.toFixed(2) + '%';
         } else if (samsungKpiRow) {
@@ -1778,7 +1778,7 @@
         const elC = document.getElementById('prodKpiCategories');
         const elA = document.getElementById('prodKpiAvgConv');
         if (elQ) elQ.textContent = formatNumber(totalQty);
-        if (elR) elR.textContent = 'â‚¹' + fmtShort(totalRev);
+        if (elR) elR.textContent = '\u20B9' + fmtShort(totalRev);
         if (elC) elC.textContent = cats.length;
         if (elA) elA.textContent = avgConv.toFixed(2) + '%';
 
@@ -1811,7 +1811,7 @@
                 data: {
                     labels,
                     datasets: [{
-                        label: 'Revenue (â‚¹)',
+                        label: 'Revenue (\u20B9)',
                         data: revData,
                         backgroundColor: CHART_COLORS,
                         borderRadius: 6,
@@ -1822,9 +1822,9 @@
                     ...chartDefaults,
                     scales: {
                         x: { ticks: { color: '#94a3b8', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                        y: { ticks: { color: '#94a3b8', callback: v => 'â‚¹' + fmtShort(v) }, grid: { color: 'rgba(255,255,255,0.07)' } }
+                        y: { ticks: { color: '#94a3b8', callback: v => '\u20B9' + fmtShort(v) }, grid: { color: 'rgba(255,255,255,0.07)' } }
                     },
-                    plugins: { ...chartDefaults.plugins, tooltip: { callbacks: { label: ctx => 'â‚¹' + formatNumber(ctx.parsed.y) } } }
+                    plugins: { ...chartDefaults.plugins, tooltip: { callbacks: { label: ctx => '\u20B9' + formatNumber(ctx.parsed.y) } } }
                 }
             });
         }
@@ -1895,12 +1895,12 @@
                     ${c.name}
                 </td>
                 <td class="text-right">${formatNumber(c.pQty)}</td>
-                <td class="text-right">â‚¹${fmtShortHtml(c.pRev)}</td>
+                <td class="text-right">\u20B9${fmtShortHtml(c.pRev)}</td>
                 <td class="text-right">${formatNumber(c.oQty)}</td>
                 <td class="text-right">${fmtPct(c.osgConv)}</td>
                 <td class="text-right">${formatNumber(c.aQty)}</td>
                 <td class="text-right">${fmtPct(c.amcConv)}</td>
-                <td class="text-right">â‚¹${fmtShortHtml(c.avgPrice)}</td>
+                <td class="text-right">\u20B9${fmtShortHtml(c.avgPrice)}</td>
             </tr>
         `).join('');
     }
@@ -1993,7 +1993,7 @@
                 data: {
                     labels,
                     datasets: [{
-                        label: 'Total Revenue (â‚¹)',
+                        label: 'Total Revenue (\u20B9)',
                         data: revData,
                         borderColor: '#10b981',
                         backgroundColor: 'rgba(16,185,129,0.15)',
@@ -2005,11 +2005,11 @@
                     ...chartDefaults,
                     scales: {
                         ...chartDefaults.scales,
-                        y: { ...chartDefaults.scales.y, ticks: { ...chartDefaults.scales.y.ticks, callback: v => 'â‚¹' + fmtShort(v) } }
+                        y: { ...chartDefaults.scales.y, ticks: { ...chartDefaults.scales.y.ticks, callback: v => '\u20B9' + fmtShort(v) } }
                     },
                     plugins: {
                         ...chartDefaults.plugins,
-                        tooltip: { callbacks: { label: ctx => 'â‚¹' + formatNumber(ctx.parsed.y) } }
+                        tooltip: { callbacks: { label: ctx => '\u20B9' + formatNumber(ctx.parsed.y) } }
                     }
                 }
             });
@@ -2113,7 +2113,7 @@
                         ${pincodeAreaCache[grp.pincode] ? pincodeAreaCache[grp.pincode] : 'Loading...'}
                     </td>
                     <td class="text-right">${fmtNum(pQty)}</td>
-                    <td class="text-right">â‚¹${fmtShortHtml(pRev)}</td>
+                    <td class="text-right">\u20B9${fmtShortHtml(pRev)}</td>
                     <td class="text-right">${fmtNum(oQty)}</td>
                     <td class="text-right">${fmtPct(osgQtyC)}</td>
                     <td class="text-right">${fmtNum(aQty)}</td>
@@ -6411,7 +6411,7 @@ function exportFutureStoresCSV() {
                 const name = (r.customerName || 'Customer').split(' ')[0];
                 const prod = r.product || 'your product';
                 const inv = r.invoice || '';
-                const val = r.soldPrice && r.soldPrice > 0 ? ' (worth â‚¹' + r.soldPrice.toLocaleString('en-IN') + ')' : '';
+                const val = r.soldPrice && r.soldPrice > 0 ? ' (worth \u20B9' + r.soldPrice.toLocaleString('en-IN') + ')' : '';
                 const msg = 'Dear ' + name + ',\n\nGreetings from myG ÃƒÂ°Ã…Â¸Ã‹Å“Ã…Â \n\nThank you for your recent purchase of *' + prod + '*' + val + ' (Invoice: ' + inv + ').\n\n We noticed your purchase does not yet include an *OSG Extended Warranty* plan. OSG covers:\n\nÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Extended protection beyond manufacturer warranty\nÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Free doorstep repair service\nÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Zero hidden charges\nÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Instant claim processing\n\nSecuring your device takes just a minute â€”Â and gives you complete peace of mind! \n\nWould you be interested? Reply *YES* and we will take care of everything.\n\nWarm regards,\nmyG Team';
                 return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
             })()}" target="_blank" title="WhatsApp (English)" style="color:#25D366;display:flex;padding:5px;border-radius:50%;background:rgba(37,211,102,0.12);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>` : ''}
@@ -6420,7 +6420,7 @@ function exportFutureStoresCSV() {
                 const name = (r.customerName || 'Customer').split(' ')[0];
                 const prod = r.product || 'your product';
                 const inv = r.invoice || '';
-                const priceStr = r.soldPrice && r.soldPrice > 0 ? ' (â‚¹' + r.soldPrice.toLocaleString('en-IN') + ')' : '';
+                const priceStr = r.soldPrice && r.soldPrice > 0 ? ' (\u20B9' + r.soldPrice.toLocaleString('en-IN') + ')' : '';
                 const msgML = '\u0d2a\u0d4d\u0d30\u0d3f\u0d2f ' + name + ',\n\nmyG-\u0d7d \u0d28\u0d3f\u0d28\u0d4d\u0d28\u0d41\u0d33\u0d4d\u0d33 \u0d06\u0d36\u0d02\u0d38\u0d15\u0d7e\n\n\u0d28\u0d3f\u0d19\u0d4d\u0d19\u0d7e \u0d05\u0d1f\u0d41\u0d24\u0d4d\u0d24\u0d3f\u0d1f\u0d46 \u0d35\u0d3e\u0d19\u0d4d\u0d19\u0d3f\u0d2f ' + prod + priceStr + ' \u0d28\u0d4d \u0d28\u0d28\u0d4d\u0d26\u0d3f. (\u0d07\u0d7b\u0d35\u0d4b\u0d2f\u0d4d\u0d38\u0d4d: ' + inv + ').\n\n \u0d28\u0d3f\u0d19\u0d4d\u0d19\u0d33\u0d41\u0d1f\u0d46 \u0d2a\u0d7c\u0d1a\u0d4d\u0d1a\u0d47\u0d38\u0d3f\u0d7d \u0d07\u0d24\u0d41\u0d35\u0d30\u0d46 OSG \u0d0e\u0d15\u0d4d\u0d38\u0d4d\u0d31\u0d4d\u0d1f\u0d7b\u0d21\u0d21\u0d4d \u0d35\u0d3e\u0d31\u0d7b\u0d4d\u0d31\u0d3f \u0d2a\u0d4d\u0d32\u0d3e\u0d7b \u0d09\u0d7e\u0d2a\u0d4d\u0d2a\u0d46\u0d1f\u0d41\u0d24\u0d4d\u0d24\u0d3f\u0d2f\u0d3f\u0d1f\u0d4d\u0d1f\u0d3f\u0d32\u0d4d\u0d32 \u0d0e\u0d28\u0d4d\u0d28\u0d4d \u0d1e\u0d19\u0d4d\u0d19\u0d7e \u0d36\u0d4d\u0d30\u0d26\u0d4d\u0d27\u0d3f\u0d1a\u0d4d\u0d1a\u0d41. OSG \u0d35\u0d34\u0d3f \u0d28\u0d3f\u0d19\u0d4d\u0d19\u0d7e\u0d15\u0d4d\u0d15\u0d4d \u0d32\u0d2d\u0d3f\u0d15\u0d4d\u0d15\u0d41\u0d28\u0d4d\u0d28\u0d24\u0d4d:\n\u0d28\u0d3f\u0d19\u0d4d\u0d19\u0d7e\u0d15\u0d4d\u0d15\u0d4d \u0d24\u0d3e\u0d32\u0d4d\u0d2a\u0d30\u0d4d\u0d2f\u0d2e\u0d41\u0d23\u0d4d\u0d1f\u0d4b? YES \u0d0e\u0d28\u0d4d\u0d28\u0d4d \u0d2e\u0d31\u0d41\u0d2a\u0d1f\u0d3f \u0d28\u0d7d\u0d15\u0d41\u0d15, \u0d2c\u0d3e\u0d15\u0d4d\u0d15\u0d3f \u0d15\u0d3e\u0d30\u0d4d\u0d2f\u0d19\u0d4d\u0d19\u0d7e \u0d1e\u0d19\u0d4d\u0d19\u0d7e \u0d1a\u0d46\u0d2f\u0d4d\u0d24\u0d41 \u0d24\u0d30\u0d3e\u0d02.\n\n\u0d38\u0d4d\u0d28\u0d47\u0d39\u0d24\u0d4d\u0d24\u0d4b\u0d1f\u0d46,\n\u0d1f\u0d40\u0d02 myG';
                 return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msgML);
             })()}" target="_blank" title="WhatsApp (Malayalam)" style="color:#25D366;display:flex;padding:3px 6px;border-radius:12px;background:rgba(37,211,102,0.12);font-size:0.75rem;font-weight:700;text-decoration:none;align-items:center;">ML</a>` : ''}
@@ -6548,7 +6548,7 @@ function exportFutureStoresCSV() {
                                 baseStyle = { ...baseStyle, font: { color: { rgb: "9A3412" }, bold: true }, fill: { fgColor: { rgb: "FEF08A" } } };
                             }
                         } else if (isCurrencyCol) {
-                            baseStyle.z = '"â‚¹"#,##0'; // No decimals
+                            baseStyle.z = '"\u20B9"#,##0'; // No decimals
                         } else {
                             baseStyle.z = '#,##0'; // Commas, no decimals
                         }
@@ -6575,19 +6575,19 @@ function exportFutureStoresCSV() {
         arr.forEach(r => { const k = r[key] || 'Unknown'; if (!m[k]) m[k] = []; m[k].push(r); });
         return m;
     }
-    function formatCurrency(n) { return 'â‚¹' + n.toLocaleString('en-IN', { maximumFractionDigits: 0 }); }
+    function formatCurrency(n) { return '\u20B9' + n.toLocaleString('en-IN', { maximumFractionDigits: 0 }); }
     function fmtShort(n) {
-        if (Math.abs(n) >= 1e7) return 'â‚¹' + (n / 1e7).toFixed(1) + 'Cr';
-        if (Math.abs(n) >= 1e5) return 'â‚¹' + (n / 1e5).toFixed(1) + 'L';
-        if (Math.abs(n) >= 1e3) return 'â‚¹' + (n / 1e3).toFixed(1) + 'K';
-        return 'â‚¹' + n.toFixed(0);
+        if (Math.abs(n) >= 1e7) return '\u20B9' + (n / 1e7).toFixed(1) + 'Cr';
+        if (Math.abs(n) >= 1e5) return '\u20B9' + (n / 1e5).toFixed(1) + 'L';
+        if (Math.abs(n) >= 1e3) return '\u20B9' + (n / 1e3).toFixed(1) + 'K';
+        return '\u20B9' + n.toFixed(0);
     }
             function fmtShortHtml(n) {
-        return '<span title="â‚¹' + Number(n).toLocaleString('en-IN') + '" style="cursor:help; border-bottom:1px dotted #94a3b8;">' + fmtShort(n) + '</span>';
+        return '<span title="\u20B9' + Number(n).toLocaleString('en-IN') + '" style="cursor:help; border-bottom:1px dotted #94a3b8;">' + fmtShort(n) + '</span>';
     }
     function formatNumber(n) { return n.toLocaleString('en-IN'); }
     function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
-    function truncate(s, len) { return s.length > len ? s.substring(0, len) + 'ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦' : s; }
+    function truncate(s, len) { return s.length > len ? s.substring(0, len) + '...' : s; }
     function showLoading(show) { loadingOverlay.classList.toggle('active', show); }
     function q(s) { return '"' + (s || '').replace(/"/g, '""') + '"'; }
 
@@ -6679,7 +6679,7 @@ function exportFutureStoresCSV() {
             reasonHTML += `<li><strong>Systemic Branch Failure (${worstBranches[0].branch}):</strong> Conversion is near zero (${worstBranches[0].conv.toFixed(1)}%) despite moving ${worstBranches[0].pQ} units. This indicates a store-wide knowledge gap or a leadership failure to enforce pitching at the POS, rather than individual poor performance.</li>`;
         }
         if (premiumMisses.length >= 2) {
-            reasonHTML += `<li><strong>Premium Pitch Avoidance:</strong> Found multiple premium devices > â‚¹50K sold with no OSG attached. Sales reps might be avoiding the OSG pitch on high-ticket items out of fear of losing the primary sale due to total cart value shock.</li>`;
+            reasonHTML += `<li><strong>Premium Pitch Avoidance:</strong> Found multiple premium devices > \u20B950K sold with no OSG attached. Sales reps might be avoiding the OSG pitch on high-ticket items out of fear of losing the primary sale due to total cart value shock.</li>`;
         }
         const topPerformers = staffStats.filter(s => s.conv > 20);
         if (topPerformers.length > 0 && worstStaff.length > 0) {
@@ -6698,7 +6698,7 @@ function exportFutureStoresCSV() {
         html += '<h3 style="margin-top:0; color:var(--primary); display:flex; align-items:center; gap:8px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Immediate Action Plan</h3>';
         html += '<ol style="margin:8px 0 0 24px; color:var(--text-muted); line-height:1.8;">';
         if (worstBranches.length) html += `<li><strong>RBM/BDM Intercept:</strong> Immediately deploy regional trainers to ${worstBranches.map(b => `<strong>${b.branch}</strong>`).join(', ')} for POS floor shadowing.</li>`;
-        if (premiumMisses.length) html += `<li><strong>Premium Bundling Rule:</strong> Institute a strict rule that any manager override/discount on products over â‚¹50K ideally requires an OSG attachment commitment.</li>`;
+        if (premiumMisses.length) html += `<li><strong>Premium Bundling Rule:</strong> Institute a strict rule that any manager override/discount on products over \u20B950K ideally requires an OSG attachment commitment.</li>`;
         if (worstStaff.length) html += `<li><strong>Targeted PIPs:</strong> Place <strong>${worstStaff.map(s => `${s.staff}`).join(', ')}</strong> on an accelerated 7-day OSG pitch improvement plan.</li>`;
         html += '<li><strong>Daily Morning Brief:</strong> Have branch managers physically review the "Customers Without OSG" dashboard list from yesterday\'s data before the store opens to identify missed pitch opportunities and contact customers via the WhatsApp quick-links.</li>';
         html += '</ol>';
