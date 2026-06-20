@@ -3280,7 +3280,7 @@
         let html = '';
 
         // ---- Card 1: Overall Summary ----
-        html += insightCard('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…Â ', 'Overall Performance Summary', 'info', `
+        html += insightCard('ðŸ“Š', 'Overall Performance Summary', 'info', `
             <div class="insight-metrics">
                 <div class="insight-metric"><span class="metric-val">${formatNumber(productData.length)}</span><span class="metric-label">Total Transactions</span></div>
                 <div class="insight-metric"><span class="metric-val">${totalStaff}</span><span class="metric-label">Active Staff</span></div>
@@ -3296,7 +3296,7 @@
             const zeroTotalQty = zeroConvStaff.reduce((s, r) => s + r.pQty, 0);
             const zeroTotalRev = zeroConvStaff.reduce((s, r) => s + r.pRev, 0);
             const topZero = zeroConvStaff.sort((a, b) => b.pQty - a.pQty).slice(0, 5);
-            html += insightCard('', `Zero Conversion Alert ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ${zeroConvStaff.length} Staff`, 'danger', `
+            html += insightCard('', `Zero Conversion Alert – ${zeroConvStaff.length} Staff`, 'danger', `
                 <p><strong>${zeroConvStaff.length} staff</strong> have sold <strong>${formatNumber(zeroTotalQty)} products</strong> (${fmtShortHtml(zeroTotalRev)} revenue) but <strong>zero OSG/warranty conversion</strong>.</p>
                 <div class="insight-tag-row">
                     ${topZero.map(s => `<span class="insight-tag danger">${s.name} (${s.pQty} qty)</span>`).join('')}
@@ -3310,7 +3310,7 @@
 
         // ---- Card 3: Top Performers ----
         if (topQty.length > 0) {
-            html += insightCard('Ãƒâ€šÃ‚Â ', 'Top Performers ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Best Qty Conversion', 'success', `
+            html += insightCard(' ', 'Top Performers – Best Qty Conversion', 'success', `
                 <div class="insight-list">
                     ${topQty.map((s, i) => `
                         <div class="insight-list-item">
@@ -3682,271 +3682,6 @@
 
             return { name: displayName, branch, rbm, bdm, pQty, oQty, pRev, oRev, qtyConv, valConv, products };
         });
-    }
-    function renderLowConvPage() {
-        if (productData.length === 0) {
-            $('lcTableWrapper').innerHTML = noDataHTML('Upload data and generate reports first.');
-            $('lcKpiRow').innerHTML = '';
-            $('lcCount').textContent = '0 staff';
-            return;
-        }
-
-        const minQty = parseFloat($('lcMinQty').value) || 0;
-        const maxConv = parseFloat($('lcMaxConv').value);
-        const minOsgQty = parseInt($('lcMinOsgQty').value) || 0;
-        const selectedBranches = window.getLcSelectedBranches();
-        const selRBM = $('lcRBM').value;
-        const selBDM = $('lcBDM').value;
-
-        const allStats = buildStaffStats();
-
-        // Populate dropdowns (preserve selection)
-        const branchSet = [...new Set(allStats.map(s => s.branch).filter(Boolean))].sort();
-        const rbmSet = [...new Set(allStats.map(s => s.rbm).filter(Boolean))].sort();
-        const bdmSet = [...new Set(allStats.map(s => s.bdm).filter(Boolean))].sort();
-
-        const branchDrop = $('lcBranchDropdown');
-        const rbmEl = $('lcRBM');
-        const bdmEl = $('lcBDM');
-        const prevRBM = selRBM;
-        const prevBDM = selBDM;
-
-        if (branchDrop) {
-            let bHtml = `<label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="ALL" ${!selectedBranches ? 'checked' : ''} onchange="window.toggleAllLcBranches(this)"> <strong>All Branches</strong></label><hr style="margin: 4px 0; border: none; border-top: 1px solid var(--border);">`;
-            bHtml += branchSet.map(b => `<label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="${b}" class="lc-branch-cb" ${!selectedBranches || selectedBranches.includes(b) ? 'checked' : ''} onchange="window.updateLcBranchLabel()"> ${b}</label>`).join('');
-            branchDrop.innerHTML = bHtml;
-            window.updateLcBranchLabel();
-        }
-        rbmEl.innerHTML = '<option value="">All RBMs</option>' +
-            rbmSet.map(r => `<option value="${r}" ${r === prevRBM ? 'selected' : ''}>${r}</option>`).join('');
-        bdmEl.innerHTML = '<option value="">All BDMs</option>' +
-            bdmSet.map(b => `<option value="${b}" ${b === prevBDM ? 'selected' : ''}>${b}</option>`).join('');
-
-        // Filter: minQty, maxConv, minOsgQty, optional Branch, optional RBM, optional BDM
-        const filtered = allStats
-            .filter(s => s.pQty >= minQty && s.qtyConv <= maxConv)
-            .filter(s => s.oQty >= minOsgQty)
-            .filter(s => !selectedBranches || selectedBranches.includes(s.branch))
-            .filter(s => !selRBM || s.rbm === selRBM)
-            .filter(s => !selBDM || s.bdm === selBDM)
-            .sort((a, b) => {
-                if (a.qtyConv !== b.qtyConv) return a.qtyConv - b.qtyConv;
-                return b.pQty - a.pQty;
-            });
-
-        $('lcCount').textContent = `${filtered.length} staff`;
-
-        // KPI summary
-        const totalPQty = filtered.reduce((s, r) => s + r.pQty, 0);
-        const totalOQty = filtered.reduce((s, r) => s + r.oQty, 0);
-        const totalPRev = filtered.reduce((s, r) => s + r.pRev, 0);
-        const zeroConvCount = filtered.filter(r => r.qtyConv === 0).length;
-        $('lcKpiRow').innerHTML = `
-            <div class="lc-kpi"><span class="lc-kpi-label">Zero Conv Staff</span><span class="lc-kpi-val loss-text">${zeroConvCount}</span></div>
-            <div class="lc-kpi"><span class="lc-kpi-label">Total Product Qty</span><span class="lc-kpi-val">${formatNumber(totalPQty)}</span></div>
-            <div class="lc-kpi"><span class="lc-kpi-label">Total OSG Qty (Sold)</span><span class="lc-kpi-val">${formatNumber(totalOQty)}</span></div>
-            <div class="lc-kpi"><span class="lc-kpi-label">Opportunity Missed (Qty)</span><span class="lc-kpi-val loss-text">${formatNumber(totalPQty - totalOQty)}</span></div>
-            <div class="lc-kpi"><span class="lc-kpi-label">Total Product Revenue</span><span class="lc-kpi-val">${fmtShortHtml(totalPRev)}</span></div>
-        `;
-
-        if (filtered.length === 0) {
-            $('lcTableWrapper').innerHTML = noDataHTML(`No staff found with â‰¥${minQty} product qty and ÃƒÂ¢Ã¢â‚¬Â°Ã‚Â¤${maxConv}% qty conversion.`);
-            return;
-        }
-
-        let html = `<table class="data-table">
-            <thead><tr>
-                <th>#</th><th>Staff</th><th>Branch</th><th>RBM</th><th>BDM</th>
-                <th>Prod Qty</th><th>OSG Qty</th><th>Qty Conv%</th><th>Val Conv%</th><th>Prod Rev</th>
-            </tr></thead><tbody>`;
-
-        filtered.forEach((e, i) => {
-            const convCls = e.qtyConv === 0 ? 'loss-val' : (e.qtyConv < 0.5 ? 'conv-warn' : 'conv-val');
-            const rank = i + 1;
-            const rankBadge = rank <= 3 ? `<span class="rank-badge rank-${rank}">${rank}</span>` : `<span class="rank-num">${rank}</span>`;
-            const dlIcon = `<button onclick="window.downloadStaffDetails('${e.name}', '${e.branch}')" title="Download Staff Details" style="background:none;border:none;cursor:pointer;color:var(--primary);padding:0;margin-left:8px;vertical-align:middle;display:inline-flex;align-items:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>`;
-            html += `<tr>
-                <td class="number-cell">${rankBadge}</td>
-                <td style="white-space:nowrap;"><strong>${e.name}</strong>${dlIcon}</td>
-                <td>${e.branch}</td>
-                <td>${e.rbm}</td>
-                <td>${e.bdm}</td>
-                <td class="number-cell"><strong>${e.pQty}</strong></td>
-                <td class="number-cell">${e.oQty}</td>
-                <td class="number-cell ${convCls}">${e.qtyConv.toFixed(2)}%</td>
-                <td class="number-cell conv-val">${e.valConv.toFixed(2)}%</td>
-                <td class="number-cell">${fmtShortHtml(e.pRev)}</td>
-            </tr>`;
-        });
-
-        html += '</tbody></table>';
-        $('lcTableWrapper').innerHTML = html;
-    }
-
-    function exportLowConvCSV() {
-        if (productData.length === 0) return;
-        const minQty = parseFloat($('lcMinQty').value) || 0;
-        const maxConv = parseFloat($('lcMaxConv').value);
-        const minOsgQty = parseInt($('lcMinOsgQty').value) || 0;
-        const selectedBranches = window.getLcSelectedBranches();
-        const selRBM = $('lcRBM').value;
-        const selBDM = $('lcBDM').value;
-        const allStats = buildStaffStats();
-        const filtered = allStats
-            .filter(s => s.pQty >= minQty && s.qtyConv <= maxConv)
-            .filter(s => s.oQty >= minOsgQty)
-            .filter(s => !selectedBranches || selectedBranches.includes(s.branch))
-            .filter(s => !selRBM || s.rbm === selRBM)
-            .filter(s => !selBDM || s.bdm === selBDM)
-            .sort((a, b) => a.qtyConv - b.qtyConv || b.pQty - a.pQty);
-        if (filtered.length === 0) return;
-        const hdr = ['Rank', 'Staff', 'Branch', 'RBM', 'BDM', 'Prod Qty', 'OSG Qty', 'Qty Conv%', 'Val Conv%', 'Prod Revenue'];
-        const data = filtered.map((e, i) => [
-            i + 1, e.name, e.branch, e.rbm, e.bdm, e.pQty, e.oQty,
-            parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2)), Math.round(e.pRev)
-        ]);
-        exportToStyledExcel(data, hdr, 'low_conv_staff.xlsx', 'Low Conversion Staff');
-    }
-
-
-    // ---- TOP CONV STAFF PAGE ----
-    $('btnTCRefresh').addEventListener('click', renderTopConvPage);
-    $('btnTCExport').addEventListener('click', exportTopConvCSV);
-    document.querySelector('[data-section="topconv-section"]').addEventListener('click', () => {
-        setTimeout(renderTopConvPage, 50);
-    });
-
-    function renderTopConvPage() {
-        if (productData.length === 0) {
-            $('tcTableWrapper').innerHTML = noDataHTML('Upload data and generate reports first.');
-            $('tcKpiRow').innerHTML = '';
-            $('tcCount').textContent = '0 staff';
-            return;
-        }
-
-        const minQty = parseFloat($('tcMinQty').value) || 0;
-        const sortBy = $('tcSortBy').value; // 'qtyConv' or 'valConv'
-        const topN = parseInt($('tcTopN').value) || 50;
-        const selectedBranches = window.getTcSelectedBranches();
-        const selRBM = $('tcRBM').value;
-        const selBDM = $('tcBDM').value;
-
-        const allStats = buildStaffStats();
-
-        // Populate RBM and BDM dropdowns (preserve selection)
-        const branchSet = [...new Set(allStats.map(s => s.branch).filter(Boolean))].sort();
-        const rbmSet = [...new Set(allStats.map(s => s.rbm).filter(Boolean))].sort();
-        const bdmSet = [...new Set(allStats.map(s => s.bdm).filter(Boolean))].sort();
-        const branchDrop = $('tcBranchDropdown');
-        if (branchDrop) {
-            let bHtml = `<label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="ALL" ${!selectedBranches ? 'checked' : ''} onchange="window.toggleAllTcBranches(this)"> <strong>All Branches</strong></label><hr style="margin: 4px 0; border: none; border-top: 1px solid var(--border);">`;
-            bHtml += branchSet.map(b => `<label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="${b}" class="tc-branch-cb" ${!selectedBranches || selectedBranches.includes(b) ? 'checked' : ''} onchange="window.updateTcBranchLabel()"> ${b}</label>`).join('');
-            branchDrop.innerHTML = bHtml;
-            window.updateTcBranchLabel();
-        }
-        $('tcRBM').innerHTML = '<option value="">All RBMs</option>' +
-            rbmSet.map(r => `<option value="${r}" ${r === selRBM ? 'selected' : ''}>${r}</option>`).join('');
-        $('tcBDM').innerHTML = '<option value="">All BDMs</option>' +
-            bdmSet.map(b => `<option value="${b}" ${b === selBDM ? 'selected' : ''}>${b}</option>`).join('');
-
-        // Filter: must have >= minQty product qty AND conversion > 0, plus Branch/RBM/BDM filters
-        const eligible = allStats
-            .filter(s => s.pQty >= minQty && s[sortBy] > 0)
-            .filter(s => !selectedBranches || selectedBranches.includes(s.branch))
-            .filter(s => !selRBM || s.rbm === selRBM)
-            .filter(s => !selBDM || s.bdm === selBDM);
-
-        // Sort: primarily by absolute OSG volume (OSG Qty or OSG Revenue)
-        // This ensures staff with the highest actual number of conversions are at the top,
-        // which naturally requires both high Product Qty and high Conversion %.
-        const filtered = eligible
-            .sort((a, b) => {
-                const volA = sortBy === 'qtyConv' ? a.oQty : a.oRev;
-                const volB = sortBy === 'qtyConv' ? b.oQty : b.oRev;
-                if (volB !== volA) return volB - volA; // Highest OSG volume first
-                return b[sortBy] - a[sortBy];          // Tie-breaker: highest conversion %
-            })
-            .slice(0, topN);
-
-        $('tcCount').textContent = `${filtered.length} staff`;
-
-        // KPI summary
-        const avgQtyConv = filtered.length > 0 ? filtered.reduce((s, r) => s + r.qtyConv, 0) / filtered.length : 0;
-        const avgValConv = filtered.length > 0 ? filtered.reduce((s, r) => s + r.valConv, 0) / filtered.length : 0;
-        const totalOQty = filtered.reduce((s, r) => s + r.oQty, 0);
-        const totalORev = filtered.reduce((s, r) => s + r.oRev, 0);
-        const totalPRev = filtered.reduce((s, r) => s + r.pRev, 0);
-        $('tcKpiRow').innerHTML = `
-            <div class="lc-kpi"><span class="lc-kpi-label">Avg Qty Conv</span><span class="lc-kpi-val profit-text">${avgQtyConv.toFixed(2)}%</span></div>
-            <div class="lc-kpi"><span class="lc-kpi-label">Avg Val Conv</span><span class="lc-kpi-val profit-text">${avgValConv.toFixed(2)}%</span></div>
-            <div class="lc-kpi"><span class="lc-kpi-label">Total OSG Qty</span><span class="lc-kpi-val">${formatNumber(totalOQty)}</span></div>
-            <div class="lc-kpi"><span class="lc-kpi-label">Total OSG Revenue</span><span class="lc-kpi-val">${fmtShortHtml(totalORev)}</span></div>
-            <div class="lc-kpi"><span class="lc-kpi-label">Total Prod Revenue</span><span class="lc-kpi-val">${fmtShortHtml(totalPRev)}</span></div>
-        `;
-
-        if (filtered.length === 0) {
-            $('tcTableWrapper').innerHTML = noDataHTML('No staff found matching criteria.');
-            return;
-        }
-
-        const sortLabel = sortBy === 'qtyConv' ? 'Qty Conv%' : 'Val Conv%';
-        let html = `<table class="data-table">
-            <thead><tr>
-                <th>#</th><th>Staff</th><th>Branch</th><th>RBM</th><th>BDM</th>
-                <th>Prod Qty</th><th>OSG Qty</th><th>Qty Conv%</th><th>Val Conv%</th><th>Prod Rev</th><th>OSG Rev</th>
-            </tr></thead><tbody>`;
-
-        filtered.forEach((e, i) => {
-            const rank = i + 1;
-            const rankBadge = rank <= 3 ? `<span class="rank-badge rank-${rank}">${rank}</span>` : `<span class="rank-num">${rank}</span>`;
-            const dlIcon = `<button onclick="window.downloadStaffDetails('${e.name}', '${e.branch}')" title="Download Staff Details" style="background:none;border:none;cursor:pointer;color:var(--primary);padding:0;margin-left:8px;vertical-align:middle;display:inline-flex;align-items:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>`;
-            html += `<tr>
-                <td class="number-cell">${rankBadge}</td>
-                <td style="white-space:nowrap;"><strong>${e.name}</strong>${dlIcon}</td>
-                <td>${e.branch}</td>
-                <td>${e.rbm}</td>
-                <td>${e.bdm}</td>
-                <td class="number-cell">${e.pQty}</td>
-                <td class="number-cell"><strong>${e.oQty}</strong></td>
-                <td class="number-cell profit-val">${e.qtyConv.toFixed(2)}%</td>
-                <td class="number-cell profit-val">${e.valConv.toFixed(2)}%</td>
-                <td class="number-cell">${fmtShortHtml(e.pRev)}</td>
-                <td class="number-cell">${fmtShortHtml(e.oRev)}</td>
-            </tr>`;
-        });
-
-        html += '</tbody></table>';
-        $('tcTableWrapper').innerHTML = html;
-    }
-
-    function exportTopConvCSV() {
-        if (productData.length === 0) return;
-        const minQty = parseFloat($('tcMinQty').value) || 0;
-        const sortBy = $('tcSortBy').value;
-        const topN = parseInt($('tcTopN').value) || 50;
-        const selectedBranches = window.getTcSelectedBranches();
-        const selRBM = $('tcRBM').value;
-        const selBDM = $('tcBDM').value;
-        const allStats = buildStaffStats();
-        const filtered = allStats
-            .filter(s => s.pQty >= minQty && s[sortBy] > 0)
-            .filter(s => !selectedBranches || selectedBranches.includes(s.branch))
-            .filter(s => !selRBM || s.rbm === selRBM)
-            .filter(s => !selBDM || s.bdm === selBDM)
-            .sort((a, b) => {
-                const volA = sortBy === 'qtyConv' ? a.oQty : a.oRev;
-                const volB = sortBy === 'qtyConv' ? b.oQty : b.oRev;
-                if (volB !== volA) return volB - volA; // Highest OSG volume first
-                return b[sortBy] - a[sortBy];          // Tie-breaker: highest conversion %
-            })
-            .slice(0, topN);
-        if (filtered.length === 0) return;
-        const hdr = ['Rank', 'Staff', 'Branch', 'RBM', 'BDM', 'Prod Qty', 'OSG Qty', 'Qty Conv%', 'Val Conv%', 'Prod Revenue', 'OSG Revenue'];
-        const data = filtered.map((e, i) => [
-            i + 1, e.name, e.branch, e.rbm, e.bdm, e.pQty, e.oQty,
-            parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2)), Math.round(e.pRev), Math.round(e.oRev)
-        ]);
-        exportToStyledExcel(data, hdr, 'top_conv_staff.xlsx', 'Top Conversion Staff');
     }
 
     // ---- DEEP INSIGHTS PAGE ----
