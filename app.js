@@ -2551,6 +2551,7 @@
     // ---- LOW CONV STAFF PAGE ----
     $('btnLCRefresh').addEventListener('click', renderLowConvPage);
     $('btnLCExport').addEventListener('click', exportLowConvCSV);
+    if ($('btnLCExportDetailed')) $('btnLCExportDetailed').addEventListener('click', exportDetailedLowConvCSV);
 
     // Also refresh whenever user navigates to the page
     document.querySelector('[data-section="lowconv-section"]').addEventListener('click', () => {
@@ -2936,6 +2937,117 @@
             parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2)), Math.round(e.pRev)
         ]);
         exportToStyledExcel(data, hdr, 'low_conv_staff.xlsx', 'Low Conversion Staff');
+    }
+
+    function exportDetailedLowConvCSV() {
+        if (productData.length === 0) return;
+        const minQty = parseFloat($('lcMinQty').value) || 0;
+        const maxConv = parseFloat($('lcMaxConv').value);
+        const minOsgQty = parseInt($('lcMinOsgQty').value) || 0;
+        const selectedBranches = window.getLcSelectedBranches();
+        const selRBM = $('lcRBM').value;
+        const selBDM = $('lcBDM').value;
+        const selectedProducts = window.getLcSelectedProducts();
+        
+        const allStats = buildStaffStats(selectedProducts);
+        const filteredStaff = allStats
+            .filter(s => s.pQty >= minQty && s.qtyConv <= maxConv)
+            .filter(s => s.oQty >= minOsgQty)
+            .filter(s => !selectedBranches || selectedBranches.includes(s.branch))
+            .filter(s => !selRBM || s.rbm === selRBM)
+            .filter(s => !selBDM || s.bdm === selBDM);
+            
+        if (filteredStaff.length === 0) {
+            alert("No staff match the current filters.");
+            return;
+        }
+        
+        const validStaffNames = new Set(filteredStaff.map(s => s.name));
+        const detailedMap = {};
+        
+        productData.forEach(r => {
+            const s = r.staff || 'Unknown';
+            if (!validStaffNames.has(s)) return;
+            if (selectedProducts && !selectedProducts.includes(r.category)) return;
+            
+            const cat = r.category || 'Unknown';
+            const key = s + '|||' + cat;
+            
+            if (!detailedMap[key]) {
+                detailedMap[key] = {
+                    branch: r.branch || 'Unknown',
+                    rbm: r.rbm || 'Unknown',
+                    bdm: r.bdm || 'Unknown',
+                    staff: s,
+                    product: cat,
+                    pQty: 0,
+                    oQty: 0,
+                    lgOsgQty: 0,
+                    samsungOsgQty: 0
+                };
+            }
+            detailedMap[key].pQty += (r.qty || 0);
+        });
+        
+        const invoiceData = {};
+        productData.forEach(r => { 
+            if (r.invoice) invoiceData[r.invoice] = { staff: r.staff || 'Unknown', product: r.category }; 
+        });
+        
+        osgData.forEach(r => {
+            const inv = r.invoice ? invoiceData[r.invoice] : null;
+            if (!inv) return;
+            
+            const s = inv.staff;
+            const cat = inv.product;
+            if (!validStaffNames.has(s)) return;
+            if (selectedProducts && !selectedProducts.includes(cat)) return;
+            
+            const key = s + '|||' + cat;
+            if (detailedMap[key]) {
+                const qty = r.qty || 0;
+                detailedMap[key].oQty += qty;
+                
+                const osgBrand = (r.brand || '').toUpperCase();
+                if (osgBrand === 'LG') detailedMap[key].lgOsgQty += qty;
+                if (osgBrand === 'SAMSUNG') detailedMap[key].samsungOsgQty += qty;
+            }
+        });
+
+        amcData.forEach(r => {
+            const inv = r.invoice ? invoiceData[r.invoice] : null;
+            if (!inv) return;
+            const key = inv.staff + '|||' + inv.product;
+            if (detailedMap[key]) {
+                const qty = r.qty || 0;
+                detailedMap[key].lgOsgQty += qty;
+            }
+        });
+        
+        samsungData.forEach(r => {
+            const inv = r.invoice ? invoiceData[r.invoice] : null;
+            if (!inv) return;
+            const key = inv.staff + '|||' + inv.product;
+            if (detailedMap[key]) {
+                const qty = r.qty || 0;
+                detailedMap[key].samsungOsgQty += qty;
+            }
+        });
+        
+        const detailedRows = Object.values(detailedMap);
+        detailedRows.sort((a, b) => {
+            if (a.rbm !== b.rbm) return a.rbm.localeCompare(b.rbm);
+            if (a.branch !== b.branch) return a.branch.localeCompare(b.branch);
+            if (a.staff !== b.staff) return a.staff.localeCompare(b.staff);
+            return a.product.localeCompare(b.product);
+        });
+        
+        const hdr = ['BRANCH', 'RBM', 'BDM', 'Staff', 'Product', 'Product Qty', 'OSG QTY', 'LG', 'SAMSUNG'];
+        const data = detailedRows.map(r => [
+            r.branch, r.rbm, r.bdm, r.staff, r.product, r.pQty, r.oQty, r.lgOsgQty, r.samsungOsgQty
+        ]);
+        
+        exportToStyledExcel(data, hdr, 'detailed_low_conv_staff.xlsx', 'Detailed Low Conv Staff');
     }
 
 
