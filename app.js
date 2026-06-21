@@ -834,6 +834,26 @@
             r.staff = strVal(row, mapping.staff);
             r.product = strVal(row, mapping.product);
             r.category = normalizeProductCategory(strVal(row, mapping.category));
+            
+            // BULLETPROOF CATEGORY FALLBACK: 
+            // If the category didn't map to a standard bucket, check the product name or the entire row!
+            const stdCats = ['MICROWAVE OVEN', 'WASHING MACHINE', 'DRYER', 'REFRIGERATOR', 'AC', 'TV', 'AUDIO SYSTEM', 'HOME APPLIANCE', 'DISH WASHER'];
+            if (!r.category || !stdCats.includes(r.category)) {
+                const prodNorm = normalizeProductCategory(r.product);
+                if (stdCats.includes(prodNorm)) {
+                    r.category = prodNorm;
+                } else {
+                    for (const key in row) {
+                        if (typeof row[key] === 'string') {
+                            const valNorm = normalizeProductCategory(row[key]);
+                            if (stdCats.includes(valNorm)) {
+                                r.category = valNorm;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
             r.brand = strVal(row, mapping.brand);
             r.invoice = strVal(row, mapping.invoice);
             r.customerName = strVal(row, mapping.customerName);
@@ -980,6 +1000,26 @@
             r.storeCode = strVal(row, mapping.storeCode);
             r.product = strVal(row, mapping.product);
             r.category = normalizeProductCategory(strVal(row, mapping.category));
+            
+            // BULLETPROOF CATEGORY FALLBACK: 
+            // If the category didn't map to a standard bucket, check the product name or the entire row!
+            const stdCats = ['MICROWAVE OVEN', 'WASHING MACHINE', 'DRYER', 'REFRIGERATOR', 'AC', 'TV', 'AUDIO SYSTEM', 'HOME APPLIANCE', 'DISH WASHER'];
+            if (!r.category || !stdCats.includes(r.category)) {
+                const prodNorm = normalizeProductCategory(r.product);
+                if (stdCats.includes(prodNorm)) {
+                    r.category = prodNorm;
+                } else {
+                    for (const key in row) {
+                        if (typeof row[key] === 'string') {
+                            const valNorm = normalizeProductCategory(row[key]);
+                            if (stdCats.includes(valNorm)) {
+                                r.category = valNorm;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
             r.brand = strVal(row, mapping.brand);
             r.soldPrice = num(getVal(row, mapping.soldPrice, 0));
             r.qty = parseFloat(strVal(row, mapping.qty)) || 1;
@@ -993,11 +1033,22 @@
                 r.brand = ''; // Clear since this wasn't actually the brand
             }
 
-            // Ensure category is always normalized from the product column
-            if (!r.category || r.category === 'SMALL APPLIANCE') {
-                const normalized = normalizeProductCategory(r.product);
-                if (normalized !== 'SMALL APPLIANCE' || !r.category) {
-                    r.category = normalized;
+            // BULLETPROOF CATEGORY FALLBACK (OSG):
+            const stdCats = ['MICROWAVE OVEN', 'WASHING MACHINE', 'DRYER', 'REFRIGERATOR', 'AC', 'TV', 'AUDIO SYSTEM', 'HOME APPLIANCE', 'DISH WASHER'];
+            if (!r.category || !stdCats.includes(r.category)) {
+                const prodNorm = normalizeProductCategory(r.product);
+                if (stdCats.includes(prodNorm)) {
+                    r.category = prodNorm;
+                } else {
+                    for (const key in row) {
+                        if (typeof row[key] === 'string') {
+                            const valNorm = normalizeProductCategory(row[key]);
+                            if (stdCats.includes(valNorm)) {
+                                r.category = valNorm;
+                                break;
+                            }
+                        }
+                    }
                 }
             }
 
@@ -7448,4 +7499,6 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
 
 // End of Main IIFE
 })();
+
+
 
