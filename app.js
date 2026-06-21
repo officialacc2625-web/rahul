@@ -2814,35 +2814,65 @@
             pByStaff[s].rows.push(r);
         });
 
-        // Group OSG data by staff via invoice mapping
+        // OSG: invoice match first, then staff name from OSG row as fallback
         const oByStaff = {};
         osgData.forEach(r => {
+            let s = null, pName = null;
             const inv = r.invoice ? invoiceData[r.invoice] : null;
-            const s = inv ? inv.staff : null;
-            const pName = inv ? inv.product : null;
+            if (inv) { s = inv.staff; pName = inv.product; }
+            else if (r.staff) { s = r.staff; }
             if (!s) return;
-            if (selectedProducts && !selectedProducts.includes(pName)) return;
+            if (selectedProducts && pName && !selectedProducts.includes(pName)) return;
             if (!oByStaff[s]) oByStaff[s] = [];
             oByStaff[s].push(r);
         });
 
-        const allStaff = new Set([...Object.keys(pByStaff), ...Object.keys(oByStaff)]);
+        // LG AMC: invoice match first, then staff name fallback
+        const lgByStaff = {};
+        amcData.forEach(r => {
+            let s = null;
+            const inv = r.invoice ? invoiceData[r.invoice] : null;
+            if (inv) s = inv.staff;
+            else if (r.staff) s = r.staff;
+            if (!s) return;
+            lgByStaff[s] = (lgByStaff[s] || 0) + (r.qty || 0);
+        });
+
+        // Samsung: invoice match first, then staff name fallback
+        const samByStaff = {};
+        samsungData.forEach(r => {
+            let s = null;
+            const inv = r.invoice ? invoiceData[r.invoice] : null;
+            if (inv) s = inv.staff;
+            else if (r.staff) s = r.staff;
+            if (!s) return;
+            samByStaff[s] = (samByStaff[s] || 0) + (r.qty || 0);
+        });
+
+        const allStaff = new Set([
+            ...Object.keys(pByStaff), ...Object.keys(oByStaff),
+            ...Object.keys(lgByStaff), ...Object.keys(samByStaff)
+        ]);
         allStaff.delete('Unknown');
 
         const finalStats = Array.from(allStaff).map(name => {
             const pInfo = pByStaff[name] || { branch: '', rbm: '', bdm: '', rows: [] };
             const oRows = oByStaff[name] || [];
             const pQty = pInfo.rows.reduce((s, r) => s + r.qty, 0);
-            const oQty = oRows.reduce((s, r) => s + r.qty, 0);
+            const oQty = oRows.reduce((s, r) => s + r.qty, 0);       // OSG file only
+            const lgOsgQty = lgByStaff[name] || 0;                    // LG AMC file only
+            const samsungOsgQty = samByStaff[name] || 0;              // Samsung file only
             const pRev = pInfo.rows.reduce((s, r) => s + r.soldPrice, 0);
             const oRev = oRows.reduce((s, r) => s + r.soldPrice, 0);
+            // Qty Conv% uses OSG warranty only
             const qtyConv = pQty > 0 ? (oQty / pQty) * 100 : 0;
             const valConv = pRev > 0 ? (oRev / pRev) * 100 : 0;
-            return { name, branch: pInfo.branch, rbm: pInfo.rbm, bdm: pInfo.bdm, pQty, oQty, pRev, oRev, qtyConv, valConv };
+            return { name, branch: pInfo.branch, rbm: pInfo.rbm, bdm: pInfo.bdm, pQty, oQty, lgOsgQty, samsungOsgQty, pRev, oRev, qtyConv, valConv };
         });
         window.portalStaffStats = finalStats;
         return finalStats;
     }
+
 
     function renderLowConvPage() {
         if (productData.length === 0) {
@@ -2919,7 +2949,7 @@
         let html = `<table class="data-table">
             <thead><tr>
                 <th>#</th><th>Staff</th><th>Branch</th><th>RBM</th><th>BDM</th>
-                <th>Prod Qty</th><th>OSG Qty</th><th>Qty Conv%</th><th>Val Conv%</th><th>Prod Rev</th>
+                <th>Prod Qty</th><th>OSG Qty</th><th style="color:#10b981;">LG</th><th style="color:#f59e0b;">SAMSUNG</th><th>Qty Conv%</th><th>Val Conv%</th><th>Prod Rev</th>
             </tr></thead><tbody>`;
 
         filtered.forEach((e, i) => {
@@ -2935,6 +2965,8 @@
                 <td>${e.bdm}</td>
                 <td class="number-cell"><strong>${e.pQty}</strong></td>
                 <td class="number-cell">${e.oQty}</td>
+                <td class="number-cell" style="color:#10b981;font-weight:600;">${e.lgOsgQty || 0}</td>
+                <td class="number-cell" style="color:#f59e0b;font-weight:600;">${e.samsungOsgQty || 0}</td>
                 <td class="number-cell ${convCls}">${e.qtyConv.toFixed(2)}%</td>
                 <td class="number-cell conv-val">${e.valConv.toFixed(2)}%</td>
                 <td class="number-cell">${fmtShortHtml(e.pRev)}</td>
@@ -7484,6 +7516,14 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
 
 // End of Main IIFE
 })();
+
+
+
+
+
+
+
+
 
 
 
