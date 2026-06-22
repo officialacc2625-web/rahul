@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 // Analytics Portal ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â Conversion Reports
 // Dual-file: Product Data + OSG Data
 // Value Conversion = OSG Sold Price / Product Sold Price
@@ -3050,14 +3050,14 @@
         }
         
         const detailedMap = {};
-        const displayProduct = selectedProducts && selectedProducts.length > 0 ? selectedProducts.join(', ') : 'All Products';
         
         productData.forEach(r => {
             const s = r.staff || 'Unknown';
             if (!validStaffNames.has(s)) return;
             if (selectedProducts && !selectedProducts.includes(r.category)) return;
             
-            const key = s;
+            const cat = r.category || 'Unknown';
+            const key = s + '|' + cat;
             
             if (!detailedMap[key]) {
                 detailedMap[key] = {
@@ -3065,7 +3065,7 @@
                     rbm: r.rbm || 'Unknown',
                     bdm: r.bdm || 'Unknown',
                     staff: s,
-                    product: displayProduct,
+                    product: cat,
                     pQty: 0,
                     oQty: 0,
                     lgOsgQty: 0,
@@ -3084,38 +3084,42 @@
             let s = null, cat = null;
             const inv = r.invoice ? invoiceData[r.invoice] : null;
             if (inv) { s = inv.staff; cat = inv.product; }
-            else if (!selectedProducts && r.staff) { s = r.staff; }
+            else { s = r.staff; cat = mapLGAMCProductCategory(r.product) || 'Unknown'; }
             if (!s || !validStaffNames.has(s)) return;
             if (selectedProducts && cat && !selectedProducts.includes(cat)) return;
             
-            const key = s;
+            const key = s + '|' + cat;
             if (detailedMap[key]) {
                 detailedMap[key].oQty += (r.qty || 0);
             }
         });
 
         amcData.forEach(r => {
-            let key = null;
+            let s = null, cat = null;
             const inv = r.invoice ? invoiceData[r.invoice] : null;
-            if (inv) {
-                if (selectedProducts && !selectedProducts.includes(inv.product)) return;
-                key = inv.staff;
-            } else if (!selectedProducts && r.staff) {
-                key = r.staff;
+            if (inv) { s = inv.staff; cat = inv.product; }
+            else { s = r.staff; cat = mapLGAMCProductCategory(r.product) || 'Unknown'; }
+            if (!s || !validStaffNames.has(s)) return;
+            if (selectedProducts && cat && !selectedProducts.includes(cat)) return;
+            
+            const key = s + '|' + cat;
+            if (detailedMap[key]) {
+                detailedMap[key].lgOsgQty += (r.qty || 0);
             }
-            if (key && detailedMap[key]) detailedMap[key].lgOsgQty += (r.qty || 0);
         });
         
         samsungData.forEach(r => {
-            let key = null;
+            let s = null, cat = null;
             const inv = r.invoice ? invoiceData[r.invoice] : null;
-            if (inv) {
-                if (selectedProducts && !selectedProducts.includes(inv.product)) return;
-                key = inv.staff;
-            } else if (!selectedProducts && r.staff) {
-                key = r.staff;
+            if (inv) { s = inv.staff; cat = inv.product; }
+            else { s = r.staff; cat = mapLGAMCProductCategory(r.product) || 'Unknown'; }
+            if (!s || !validStaffNames.has(s)) return;
+            if (selectedProducts && cat && !selectedProducts.includes(cat)) return;
+            
+            const key = s + '|' + cat;
+            if (detailedMap[key]) {
+                detailedMap[key].samsungOsgQty += (r.qty || 0);
             }
-            if (key && detailedMap[key]) detailedMap[key].samsungOsgQty += (r.qty || 0);
         });
         
         const detailedRows = Object.values(detailedMap);
