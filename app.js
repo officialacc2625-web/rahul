@@ -1,5 +1,5 @@
-// ============================================================
-// Analytics Portal ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â Conversion Reports
+﻿// ============================================================
+// Analytics Portal ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Conversion Reports
 // Dual-file: Product Data + OSG Data
 // Value Conversion = OSG Sold Price / Product Sold Price
 // Qty Conversion   = OSG Quantity  / Product Quantity
@@ -394,7 +394,7 @@
             e.preventDefault();
             const section = item.dataset.section;
 
-            // Check if page needs auth ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â Upload Data and Customers Without OSG are public
+            // Check if page needs auth ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Upload Data and Customers Without OSG are public
             const isPublicPage = section === 'customers-osg-section' || section === 'upload-section' || section === 'wosg-dashboard-section';
             if (!isPublicPage && !isAuthenticated) {
                 // Intercept navigation and show password modal
@@ -475,7 +475,7 @@
             savedAt: new Date().toISOString()
         };
         await saveMonthlyDataToDB(month, snapshot);
-        alert(`ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Data for ${month} saved successfully!`);
+        alert(`ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Data for ${month} saved successfully!`);
         renderTrendsDashboard();
     });
 
@@ -643,7 +643,7 @@
     function setupUploadZone(zone, input, onFiles) {
         console.log('[UPLOAD] setupUploadZone registered for', input.id);
         // Only open the file picker on bare zone clicks (not on label/button/input)
-        // The label's native `for` attribute already opens the input Ã¢â‚¬â€Ã‚Â no manual click needed
+        // The label's native `for` attribute already opens the input ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒâ€šÃ‚Â no manual click needed
         zone.addEventListener('click', (e) => {
             if (e.target === input) return;
             if (e.target.tagName === 'LABEL' || e.target.closest('label')) return;
@@ -734,7 +734,7 @@
                     var bShr = document.getElementById('btnShare');
                     var bRst = document.getElementById('btnReset');
                     if (fcb) fcb.style.display = 'flex';
-                    if (fct) fct.textContent = allData.length + ' product ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ' + osgData.length + ' OSG';
+                    if (fct) fct.textContent = allData.length + ' product ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ' + osgData.length + ' OSG';
                     if (bShr) bShr.style.display = 'flex';
                     if (bRst) bRst.style.display = 'flex';
 
@@ -884,8 +884,8 @@
     }
 
     // ---- SAMSUNG PRODUCT NAME NORMALIZER ----
-    // Maps raw Samsung Care+ product strings ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ standard category names
-    // e.g. "Samsung Care+ EW WM Auto TopLoad 1Year" ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ "WASHING MACHINE"
+    // Maps raw Samsung Care+ product strings ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ standard category names
+    // e.g. "Samsung Care+ EW WM Auto TopLoad 1Year" ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ "WASHING MACHINE"
     function mapSamsungProductCategory(rawName) {
         if (!rawName) return rawName;
         const name = rawName.toUpperCase();
@@ -908,7 +908,7 @@
     }
 
     // ---- UNIVERSAL CATEGORY NORMALIZER (for Product & OSG files) ----
-    // Maps raw category column values ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ one of the 9 standard categories
+    // Maps raw category column values ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ one of the 9 standard categories
     function normalizeProductCategory(raw) {
         if (!raw) return raw;
         const c = raw.toUpperCase().trim();
@@ -928,13 +928,13 @@
             || c.includes('PURIFIER') || c.includes('WATER HEATER') || c.includes('GEYSER')
             || c.includes('HOME APPLIANCE')) return 'HOME APPLIANCE';
         if (c.includes('DISH WASHER') || c.includes('DISHWASHER')) return 'DISH WASHER';
-        // Return the original if not matched Ã¢â‚¬â€Ã‚Â keeps custom categories intact
+        // Return the original if not matched ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒâ€šÃ‚Â keeps custom categories intact
         return raw;
     }
 
     // ---- LG-AMC PRODUCT NAME NORMALIZER ----
-    // Maps full LG product names ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ standard category names.
-    // Audio-related ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ AUDIO SYSTEM; anything else not in the 6 known categories ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ SMALL APPLIANCE
+    // Maps full LG product names ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ standard category names.
+    // Audio-related ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ AUDIO SYSTEM; anything else not in the 6 known categories ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ SMALL APPLIANCE
     function mapLGAMCProductCategory(rawName) {
         if (!rawName) return rawName;
         const name = rawName.toUpperCase();
@@ -948,7 +948,7 @@
             || name.includes('FRONT LOAD') || name.includes('TOP LOAD') || name.includes('FL WM')
             || name.includes('TL WM') || name.includes('F/L') || name.includes('T/L') 
             || /\bSA\b/.test(name) || name.includes('SEMI') || name.includes('FL DRYER') || name.includes('DRYER')) {
-            // Dryer is laundry but separate Ã¢â‚¬â€Ã‚Â return DRYER
+            // Dryer is laundry but separate ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒâ€šÃ‚Â return DRYER
             if (name.includes('DRYER') && !name.includes('WASHER') && !name.includes('WASHING')) return 'DRYER';
             return 'WASHING MACHINE';
         }
@@ -990,7 +990,7 @@
         // --- Laptop ---
         if (name.includes('LAPTOP') || name.includes('GRAM') || name.includes('NOTEBOOK')) return 'LAPTOP';
 
-        // --- Everything else ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Small Appliance ---
+        // --- Everything else ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ Small Appliance ---
         // (Styler, WashTower, other niche products)
         return 'SMALL APPLIANCE';
     }
@@ -1071,7 +1071,7 @@
             r.rbm = strVal(row, mapping.rbm);
             r.bdm = strVal(row, mapping.bdm);
             r.staff = strVal(row, mapping.staff);
-            // Normalize the raw LG product name ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ standard category
+            // Normalize the raw LG product name ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ standard category
             const rawProduct = strVal(row, mapping.product);
             r.product = rawProduct;
             r.rawProduct = rawProduct;  // keep original for debugging
@@ -1108,7 +1108,7 @@
             const r = {};
             r.branch = strVal(row, mapping.branch);
             r.storeCode = strVal(row, mapping.storeCode);
-            // Normalize the raw product name ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ standard category
+            // Normalize the raw product name ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ standard category
             const rawProduct = strVal(row, mapping.product);
             r.product = rawProduct;
             r.rawProduct = rawProduct;  // keep original for debugging
@@ -1138,9 +1138,9 @@
         if (typeof XLSX === 'undefined') {
             return Promise.reject(new Error(
                 'The XLSX library failed to load.\n\n' +
-                'ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Fix: Check your internet connection and reload the page.\n' +
+                'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Fix: Check your internet connection and reload the page.\n' +
                 '   The library loads from cdn.jsdelivr.net on first use.\n\n' +
-                'ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢Ãƒâ€šÃ‚Â¡ Alternative: Convert your file to CSV first:\n' +
+                'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ Alternative: Convert your file to CSV first:\n' +
                 '   python convert.py "your_file.xlsx"'
             ));
         }
@@ -1172,7 +1172,7 @@
                                 console.log('[Sheet: ' + sheetName + '] ' + json.length + ' rows');
                                 const mapping = autoMapColumns(headers, colMap);
                                 for (let i = 0; i < json.length; i++) {
-                                    allRows.push(rowMapper(json[i], mapping));
+                                    const rowData = rowMapper(json[i], mapping); if (rowData) allRows.push(rowData);
                                 }
                             }
                             if (allRows.length === 0) { reject(new Error('No data')); return; }
@@ -1217,7 +1217,7 @@
                     updateLoadingMsg('Processing ' + json.length.toLocaleString() + ' rows...');
                     var allRows = [];
                     for (var i = 0; i < json.length; i++) {
-                        allRows.push(rowMapper(json[i], mapping));
+                        const rowData = rowMapper(json[i], mapping); if (rowData) allRows.push(rowData);
                         if (i % 100000 === 0 && i > 0) {
                             updateLoadingMsg('Row ' + i.toLocaleString() + ' / ' + json.length.toLocaleString());
                         }
@@ -1288,7 +1288,7 @@
     function populateFilters() {
         populateSelect(filterRBM, uniqueVals(allData, 'rbm'), 'All RBMs');
         populateSelect(filterBranch, uniqueVals([...allData, ...osgData], 'branch'), 'All Branches');
-        // Product dropdown is predefined ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â keep as-is, just reset selection
+        // Product dropdown is predefined ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â keep as-is, just reset selection
         filterProduct.value = '';
         // Brand populated dynamically from uploaded data
         populateSelect(filterBrand, uniqueVals([...allData, ...osgData], 'brand'), 'All Brands');
@@ -2213,7 +2213,7 @@
         if (OSG_NATIVE_FIELDS.has(key)) {
             oGrouped = groupBy(filteredOSG, key);
         } else {
-            // Build invoice ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ key value lookup from filtered product data
+            // Build invoice ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ key value lookup from filtered product data
             const invoiceToKey = {};
             filteredProduct.forEach(r => {
                 if (r.invoice && r[key]) invoiceToKey[r.invoice] = r[key];
@@ -2227,7 +2227,7 @@
                     if (!oGrouped[groupName]) oGrouped[groupName] = [];
                     oGrouped[groupName].push(r);
                 }
-                // Skip OSG rows that can't be attributed ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â no "Unknown"
+                // Skip OSG rows that can't be attributed ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â no "Unknown"
             });
         }
 
@@ -2279,7 +2279,7 @@
 
 
     function renderConversionReport() {
-        // Group by branch ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â show value and qty conversion
+        // Group by branch ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â show value and qty conversion
         const pGrouped = groupBy(filteredProduct, 'branch');
         const oGrouped = groupBy(filteredOSG, 'branch');
         const allKeys = new Set([...Object.keys(pGrouped), ...Object.keys(oGrouped)]);
@@ -2414,13 +2414,13 @@
         destroyChart('qtyConvRBM');
         const pG = groupBy(filteredProduct, 'rbm');
 
-        // Map OSG ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ RBM via invoice lookup (same as renderConvTable)
+        // Map OSG ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ RBM via invoice lookup (same as renderConvTable)
         const invoiceToRBM = {};
         filteredProduct.forEach(r => { if (r.invoice && r.rbm) invoiceToRBM[r.invoice] = r.rbm; });
         const osgByRBM = {};
         filteredOSG.forEach(r => {
             const rbm = r.invoice ? (invoiceToRBM[r.invoice] || null) : null;
-            if (!rbm) return; // skip unattributable rows ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â no "Unknown"
+            if (!rbm) return; // skip unattributable rows ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â no "Unknown"
             if (!osgByRBM[rbm]) osgByRBM[rbm] = [];
             osgByRBM[rbm].push(r);
         });
@@ -2952,7 +2952,7 @@
         `;
 
         if (filtered.length === 0) {
-            $('lcTableWrapper').innerHTML = noDataHTML(`No staff found with Ã¢â€°Â¥${minQty} product qty and ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°Ãƒâ€šÃ‚Â¤${maxConv}% qty conversion.`);
+            $('lcTableWrapper').innerHTML = noDataHTML(`No staff found with ÃƒÂ¢Ã¢â‚¬Â°Ã‚Â¥${minQty} product qty and ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¤${maxConv}% qty conversion.`);
             return;
         }
 
@@ -3351,7 +3351,7 @@
         let html = '';
 
         // ---- Card 1: Overall Summary ----
-        html += insightCard('Ã°Å¸â€œÅ ', 'Overall Performance Summary', 'info', `
+        html += insightCard('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…Â ', 'Overall Performance Summary', 'info', `
             <div class="insight-metrics">
                 <div class="insight-metric"><span class="metric-val">${formatNumber(productData.length)}</span><span class="metric-label">Total Transactions</span></div>
                 <div class="insight-metric"><span class="metric-val">${totalStaff}</span><span class="metric-label">Active Staff</span></div>
@@ -3367,7 +3367,7 @@
             const zeroTotalQty = zeroConvStaff.reduce((s, r) => s + r.pQty, 0);
             const zeroTotalRev = zeroConvStaff.reduce((s, r) => s + r.pRev, 0);
             const topZero = zeroConvStaff.sort((a, b) => b.pQty - a.pQty).slice(0, 5);
-            html += insightCard('', `Zero Conversion Alert â€“ ${zeroConvStaff.length} Staff`, 'danger', `
+            html += insightCard('', `Zero Conversion Alert Ã¢â‚¬â€œ ${zeroConvStaff.length} Staff`, 'danger', `
                 <p><strong>${zeroConvStaff.length} staff</strong> have sold <strong>${formatNumber(zeroTotalQty)} products</strong> (${fmtShortHtml(zeroTotalRev)} revenue) but <strong>zero OSG/warranty conversion</strong>.</p>
                 <div class="insight-tag-row">
                     ${topZero.map(s => `<span class="insight-tag danger">${s.name} (${s.pQty} qty)</span>`).join('')}
@@ -3381,7 +3381,7 @@
 
         // ---- Card 3: Top Performers ----
         if (topQty.length > 0) {
-            html += insightCard('Â ', 'Top Performers â€“ Best Qty Conversion', 'success', `
+            html += insightCard('Ã‚Â ', 'Top Performers Ã¢â‚¬â€œ Best Qty Conversion', 'success', `
                 <div class="insight-list">
                     ${topQty.map((s, i) => `
                         <div class="insight-list-item">
@@ -3402,7 +3402,7 @@
         // ---- Card 4: Underperforming Branches ----
         const weakBranches = branchStats.filter(b => b.pQty >= 10 && b.qtyConv < 2).sort((a, b) => a.qtyConv - b.qtyConv).slice(0, 5);
         if (weakBranches.length > 0) {
-            html += insightCard('ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°', 'Underperforming Branches', 'warning', `
+            html += insightCard('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â°', 'Underperforming Branches', 'warning', `
                 <p>These branches have significant product sales but very low OSG conversion:</p>
                 <table class="data-table insight-table"><thead><tr>
                     <th>Branch</th><th>Prod Qty</th><th>OSG Qty</th><th>Qty Conv%</th>
@@ -3421,7 +3421,7 @@
             const best = rbmSorted[0];
             const worst = rbmSorted[rbmSorted.length - 1];
             const gap = best.qtyConv - worst.qtyConv;
-            html += insightCard('ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“Ãƒâ€šÃ‚Â¥', 'RBM Performance Gap', gap > 5 ? 'warning' : 'info', `
+            html += insightCard('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥', 'RBM Performance Gap', gap > 5 ? 'warning' : 'info', `
                 <div class="insight-compare">
                     <div class="compare-box success-bg">
                         <span class="compare-label">Best RBM</span>
@@ -3447,7 +3447,7 @@
         const weakProds = prodSorted.slice(0, 3);
         const strongProds = prodSorted.slice(-3).reverse();
         if (prodSorted.length > 0) {
-            html += insightCard('ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹', 'Product Category Analysis', 'info', `
+            html += insightCard('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¹', 'Product Category Analysis', 'info', `
                 <div class="insight-compare">
                     <div class="compare-box success-bg" style="flex:1;">
                         <span class="compare-label">Strong Categories</span>
@@ -3467,12 +3467,12 @@
         // ---- Card 7: Revenue Concentration Risk ----
         if (branchRevShare.length >= 3) {
             const top3Share = branchRevShare.slice(0, 3).reduce((s, b) => s + b.share, 0);
-            html += insightCard('ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â', 'Revenue Concentration', top3Share > 50 ? 'warning' : 'info', `
+            html += insightCard('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â', 'Revenue Concentration', top3Share > 50 ? 'warning' : 'info', `
                 <p>Top 3 branches contribute <strong>${top3Share.toFixed(1)}%</strong> of total product revenue:</p>
                 <div class="insight-tag-row">
                     ${branchRevShare.slice(0, 5).map(b => `<span class="insight-tag info">${b.name}: ${b.share.toFixed(1)}%</span>`).join('')}
                 </div>
-                ${top3Share > 50 ? '<p class="text-warning"> High concentration risk ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â underperformance in these branches would significantly impact overall numbers.</p>' : '<p class="text-success">ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Revenue is fairly distributed ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â good diversification.</p>'}
+                ${top3Share > 50 ? '<p class="text-warning"> High concentration risk ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â underperformance in these branches would significantly impact overall numbers.</p>' : '<p class="text-success">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Revenue is fairly distributed ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â good diversification.</p>'}
                 <div class="insight-solution">
                     <strong> Recommendation:</strong> ${top3Share > 50 ? 'Invest in growing smaller branches. Reduce dependency on top branches by improving performance of bottom 50%.' : 'Maintain balanced growth across all branches.'}
                 </div>
@@ -3537,7 +3537,7 @@
         }
         deepAnalysisHtml += `</ul>`;
 
-        html += insightCard('ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒâ€šÃ‚Â', 'Deep Root Cause Analysis', 'danger', `
+        html += insightCard('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â', 'Deep Root Cause Analysis', 'danger', `
             <p style="margin-bottom:1rem; color:var(--text-primary); font-weight:500;">Based on combinatorial data analysis, the primary drivers of lost conversion are:</p>
             ${deepAnalysisHtml}
         `);
@@ -3546,12 +3546,12 @@
         const urgentActions = [];
         if (zeroConvStaff.length > 5) urgentActions.push(`Train ${zeroConvStaff.length} zero-conversion staff on OSG selling immediately`);
         if (weakBranches.length > 0) urgentActions.push(`Conduct branch visits to ${weakBranches.map(b => b.name).join(', ')}`);
-        if (conv.qtyConv < 5) urgentActions.push(`Overall qty conversion (${conv.qtyConv.toFixed(1)}%) is below target ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â launch org-wide OSG campaign`);
+        if (conv.qtyConv < 5) urgentActions.push(`Overall qty conversion (${conv.qtyConv.toFixed(1)}%) is below target ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â launch org-wide OSG campaign`);
         urgentActions.push('Review and update staff-wise weekly conversion targets');
         urgentActions.push('Share top performer success stories in team meetings');
         if (topQty.length > 0) urgentActions.push(`Reward top converters: ${topQty.slice(0, 3).map(s => s.name).join(', ')}`);
 
-        html += insightCard('', 'Action Plan ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â Next Steps', 'action', `
+        html += insightCard('', 'Action Plan ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Next Steps', 'action', `
             <ol class="insight-actions">
                 ${urgentActions.map(a => `<li>${a}</li>`).join('')}
             </ol>
@@ -3831,7 +3831,7 @@
         let html = '';
 
         // ---- Card 1: Overall Summary ----
-        html += insightCard('ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€¦Ã‚Â ', 'Overall Performance Summary', 'info', `
+        html += insightCard('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â ', 'Overall Performance Summary', 'info', `
             <div class="insight-metrics">
                 <div class="insight-metric"><span class="metric-val">${formatNumber(productData.length)}</span><span class="metric-label">Total Transactions</span></div>
                 <div class="insight-metric"><span class="metric-val">${totalStaff}</span><span class="metric-label">Active Staff</span></div>
@@ -3847,7 +3847,7 @@
             const zeroTotalQty = zeroConvStaff.reduce((s, r) => s + r.pQty, 0);
             const zeroTotalRev = zeroConvStaff.reduce((s, r) => s + r.pRev, 0);
             const topZero = zeroConvStaff.sort((a, b) => b.pQty - a.pQty).slice(0, 5);
-            html += insightCard('', `Zero Conversion Alert ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ${zeroConvStaff.length} Staff`, 'danger', `
+            html += insightCard('', `Zero Conversion Alert ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ${zeroConvStaff.length} Staff`, 'danger', `
                 <p><strong>${zeroConvStaff.length} staff</strong> have sold <strong>${formatNumber(zeroTotalQty)} products</strong> (${fmtShortHtml(zeroTotalRev)} revenue) but <strong>zero OSG/warranty conversion</strong>.</p>
                 <div class="insight-tag-row">
                     ${topZero.map(s => `<span class="insight-tag danger">${s.name} (${s.pQty} qty)</span>`).join('')}
@@ -3861,7 +3861,7 @@
 
         // ---- Card 3: Top Performers ----
         if (topQty.length > 0) {
-            html += insightCard('ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ', 'Top Performers ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â Best Qty Conversion', 'success', `
+            html += insightCard('ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ', 'Top Performers ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Best Qty Conversion', 'success', `
                 <div class="insight-list">
                     ${topQty.map((s, i) => `
                         <div class="insight-list-item">
@@ -3882,7 +3882,7 @@
         // ---- Card 4: Underperforming Branches ----
         const weakBranches = branchStats.filter(b => b.pQty >= 10 && b.qtyConv < 2).sort((a, b) => a.qtyConv - b.qtyConv).slice(0, 5);
         if (weakBranches.length > 0) {
-            html += insightCard('ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°', 'Underperforming Branches', 'warning', `
+            html += insightCard('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â°', 'Underperforming Branches', 'warning', `
                 <p>These branches have significant product sales but very low OSG conversion:</p>
                 <table class="data-table insight-table"><thead><tr>
                     <th>Branch</th><th>Prod Qty</th><th>OSG Qty</th><th>Qty Conv%</th>
@@ -3901,7 +3901,7 @@
             const best = rbmSorted[0];
             const worst = rbmSorted[rbmSorted.length - 1];
             const gap = best.qtyConv - worst.qtyConv;
-            html += insightCard('ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“Ãƒâ€šÃ‚Â¥', 'RBM Performance Gap', gap > 5 ? 'warning' : 'info', `
+            html += insightCard('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥', 'RBM Performance Gap', gap > 5 ? 'warning' : 'info', `
                 <div class="insight-compare">
                     <div class="compare-box success-bg">
                         <span class="compare-label">Best RBM</span>
@@ -3927,7 +3927,7 @@
         const weakProds = prodSorted.slice(0, 3);
         const strongProds = prodSorted.slice(-3).reverse();
         if (prodSorted.length > 0) {
-            html += insightCard('ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹', 'Product Category Analysis', 'info', `
+            html += insightCard('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¹', 'Product Category Analysis', 'info', `
                 <div class="insight-compare">
                     <div class="compare-box success-bg" style="flex:1;">
                         <span class="compare-label">Strong Categories</span>
@@ -3947,12 +3947,12 @@
         // ---- Card 7: Revenue Concentration Risk ----
         if (branchRevShare.length >= 3) {
             const top3Share = branchRevShare.slice(0, 3).reduce((s, b) => s + b.share, 0);
-            html += insightCard('ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â', 'Revenue Concentration', top3Share > 50 ? 'warning' : 'info', `
+            html += insightCard('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â', 'Revenue Concentration', top3Share > 50 ? 'warning' : 'info', `
                 <p>Top 3 branches contribute <strong>${top3Share.toFixed(1)}%</strong> of total product revenue:</p>
                 <div class="insight-tag-row">
                     ${branchRevShare.slice(0, 5).map(b => `<span class="insight-tag info">${b.name}: ${b.share.toFixed(1)}%</span>`).join('')}
                 </div>
-                ${top3Share > 50 ? '<p class="text-warning"> High concentration risk ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â underperformance in these branches would significantly impact overall numbers.</p>' : '<p class="text-success">ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Revenue is fairly distributed ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â good diversification.</p>'}
+                ${top3Share > 50 ? '<p class="text-warning"> High concentration risk ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â underperformance in these branches would significantly impact overall numbers.</p>' : '<p class="text-success">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Revenue is fairly distributed ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â good diversification.</p>'}
                 <div class="insight-solution">
                     <strong> Recommendation:</strong> ${top3Share > 50 ? 'Invest in growing smaller branches. Reduce dependency on top branches by improving performance of bottom 50%.' : 'Maintain balanced growth across all branches.'}
                 </div>
@@ -4017,7 +4017,7 @@
         }
         deepAnalysisHtml += `</ul>`;
 
-        html += insightCard('ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒâ€šÃ‚Â', 'Deep Root Cause Analysis', 'danger', `
+        html += insightCard('ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â', 'Deep Root Cause Analysis', 'danger', `
             <p style="margin-bottom:1rem; color:var(--text-primary); font-weight:500;">Based on combinatorial data analysis, the primary drivers of lost conversion are:</p>
             ${deepAnalysisHtml}
         `);
@@ -4026,12 +4026,12 @@
         const urgentActions = [];
         if (zeroConvStaff.length > 5) urgentActions.push(`Train ${zeroConvStaff.length} zero-conversion staff on OSG selling immediately`);
         if (weakBranches.length > 0) urgentActions.push(`Conduct branch visits to ${weakBranches.map(b => b.name).join(', ')}`);
-        if (conv.qtyConv < 5) urgentActions.push(`Overall qty conversion (${conv.qtyConv.toFixed(1)}%) is below target ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â launch org-wide OSG campaign`);
+        if (conv.qtyConv < 5) urgentActions.push(`Overall qty conversion (${conv.qtyConv.toFixed(1)}%) is below target ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â launch org-wide OSG campaign`);
         urgentActions.push('Review and update staff-wise weekly conversion targets');
         urgentActions.push('Share top performer success stories in team meetings');
         if (topQty.length > 0) urgentActions.push(`Reward top converters: ${topQty.slice(0, 3).map(s => s.name).join(', ')}`);
 
-        html += insightCard('', 'Action Plan ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â Next Steps', 'action', `
+        html += insightCard('', 'Action Plan ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Next Steps', 'action', `
             <ol class="insight-actions">
                 ${urgentActions.map(a => `<li>${a}</li>`).join('')}
             </ol>
@@ -4460,7 +4460,7 @@ function exportFutureStoresCSV() {
         addSheet('RBM WISE', aoa2, merges2, false, 0);
 
         // 3. STORE WISE Sheet
-        const aoa3 = [['FUTURE STORES Ã¢â‚¬â€ STORE WISE'], ['BDM', 'Branch', 'Product', 'Product Qty', qtyName, 'Qty Conv%', 'Val Conv%', 'OVERALL Qty Conv%', 'OVERALL Val Conv%']];
+        const aoa3 = [['FUTURE STORES ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â STORE WISE'], ['BDM', 'Branch', 'Product', 'Product Qty', qtyName, 'Qty Conv%', 'Val Conv%', 'OVERALL Qty Conv%', 'OVERALL Val Conv%']];
         const merges3 = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 8 } }];
         
         const bdmBranchMap = {};
@@ -4571,7 +4571,7 @@ function exportFutureStoresCSV() {
         if (selBDM) filtP = filtP.filter(r => r.bdm === selBDM);
         if (selProduct) filtP = filtP.filter(r => r.product === selProduct);
 
-        // Build invoice lookup from product data ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â only count OSG entries that match a product invoice
+        // Build invoice lookup from product data ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â only count OSG entries that match a product invoice
         const productInvoices = new Set();
         filtP.forEach(r => { if (r.invoice) productInvoices.add(r.invoice); });
 
@@ -5217,8 +5217,8 @@ function exportFutureStoresCSV() {
                 ? `Caller_Report_${selectedCaller}_${dateStr}.xlsx`
                 : `Caller_Report_All_${dateStr}.xlsx`;
             const sheetTitle = selectedCaller
-                ? `WITHOUT OSG CALLER REPORT Ã¢â‚¬â€Ã‚Â ${dateStr} Ã¢â‚¬â€Ã‚Â ${selectedCaller.toUpperCase()}`
-                : `WITHOUT OSG CALLER REPORT Ã¢â‚¬â€Ã‚Â ${dateStr}`;
+                ? `WITHOUT OSG CALLER REPORT ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒâ€šÃ‚Â ${dateStr} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒâ€šÃ‚Â ${selectedCaller.toUpperCase()}`
+                : `WITHOUT OSG CALLER REPORT ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒâ€šÃ‚Â ${dateStr}`;
 
             // Build AOA
             const aoa = [];
@@ -5329,7 +5329,7 @@ function exportFutureStoresCSV() {
                         const rowBg = callerIdx % 2 === 0 ? '0F172A' : '1E293B';
 
                         if (C === 0) {
-                            // Caller name cell Ã¢â‚¬â€Ã‚Â colored left border + avatar-style bg
+                            // Caller name cell ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒâ€šÃ‚Â colored left border + avatar-style bg
                             ws[addr].s = {
                                 fill: { patternType: 'solid', fgColor: { rgb: rowBg } },
                                 font: { color: { rgb: callerHex }, bold: true, sz: 10, name: 'Calibri' },
@@ -5386,7 +5386,7 @@ function exportFutureStoresCSV() {
 
         if (tab === 'main') {
             if (!window._wosgMainData) return;
-            title = 'WITHOUT OSG MAIN REPORT Ã¢â‚¬â€Ã‚Â ' + dateStr;
+            title = 'WITHOUT OSG MAIN REPORT ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒâ€šÃ‚Â ' + dateStr;
             fileName = 'Without_OSG_Main_Report_' + dateStr + '.xlsx';
             aoa.push([title]);
             aoa.push(['SUMMARY', ...cols, 'TOTAL VALUE', 'TOTAL COUNT']);
@@ -5408,7 +5408,7 @@ function exportFutureStoresCSV() {
             });
         } else if (tab === 'caller') {
             if (!window._wosgCallerData || !window._wosgCallers) return;
-            title = 'WITHOUT OSG CALLER REPORT Ã¢â‚¬â€Ã‚Â ' + dateStr;
+            title = 'WITHOUT OSG CALLER REPORT ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒâ€šÃ‚Â ' + dateStr;
             fileName = 'Without_OSG_Caller_Report_' + dateStr + '.xlsx';
             aoa.push([title]);
             aoa.push(['CALLER', ...cols, 'TOTAL VALUE', 'TOTAL COUNT']);
@@ -5431,7 +5431,7 @@ function exportFutureStoresCSV() {
             });
         } else if (tab === 'daily') {
             if (!window._wosgDailyData) return;
-            title = 'WITHOUT OSG DAILY REPORT Ã¢â‚¬â€Ã‚Â ' + dateStr;
+            title = 'WITHOUT OSG DAILY REPORT ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒâ€šÃ‚Â ' + dateStr;
             fileName = 'Without_OSG_Daily_Report_' + dateStr + '.xlsx';
             aoa.push([title]);
             aoa.push(['DATE', ...cols, 'TOTAL VALUE', 'TOTAL COUNT']);
@@ -5453,7 +5453,7 @@ function exportFutureStoresCSV() {
             });
         } else if (tab === 'monthly') {
             if (!window._wosgMonthlyData) return;
-            title = 'WITHOUT OSG MONTHLY REPORT Ã¢â‚¬â€Ã‚Â ' + dateStr;
+            title = 'WITHOUT OSG MONTHLY REPORT ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒâ€šÃ‚Â ' + dateStr;
             fileName = 'Without_OSG_Monthly_Report_' + dateStr + '.xlsx';
             aoa.push([title]);
             aoa.push(['MONTH', ...cols, 'TOTAL VALUE', 'TOTAL COUNT']);
@@ -5507,10 +5507,10 @@ function exportFutureStoresCSV() {
             window.coDueTodayFilter = !window.coDueTodayFilter;
             if (window.coDueTodayFilter) {
                 btnDue.style.boxShadow = '0 0 0 3px rgba(239,68,68,0.5)';
-                btnDue.innerHTML = 'ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Clear Due Today';
+                btnDue.innerHTML = 'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Clear Due Today';
             } else {
                 btnDue.style.boxShadow = '0 2px 8px rgba(239,68,68,0.3)';
-                btnDue.innerHTML = 'ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒâ€šÃ‚Â¥ Due Today';
+                btnDue.innerHTML = 'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ Due Today';
             }
             renderCustomersOSGPage();
         });
@@ -5558,12 +5558,12 @@ function exportFutureStoresCSV() {
                 coStatusMap[fbKey(inv)] = childSnap.val();
                 const st = coStatusMap[fbKey(inv)];
 
-                // If another caller made ANY selection ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ instantly remove from this caller's view
+                // If another caller made ANY selection ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ instantly remove from this caller's view
                 if (st.calledBy && st.calledBy !== currentCaller) {
                     const rowEl = document.getElementById('co-row-' + fbKey(inv));
                     if (rowEl) rowEl.remove();
                 } else {
-                    // Own row or unclaimed ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ update status colour in-place
+                    // Own row or unclaimed ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ update status colour in-place
                     const rowEl = document.getElementById('co-row-' + fbKey(inv));
                     if (rowEl && !rowEl.contains(document.activeElement)) {
                         const rowData = (coCurrentRows || []).find(r => fbKey(r.invoice) === inv);
@@ -5574,7 +5574,7 @@ function exportFutureStoresCSV() {
                 if (typeof updateCoStatsInPlace === 'function') updateCoStatsInPlace();
             });
 
-            // ===== INITIAL FULL LOAD (once) Ã¢â‚¬â€Ã‚Â then render page =====
+            // ===== INITIAL FULL LOAD (once) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒâ€šÃ‚Â then render page =====
             coLiveRef.once('value', snap => {
                 const data = snap.val() || {};
                 Object.keys(data).forEach(inv => { coStatusMap[fbKey(inv)] = data[inv]; });
@@ -5622,7 +5622,7 @@ function exportFutureStoresCSV() {
         banner.colSpan = 10;
         banner.style.cssText = `position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
             background:${claimBg};color:${claimColor};font-weight:700;font-size:0.85rem;gap:8px;border-radius:6px;`;
-        banner.innerHTML = `<span style="font-size:1.1rem;">ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢</span> Claimed by <strong>${callerName}</strong> Ã¢â‚¬â€Ã‚Â removing from your list...`;
+        banner.innerHTML = `<span style="font-size:1.1rem;">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢</span> Claimed by <strong>${callerName}</strong> ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒâ€šÃ‚Â removing from your list...`;
         rowEl.innerHTML = '';
         rowEl.appendChild(banner);
         rowEl.classList.add('co-row-claiming');
@@ -5881,7 +5881,7 @@ function exportFutureStoresCSV() {
             statusFiltered.forEach(r => missedUnique.push(r));
         }
 
-        // Apply manual caller filter dropdown (admin view Ã¢â‚¬â€Ã‚Â shows rows by a specific caller)
+        // Apply manual caller filter dropdown (admin view ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒâ€šÃ‚Â shows rows by a specific caller)
         if (selCallerFilter) {
             const filtered = missedUnique.filter(r => {
                 const st = coStatusMap[fbKey(r.invoice)] || {};
@@ -5922,7 +5922,7 @@ function exportFutureStoresCSV() {
         }
 
         if (missedUnique.length === 0) {
-            $('coMissedTable').innerHTML = noDataHTML('All invoices have OSG entries ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â great conversion! ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°');
+            $('coMissedTable').innerHTML = noDataHTML('All invoices have OSG entries ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â great conversion! ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°');
             return;
         }
 
@@ -5983,7 +5983,7 @@ function exportFutureStoresCSV() {
                 ">
                     <span style="width:24px;height:24px;border-radius:50%;background:${c.color};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;">${c.name[0]}</span>
                     ${c.name}
-                    ${currentCaller === c.name ? '<span style="font-size:0.7rem;opacity:0.8;">Ã¢â‚¬â€Ã‚Â Active</span>' : ''}
+                    ${currentCaller === c.name ? '<span style="font-size:0.7rem;opacity:0.8;">ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒâ€šÃ‚Â Active</span>' : ''}
                 </button>`).join('')}
             </div>
             ${currentCaller
@@ -6017,7 +6017,7 @@ function exportFutureStoresCSV() {
                     padding:10px 28px;border-radius:20px;border:1.5px solid var(--accent);
                     background:transparent;color:var(--accent);font-family:inherit;
                     font-size:0.88rem;font-weight:600;cursor:pointer;transition:all 0.2s;
-                ">ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ Load ${Math.min(remaining, 100)} more (${remaining} remaining)</button>
+                ">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¡ Load ${Math.min(remaining, 100)} more (${remaining} remaining)</button>
                </div>` : '';
 
         $('coMissedTable').innerHTML = statsBar + callerSelector + tableHeader + rowsHTML + '</tbody></table></div>' + loadMoreBtn;
@@ -6063,7 +6063,7 @@ function exportFutureStoresCSV() {
                     wrap.innerHTML = `<button onclick="window.coLoadMore()" style="
                         padding:10px 28px;border-radius:20px;border:1.5px solid var(--accent);
                         background:transparent;color:var(--accent);font-family:inherit;
-                        font-size:0.88rem;font-weight:600;cursor:pointer;">ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ Load ${Math.min(remaining2, 100)} more (${remaining2} remaining)</button>`;
+                        font-size:0.88rem;font-weight:600;cursor:pointer;">ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¡ Load ${Math.min(remaining2, 100)} more (${remaining2} remaining)</button>`;
                 } else {
                     wrap.remove();
                 }
@@ -6258,8 +6258,8 @@ function exportFutureStoresCSV() {
         // Added 'follow-up' and 'bought' options to Interest
         const interestBtnOptions = `
             <option value="" ${!st.interest ? 'selected' : ''}>- Select -</option>
-            <option value="interested" ${st.interest === 'interested' ? 'selected' : ''}>ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Interested</option>
-            <option value="not-interested" ${st.interest === 'not-interested' ? 'selected' : ''}>ÃƒÆ’Ã‚Â¢Ãƒâ€šÃ‚ÂÃƒâ€¦Ã¢â‚¬â„¢ Not Interested</option>
+            <option value="interested" ${st.interest === 'interested' ? 'selected' : ''}>ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Interested</option>
+            <option value="not-interested" ${st.interest === 'not-interested' ? 'selected' : ''}>ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ Not Interested</option>
             <option value="follow-up" ${st.interest === 'follow-up' ? 'selected' : ''}>Follow-up</option>
             <option value="bought" ${st.interest === 'bought' ? 'selected' : ''}>Closed</option>
         `;
@@ -6297,8 +6297,8 @@ function exportFutureStoresCSV() {
                     background:var(--bg-input); color:var(--text-primary); outline:none; max-width:140px; ${opcStyle}">
                     <option value="" ${!st.callStatus ? 'selected' : ''}>- Status -</option>
                     <option value="connected" ${st.callStatus === 'connected' ? 'selected' : ''}>Connected</option>
-                    <option value="not-connected" ${st.callStatus === 'not-connected' ? 'selected' : ''}>ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒâ€šÃ‚Â´ Not Connected</option>
-                    <option value="disconnected" ${st.callStatus === 'disconnected' ? 'selected' : ''}>ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Âµ Disconnected</option>
+                    <option value="not-connected" ${st.callStatus === 'not-connected' ? 'selected' : ''}>ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â´ Not Connected</option>
+                    <option value="disconnected" ${st.callStatus === 'disconnected' ? 'selected' : ''}>ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âµ Disconnected</option>
                 </select>
                 ${callerInfo}
             </div>` : '';
@@ -6344,7 +6344,7 @@ function exportFutureStoresCSV() {
                 const prod = r.product || 'your product';
                 const inv = r.invoice || '';
                 const val = r.soldPrice && r.soldPrice > 0 ? ' (worth \u20B9' + r.soldPrice.toLocaleString('en-IN') + ')' : '';
-                const msg = 'Dear ' + name + ',\n\nGreetings from myG ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¹Ã…â€œÃƒâ€¦Ã‚Â \n\nThank you for your recent purchase of *' + prod + '*' + val + ' (Invoice: ' + inv + ').\n\n We noticed your purchase does not yet include an *OSG Extended Warranty* plan. OSG covers:\n\nÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Extended protection beyond manufacturer warranty\nÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Free doorstep repair service\nÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Zero hidden charges\nÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ Instant claim processing\n\nSecuring your device takes just a minute Ã¢â‚¬â€Ã‚Â and gives you complete peace of mind! \n\nWould you be interested? Reply *YES* and we will take care of everything.\n\nWarm regards,\nmyG Team';
+                const msg = 'Dear ' + name + ',\n\nGreetings from myG ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¹Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â \n\nThank you for your recent purchase of *' + prod + '*' + val + ' (Invoice: ' + inv + ').\n\n We noticed your purchase does not yet include an *OSG Extended Warranty* plan. OSG covers:\n\nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Extended protection beyond manufacturer warranty\nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Free doorstep repair service\nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Zero hidden charges\nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ Instant claim processing\n\nSecuring your device takes just a minute ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒâ€šÃ‚Â and gives you complete peace of mind! \n\nWould you be interested? Reply *YES* and we will take care of everything.\n\nWarm regards,\nmyG Team';
                 return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
             })()}" target="_blank" title="WhatsApp (English)" style="color:#25D366;display:flex;padding:5px;border-radius:50%;background:rgba(37,211,102,0.12);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>` : ''}
                     ${r.customerNo ? `<a href="${(function () {
@@ -6593,12 +6593,12 @@ function exportFutureStoresCSV() {
         else html += '<li>No significantly underperforming branches detected.</li>';
         html += '</ul></div>';
 
-        html += '<div style="margin-bottom: 16px;"><strong>ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â½ Missed Premium Device Attachments:</strong><ul style="margin:8px 0 0 20px; color:var(--text-muted); line-height: 1.6;">';
+        html += '<div style="margin-bottom: 16px;"><strong>ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â½ Missed Premium Device Attachments:</strong><ul style="margin:8px 0 0 20px; color:var(--text-muted); line-height: 1.6;">';
         if (premiumMisses.length) premiumMisses.forEach(m => html += `<li><strong>${m.staff} (${m.branch})</strong> sold a ${m.product} for ${fmtShortHtml(m.soldPrice)} without OSG (Inv: ${m.invoice}).</li>`);
         else html += '<li>Great job! High-value premium products seem to be attached correctly.</li>';
         html += '</ul></div>';
 
-        html += '<div><strong>ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“Ãƒâ€šÃ‚Â¤ Highest Opportunity Staff:</strong><ul style="margin:8px 0 0 20px; color:var(--text-muted); line-height: 1.6;">';
+        html += '<div><strong>ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¹Ã…â€œÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¤ Highest Opportunity Staff:</strong><ul style="margin:8px 0 0 20px; color:var(--text-muted); line-height: 1.6;">';
         if (worstStaff.length) worstStaff.forEach(s => html += `<li><strong>${s.staff} (${s.branch})</strong>: Delivered ${s.pQ} units physically but achieved only ${s.conv.toFixed(1)}% conversion.</li>`);
         else html += '<li>Staff metrics look solid across the board (or volume threshold not met).</li>';
         html += '</ul></div>';
@@ -6663,7 +6663,7 @@ function exportFutureStoresCSV() {
             });
         });
 
-        // Filter change ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ re-render
+        // Filter change ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ re-render
         ['fsDashRBM', 'fsDashBDM', 'fsDashBranch', 'fsDashStaff'].forEach(id => {
             const el = $(id);
             if (el) el.addEventListener('change', () => renderFsExportDashboard(false));
@@ -7166,7 +7166,7 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
                 // Status colour
                 const onTrack = currentConv >= targetConv;
                 const statusColor = onTrack ? '#10b981' : (currentConv >= targetConv * 0.8 ? '#f59e0b' : '#ef4444');
-                const statusLabel = onTrack ? 'ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸Ãƒâ€¦Ã‚Â½Ãƒâ€šÃ‚Â¯ On Target!' : (daysLeft === 0 ? 'ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂºÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Month Ended' : 'ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Behind Target');
+                const statusLabel = onTrack ? 'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â°ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â½ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¯ On Target!' : (daysLeft === 0 ? 'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂºÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â Month Ended' : 'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Behind Target');
 
                 // KPI cards
                 const kpiDefs = [
@@ -7288,7 +7288,7 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
                                     <td style="text-align:right;">${r.pQty.toLocaleString('en-IN')}</td>
                                     <td style="text-align:right;">${r.oQty.toLocaleString('en-IN')}</td>
                                     <td style="text-align:right;font-weight:700;color:${r.isOnTrack?'#10b981':'#ef4444'};">${r.conv.toFixed(1)}%</td>
-                                    <td style="text-align:right;color:${r.rbmGap>0?'#ef4444':'#10b981'};font-weight:600;">${r.rbmGap > 0 ? r.rbmGap.toLocaleString('en-IN') : 'ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ Done'}</td>
+                                    <td style="text-align:right;color:${r.rbmGap>0?'#ef4444':'#10b981'};font-weight:600;">${r.rbmGap > 0 ? r.rbmGap.toLocaleString('en-IN') : 'ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ Done'}</td>
                                     <td style="text-align:right;font-weight:700;color:${r.rbmDaily>0?'#f97316':'#10b981'};">${r.rbmDaily > 0 ? r.rbmDaily : '-'}</td>
                                     <td style="text-align:center;"><span style="padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:700;background:${r.isOnTrack?'rgba(16,185,129,0.12)':'rgba(239,68,68,0.12)'};color:${r.isOnTrack?'#10b981':'#ef4444'};">${r.isOnTrack?'On Track':'Behind'}</span></td>
                                 </tr>`).join('')}
@@ -7316,11 +7316,11 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
         // Expose globally so onclick attribute in HTML can call it
         window.renderForecastPage = renderForecastPage;
 
-        // Nav click Ã¢â‚¬â€Ã‚Â auto-render when switching to this page
+        // Nav click ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒâ€šÃ‚Â auto-render when switching to this page
         var fcNavBtn = document.querySelector('[data-section="forecast-section"]');
         if (fcNavBtn) fcNavBtn.addEventListener('click', function() { setTimeout(renderForecastPage, 100); });
 
-        // Calculate button Ã¢â‚¬â€Ã‚Â use getElementById directly (most reliable)
+        // Calculate button ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒâ€šÃ‚Â use getElementById directly (most reliable)
         var fcCalcBtn = document.getElementById('btnForecastCalc');
         if (fcCalcBtn) fcCalcBtn.addEventListener('click', renderForecastPage);
     })();
@@ -7408,7 +7408,7 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
     async function sendMessageToAI(userMessage) {
         var apiKey = localStorage.getItem('nova_ai_api_key');
         if (!apiKey) {
-            addMessage('I need an OpenRouter API Key to work. Click the Ã¢Å¡â„¢Ã¯Â¸Â Settings icon above to add it.', 'error');
+            addMessage('I need an OpenRouter API Key to work. Click the ÃƒÂ¢Ã…Â¡Ã¢â€žÂ¢ÃƒÂ¯Ã‚Â¸Ã‚Â Settings icon above to add it.', 'error');
             return;
         }
         addMessage(userMessage, 'user');
@@ -7523,6 +7523,7 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
 
 // End of Main IIFE
 })();
+
 
 
 
