@@ -3119,12 +3119,7 @@
         });
         
         const detailedRows = Object.values(detailedMap);
-        detailedRows.sort((a, b) => {
-            if (a.rbm !== b.rbm) return a.rbm.localeCompare(b.rbm);
-            if (a.branch !== b.branch) return a.branch.localeCompare(b.branch);
-            if (a.staff !== b.staff) return a.staff.localeCompare(b.staff);
-            return a.product.localeCompare(b.product);
-        });
+        detailedRows.sort((a, b) => { const aConv = a.pQty > 0 ? a.oQty / a.pQty : 0; const bConv = b.pQty > 0 ? b.oQty / b.pQty : 0; if (aConv !== bConv) return aConv - bConv; if (b.pQty !== a.pQty) return b.pQty - a.pQty; if (a.branch !== b.branch) return a.branch.localeCompare(b.branch); return a.staff.localeCompare(b.staff); });
         
         const hdr = ['BRANCH', 'RBM', 'BDM', 'Staff', 'Product', 'Product Qty', 'OSG QTY', 'LG', 'SAMSUNG'];
         const data = detailedRows.map(r => [
@@ -7522,6 +7517,8 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
 
 // End of Main IIFE
 })();
+
+
 
 
 
