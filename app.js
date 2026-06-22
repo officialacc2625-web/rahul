@@ -2856,7 +2856,6 @@
             if (!s) return;
             samByStaff[s] = (samByStaff[s] || 0) + (r.qty || 0);
         });
-        });
 
         const allStaff = new Set([
             ...Object.keys(pByStaff), ...Object.keys(oByStaff),
