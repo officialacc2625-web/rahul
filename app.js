@@ -3081,43 +3081,41 @@
         });
         
         osgData.forEach(r => {
+            let s = null, cat = null;
             const inv = r.invoice ? invoiceData[r.invoice] : null;
-            if (!inv) return;
-            
-            const s = inv.staff;
-            const cat = inv.product;
-            if (!validStaffNames.has(s)) return;
-            if (selectedProducts && !selectedProducts.includes(cat)) return;
+            if (inv) { s = inv.staff; cat = inv.product; }
+            else if (!selectedProducts && r.staff) { s = r.staff; }
+            if (!s || !validStaffNames.has(s)) return;
+            if (selectedProducts && cat && !selectedProducts.includes(cat)) return;
             
             const key = s;
             if (detailedMap[key]) {
-                const qty = r.qty || 0;
-                detailedMap[key].oQty += qty;
-                
-                const osgBrand = (r.brand || '').toUpperCase();
-                if (osgBrand === 'LG') detailedMap[key].lgOsgQty += qty;
-                if (osgBrand === 'SAMSUNG') detailedMap[key].samsungOsgQty += qty;
+                detailedMap[key].oQty += (r.qty || 0);
             }
         });
 
         amcData.forEach(r => {
+            let key = null;
             const inv = r.invoice ? invoiceData[r.invoice] : null;
-            if (!inv) return;
-            const key = inv.staff;
-            if (detailedMap[key]) {
-                const qty = r.qty || 0;
-                detailedMap[key].lgOsgQty += qty;
+            if (inv) {
+                if (selectedProducts && !selectedProducts.includes(inv.product)) return;
+                key = inv.staff;
+            } else if (!selectedProducts && r.staff) {
+                key = r.staff;
             }
+            if (key && detailedMap[key]) detailedMap[key].lgOsgQty += (r.qty || 0);
         });
         
         samsungData.forEach(r => {
+            let key = null;
             const inv = r.invoice ? invoiceData[r.invoice] : null;
-            if (!inv) return;
-            const key = inv.staff;
-            if (detailedMap[key]) {
-                const qty = r.qty || 0;
-                detailedMap[key].samsungOsgQty += qty;
+            if (inv) {
+                if (selectedProducts && !selectedProducts.includes(inv.product)) return;
+                key = inv.staff;
+            } else if (!selectedProducts && r.staff) {
+                key = r.staff;
             }
+            if (key && detailedMap[key]) detailedMap[key].samsungOsgQty += (r.qty || 0);
         });
         
         const detailedRows = Object.values(detailedMap);
