@@ -854,6 +854,7 @@
                     }
                 }
             }
+            if (!r.category || !stdCats.includes(r.category)) return;
 
             r.brand = strVal(row, mapping.brand);
             r.invoice = strVal(row, mapping.invoice);
@@ -1021,6 +1022,7 @@
                     }
                 }
             }
+            if (!r.category || !stdCats.includes(r.category)) return;
 
             r.brand = strVal(row, mapping.brand);
             r.soldPrice = num(getVal(row, mapping.soldPrice, 0));
