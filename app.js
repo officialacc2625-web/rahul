@@ -2827,26 +2827,35 @@
             oByStaff[s].push(r);
         });
 
-        // LG AMC: invoice match first, then staff name fallback
+        // LG AMC: invoice match (with category filter) first; staff name fallback ONLY when no product filter
         const lgByStaff = {};
         amcData.forEach(r => {
             let s = null;
             const inv = r.invoice ? invoiceData[r.invoice] : null;
-            if (inv) s = inv.staff;
-            else if (r.staff) s = r.staff;
+            if (inv) {
+                if (selectedProducts && !selectedProducts.includes(inv.product)) return;
+                s = inv.staff;
+            } else if (!selectedProducts && r.staff) {
+                s = r.staff; // staff-name fallback only when showing All Products
+            }
             if (!s) return;
             lgByStaff[s] = (lgByStaff[s] || 0) + (r.qty || 0);
         });
 
-        // Samsung: invoice match first, then staff name fallback
+        // Samsung: invoice match (with category filter) first; staff name fallback ONLY when no product filter
         const samByStaff = {};
         samsungData.forEach(r => {
             let s = null;
             const inv = r.invoice ? invoiceData[r.invoice] : null;
-            if (inv) s = inv.staff;
-            else if (r.staff) s = r.staff;
+            if (inv) {
+                if (selectedProducts && !selectedProducts.includes(inv.product)) return;
+                s = inv.staff;
+            } else if (!selectedProducts && r.staff) {
+                s = r.staff; // staff-name fallback only when showing All Products
+            }
             if (!s) return;
             samByStaff[s] = (samByStaff[s] || 0) + (r.qty || 0);
+        });
         });
 
         const allStaff = new Set([
@@ -7516,6 +7525,7 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
 
 // End of Main IIFE
 })();
+
 
 
 
