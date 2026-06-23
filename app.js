@@ -1,5 +1,5 @@
 // ============================================================
-// Analytics Portal ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Conversion Reports
+// Analytics Portal ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Conversion Reports
 // Dual-file: Product Data + OSG Data
 // Value Conversion = OSG Sold Price / Product Sold Price
 // Qty Conversion   = OSG Quantity  / Product Quantity
@@ -182,9 +182,9 @@
         rbm: ['rbm', 'rbm name', 'region', 'regional manager', 'regional business manager', 'rsm'],
         bdm: ['bdm', 'bdm name', 'business development manager', 'area manager', 'asm'],
         staff: ['staff', 'staff name', 'salesperson', 'sales person', 'employee', 'employee name', 'promoter', 'promoter name', 'executive'],
-        product: ['product', 'product name', 'product type', 'product group', 'model', 'model name', 'item name', 'item description', 'description', 'material', 'material description', 'item'],
-        category: ['category', 'item category', 'item group', 'product category', 'sub category', 'material group', 'group'],
-        brand: ['brand', 'brand name', 'make', 'manufacturer'],
+        product: ['product', 'product name', 'product type', 'product group', 'model', 'model name', 'item name'],
+        category: ['category', 'item category', 'item group', 'product category', 'sub category'],
+        brand: ['brand', 'brand name', 'make'],
         soldPrice: ['sold price', 'soldprice', 'selling price', 'sale price', 'mop', 'net amount', 'net value', 'total amount', 'amount', 'sale amount', 'sale value', 'value', 'net sales value'],
         taxableVal: ['taxable value', 'taxable', 'taxable amount', 'taxable val'],
         tax: ['tax', 'tax amount', 'gst', 'tax value', 'gst amount'],
@@ -208,10 +208,10 @@
     const OSG_COL_MAP = {
         branch: ['store name', 'store', 'branch', 'branch name', 'outlet', 'outlet name', 'shop name'],
         storeCode: ['store code', 'store id', 'outlet code'],
-        product: ['product', 'product name', 'product type', 'model', 'model name', 'item name', 'product group', 'item description', 'description', 'material', 'material description', 'item'],
-        category: ['category', 'product category', 'item category', 'material group', 'group', 'sub category'],
-        brand: ['brand', 'brand name', 'make', 'manufacturer'],
-        soldPrice: ['sold price', 'soldprice', 'plan price', 'selling price', 'net amount', 'amount', 'value', 'net value', 'sale price', 'mop', 'total amount', 'premium', 'premium amount', 'price'],
+        product: ['product', 'product name', 'product type', 'model', 'model name', 'item name', 'product group'],
+        category: ['category', 'product category', 'item category'],
+        brand: ['brand', 'brand name', 'make'],
+        soldPrice: ['sold price', 'soldprice', 'plan price', 'selling price', 'net amount', 'amount', 'value', 'net value', 'sale price', 'mop', 'total amount', 'premium', 'premium amount'],
         qty: ['quantity', 'qty', 'ews qty', 'qnty', 'units', 'net qty', 'count', 'nos', 'pcs'],
         invoice: ['invoice no', 'invoice numb', 'invoice number', 'invoice', 'bill no', 'bill number', 'bill no.', 'invoice no.', 'inv no', 'receipt no'],
         staff: ['staff', 'staff name', 'sales person', 'salesman', 'employee name']
@@ -394,7 +394,7 @@
             e.preventDefault();
             const section = item.dataset.section;
 
-            // Check if page needs auth ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Upload Data and Customers Without OSG are public
+            // Check if page needs auth ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Upload Data and Customers Without OSG are public
             const isPublicPage = section === 'customers-osg-section' || section === 'upload-section' || section === 'wosg-dashboard-section';
             if (!isPublicPage && !isAuthenticated) {
                 // Intercept navigation and show password modal
@@ -475,7 +475,7 @@
             savedAt: new Date().toISOString()
         };
         await saveMonthlyDataToDB(month, snapshot);
-        alert(`ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ Data for ${month} saved successfully!`);
+        alert(`ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Data for ${month} saved successfully!`);
         renderTrendsDashboard();
     });
 
@@ -643,7 +643,7 @@
     function setupUploadZone(zone, input, onFiles) {
         console.log('[UPLOAD] setupUploadZone registered for', input.id);
         // Only open the file picker on bare zone clicks (not on label/button/input)
-        // The label's native `for` attribute already opens the input ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â no manual click needed
+        // The label's native `for` attribute already opens the input â€”Â no manual click needed
         zone.addEventListener('click', (e) => {
             if (e.target === input) return;
             if (e.target.tagName === 'LABEL' || e.target.closest('label')) return;
@@ -734,7 +734,7 @@
                     var bShr = document.getElementById('btnShare');
                     var bRst = document.getElementById('btnReset');
                     if (fcb) fcb.style.display = 'flex';
-                    if (fct) fct.textContent = allData.length + ' product ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ' + osgData.length + ' OSG';
+                    if (fct) fct.textContent = allData.length + ' product Ãƒâ€šÃ‚Â· ' + osgData.length + ' OSG';
                     if (bShr) bShr.style.display = 'flex';
                     if (bRst) bRst.style.display = 'flex';
 
@@ -834,28 +834,6 @@
             r.staff = strVal(row, mapping.staff);
             r.product = strVal(row, mapping.product);
             r.category = normalizeProductCategory(strVal(row, mapping.category));
-            
-            // BULLETPROOF CATEGORY FALLBACK: 
-            // If the category didn't map to a standard bucket, check the product name or the entire row!
-            const stdCats = ['MICROWAVE OVEN', 'WASHING MACHINE', 'DRYER', 'REFRIGERATOR', 'AC', 'TV', 'AUDIO SYSTEM', 'HOME APPLIANCE', 'DISH WASHER'];
-            if (!r.category || !stdCats.includes(r.category)) {
-                const prodNorm = normalizeProductCategory(r.product);
-                if (stdCats.includes(prodNorm)) {
-                    r.category = prodNorm;
-                } else {
-                    for (const key in row) {
-                        if (typeof row[key] === 'string') {
-                            const valNorm = normalizeProductCategory(row[key]);
-                            if (stdCats.includes(valNorm)) {
-                                r.category = valNorm;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            if (!r.category || !stdCats.includes(r.category)) return;
-
             r.brand = strVal(row, mapping.brand);
             r.invoice = strVal(row, mapping.invoice);
             r.customerName = strVal(row, mapping.customerName);
@@ -884,8 +862,8 @@
     }
 
     // ---- SAMSUNG PRODUCT NAME NORMALIZER ----
-    // Maps raw Samsung Care+ product strings ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ standard category names
-    // e.g. "Samsung Care+ EW WM Auto TopLoad 1Year" ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ "WASHING MACHINE"
+    // Maps raw Samsung Care+ product strings ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ standard category names
+    // e.g. "Samsung Care+ EW WM Auto TopLoad 1Year" ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ "WASHING MACHINE"
     function mapSamsungProductCategory(rawName) {
         if (!rawName) return rawName;
         const name = rawName.toUpperCase();
@@ -908,7 +886,7 @@
     }
 
     // ---- UNIVERSAL CATEGORY NORMALIZER (for Product & OSG files) ----
-    // Maps raw category column values ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ one of the 9 standard categories
+    // Maps raw category column values ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ one of the 9 standard categories
     function normalizeProductCategory(raw) {
         if (!raw) return raw;
         const c = raw.toUpperCase().trim();
@@ -928,13 +906,13 @@
             || c.includes('PURIFIER') || c.includes('WATER HEATER') || c.includes('GEYSER')
             || c.includes('HOME APPLIANCE')) return 'HOME APPLIANCE';
         if (c.includes('DISH WASHER') || c.includes('DISHWASHER')) return 'DISH WASHER';
-        // Return the original if not matched ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â keeps custom categories intact
+        // Return the original if not matched â€”Â keeps custom categories intact
         return raw;
     }
 
     // ---- LG-AMC PRODUCT NAME NORMALIZER ----
-    // Maps full LG product names ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ standard category names.
-    // Audio-related ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ AUDIO SYSTEM; anything else not in the 6 known categories ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ SMALL APPLIANCE
+    // Maps full LG product names ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ standard category names.
+    // Audio-related ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ AUDIO SYSTEM; anything else not in the 6 known categories ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ SMALL APPLIANCE
     function mapLGAMCProductCategory(rawName) {
         if (!rawName) return rawName;
         const name = rawName.toUpperCase();
@@ -948,7 +926,7 @@
             || name.includes('FRONT LOAD') || name.includes('TOP LOAD') || name.includes('FL WM')
             || name.includes('TL WM') || name.includes('F/L') || name.includes('T/L') 
             || /\bSA\b/.test(name) || name.includes('SEMI') || name.includes('FL DRYER') || name.includes('DRYER')) {
-            // Dryer is laundry but separate ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â return DRYER
+            // Dryer is laundry but separate â€”Â return DRYER
             if (name.includes('DRYER') && !name.includes('WASHER') && !name.includes('WASHING')) return 'DRYER';
             return 'WASHING MACHINE';
         }
@@ -990,7 +968,7 @@
         // --- Laptop ---
         if (name.includes('LAPTOP') || name.includes('GRAM') || name.includes('NOTEBOOK')) return 'LAPTOP';
 
-        // --- Everything else ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ Small Appliance ---
+        // --- Everything else ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Small Appliance ---
         // (Styler, WashTower, other niche products)
         return 'SMALL APPLIANCE';
     }
@@ -1002,28 +980,6 @@
             r.storeCode = strVal(row, mapping.storeCode);
             r.product = strVal(row, mapping.product);
             r.category = normalizeProductCategory(strVal(row, mapping.category));
-            
-            // BULLETPROOF CATEGORY FALLBACK: 
-            // If the category didn't map to a standard bucket, check the product name or the entire row!
-            const stdCats = ['MICROWAVE OVEN', 'WASHING MACHINE', 'DRYER', 'REFRIGERATOR', 'AC', 'TV', 'AUDIO SYSTEM', 'HOME APPLIANCE', 'DISH WASHER'];
-            if (!r.category || !stdCats.includes(r.category)) {
-                const prodNorm = normalizeProductCategory(r.product);
-                if (stdCats.includes(prodNorm)) {
-                    r.category = prodNorm;
-                } else {
-                    for (const key in row) {
-                        if (typeof row[key] === 'string') {
-                            const valNorm = normalizeProductCategory(row[key]);
-                            if (stdCats.includes(valNorm)) {
-                                r.category = valNorm;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            if (!r.category || !stdCats.includes(r.category)) return;
-
             r.brand = strVal(row, mapping.brand);
             r.soldPrice = num(getVal(row, mapping.soldPrice, 0));
             r.qty = parseFloat(strVal(row, mapping.qty)) || 1;
@@ -1037,7 +993,13 @@
                 r.brand = ''; // Clear since this wasn't actually the brand
             }
 
-
+            // Ensure category is always normalized from the product column
+            if (!r.category || r.category === 'SMALL APPLIANCE') {
+                const normalized = normalizeProductCategory(r.product);
+                if (normalized !== 'SMALL APPLIANCE' || !r.category) {
+                    r.category = normalized;
+                }
+            }
 
             return r;
         }).then(rows => {
@@ -1071,7 +1033,7 @@
             r.rbm = strVal(row, mapping.rbm);
             r.bdm = strVal(row, mapping.bdm);
             r.staff = strVal(row, mapping.staff);
-            // Normalize the raw LG product name ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ standard category
+            // Normalize the raw LG product name ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ standard category
             const rawProduct = strVal(row, mapping.product);
             r.product = rawProduct;
             r.rawProduct = rawProduct;  // keep original for debugging
@@ -1108,7 +1070,7 @@
             const r = {};
             r.branch = strVal(row, mapping.branch);
             r.storeCode = strVal(row, mapping.storeCode);
-            // Normalize the raw product name ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ standard category
+            // Normalize the raw product name ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ standard category
             const rawProduct = strVal(row, mapping.product);
             r.product = rawProduct;
             r.rawProduct = rawProduct;  // keep original for debugging
@@ -1138,9 +1100,9 @@
         if (typeof XLSX === 'undefined') {
             return Promise.reject(new Error(
                 'The XLSX library failed to load.\n\n' +
-                'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ Fix: Check your internet connection and reload the page.\n' +
+                'ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Fix: Check your internet connection and reload the page.\n' +
                 '   The library loads from cdn.jsdelivr.net on first use.\n\n' +
-                'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ Alternative: Convert your file to CSV first:\n' +
+                'ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã‚Â¡ Alternative: Convert your file to CSV first:\n' +
                 '   python convert.py "your_file.xlsx"'
             ));
         }
@@ -1172,7 +1134,7 @@
                                 console.log('[Sheet: ' + sheetName + '] ' + json.length + ' rows');
                                 const mapping = autoMapColumns(headers, colMap);
                                 for (let i = 0; i < json.length; i++) {
-                                    const rowData = rowMapper(json[i], mapping); if (rowData) allRows.push(rowData);
+                                    allRows.push(rowMapper(json[i], mapping));
                                 }
                             }
                             if (allRows.length === 0) { reject(new Error('No data')); return; }
@@ -1217,7 +1179,7 @@
                     updateLoadingMsg('Processing ' + json.length.toLocaleString() + ' rows...');
                     var allRows = [];
                     for (var i = 0; i < json.length; i++) {
-                        const rowData = rowMapper(json[i], mapping); if (rowData) allRows.push(rowData);
+                        allRows.push(rowMapper(json[i], mapping));
                         if (i % 100000 === 0 && i > 0) {
                             updateLoadingMsg('Row ' + i.toLocaleString() + ' / ' + json.length.toLocaleString());
                         }
@@ -1244,29 +1206,33 @@
 
     function autoMapColumns(headers, colMap) {
         const mapping = {};
-        const cleanHeaders = headers.map(h => h.toLowerCase().replace(/[^a-z0-9]/g, ''));
+        const headersLower = headers.map(h => h.toLowerCase().trim());
 
         for (const [key, aliases] of Object.entries(colMap)) {
             mapping[key] = null;
-            const cleanAliases = aliases.map(a => a.toLowerCase().replace(/[^a-z0-9]/g, ''));
 
-            for (let i = 0; i < cleanAliases.length; i++) {
-                const idx = cleanHeaders.indexOf(cleanAliases[i]);
+            // Pass 1: Exact match (alias order = priority)
+            for (const alias of aliases) {
+                const idx = headersLower.indexOf(alias);
                 if (idx >= 0) { mapping[key] = headers[idx]; break; }
             }
 
+            // Pass 2: Partial/contains match as fallback
             if (!mapping[key]) {
-                for (let i = 0; i < cleanAliases.length; i++) {
-                    const idx = cleanHeaders.findIndex(h => h.includes(cleanAliases[i]) || cleanAliases[i].includes(h));
-                    if (idx >= 0 && cleanHeaders[idx].length > 1) { mapping[key] = headers[idx]; break; }
+                for (const alias of aliases) {
+                    const idx = headersLower.findIndex(h => h.includes(alias) || alias.includes(h));
+                    if (idx >= 0 && h_len(headersLower[idx]) > 1) { mapping[key] = headers[idx]; break; }
                 }
             }
         }
 
-        if (!mapping.product && !mapping.category) {
-            alert("CRITICAL ERROR: Could not find 'Product' or 'Category' column in CSV.\nHeaders: " + headers.slice(0,10).join(', '));
-        }
+        // Warn about critical unmapped columns
+        const critical = ['soldPrice', 'qty', 'branch', 'product'];
+        critical.forEach(k => {
+            if (!mapping[k]) console.warn(`[ÃƒÂ¢Ã…Â¡Ã‚Â  Column NOT FOUND] '${k}' ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â no matching header. Available headers:`, headers.join(', '));
+        });
 
+        console.log('[Column Mapping]', JSON.stringify(mapping));
         return mapping;
     }
 
@@ -1288,7 +1254,7 @@
     function populateFilters() {
         populateSelect(filterRBM, uniqueVals(allData, 'rbm'), 'All RBMs');
         populateSelect(filterBranch, uniqueVals([...allData, ...osgData], 'branch'), 'All Branches');
-        // Product dropdown is predefined ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â keep as-is, just reset selection
+        // Product dropdown is predefined ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â keep as-is, just reset selection
         filterProduct.value = '';
         // Brand populated dynamically from uploaded data
         populateSelect(filterBrand, uniqueVals([...allData, ...osgData], 'brand'), 'All Brands');
@@ -2213,7 +2179,7 @@
         if (OSG_NATIVE_FIELDS.has(key)) {
             oGrouped = groupBy(filteredOSG, key);
         } else {
-            // Build invoice ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ key value lookup from filtered product data
+            // Build invoice ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ key value lookup from filtered product data
             const invoiceToKey = {};
             filteredProduct.forEach(r => {
                 if (r.invoice && r[key]) invoiceToKey[r.invoice] = r[key];
@@ -2227,7 +2193,7 @@
                     if (!oGrouped[groupName]) oGrouped[groupName] = [];
                     oGrouped[groupName].push(r);
                 }
-                // Skip OSG rows that can't be attributed ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â no "Unknown"
+                // Skip OSG rows that can't be attributed ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â no "Unknown"
             });
         }
 
@@ -2279,7 +2245,7 @@
 
 
     function renderConversionReport() {
-        // Group by branch ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â show value and qty conversion
+        // Group by branch ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â show value and qty conversion
         const pGrouped = groupBy(filteredProduct, 'branch');
         const oGrouped = groupBy(filteredOSG, 'branch');
         const allKeys = new Set([...Object.keys(pGrouped), ...Object.keys(oGrouped)]);
@@ -2414,13 +2380,13 @@
         destroyChart('qtyConvRBM');
         const pG = groupBy(filteredProduct, 'rbm');
 
-        // Map OSG ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ RBM via invoice lookup (same as renderConvTable)
+        // Map OSG ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ RBM via invoice lookup (same as renderConvTable)
         const invoiceToRBM = {};
         filteredProduct.forEach(r => { if (r.invoice && r.rbm) invoiceToRBM[r.invoice] = r.rbm; });
         const osgByRBM = {};
         filteredOSG.forEach(r => {
             const rbm = r.invoice ? (invoiceToRBM[r.invoice] || null) : null;
-            if (!rbm) return; // skip unattributable rows ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â no "Unknown"
+            if (!rbm) return; // skip unattributable rows ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â no "Unknown"
             if (!osgByRBM[rbm]) osgByRBM[rbm] = [];
             osgByRBM[rbm].push(r);
         });
@@ -2685,43 +2651,13 @@
         };
     };
 
-        window.toggleAllLcOsgQty = function (el) {
-        const cbs = document.querySelectorAll('.lc-osgqty-cb');
-        cbs.forEach(cb => cb.checked = el.checked);
-        window.updateLcOsgQtyLabel();
-    };
-
-    window.updateLcOsgQtyLabel = function () {
-        const cbs = Array.from(document.querySelectorAll('.lc-osgqty-cb'));
-        const checked = cbs.filter(cb => cb.checked).map(cb => cb.value);
-        const allCb = document.querySelector('#lcOsgQtyDropdown input[value="ALL"]');
-        const label = document.getElementById('lcOsgQtyLabel');
-        if (checked.length === cbs.length) {
-            if (allCb) allCb.checked = true;
-            if (label) label.textContent = 'All OSG Qty';
-        } else if (checked.length === 0) {
-            if (allCb) allCb.checked = false;
-            if (label) label.textContent = 'None Selected';
-        } else {
-            if (allCb) allCb.checked = false;
-            if (label) label.textContent = checked.join(', ');
-        }
-    };
-window.getLcSelectedOsgQty = function () {
-        if (!document.getElementById('lcOsgQtyDropdown')) return null;
-        const cbs = document.querySelectorAll('.lc-osgqty-cb');
-        const selected = [];
-        cbs.forEach(cb => { if (cb.checked) selected.push(cb.value); });
-        if (selected.length === cbs.length || document.querySelector('#lcOsgQtyDropdown input[value="ALL"]')?.checked) return null;
-        return selected;
-    };
-
     window.getLcSelectedProducts = function() {
         if (!document.getElementById('lcProductDropdown')) return null;
         const cbs = document.querySelectorAll('.lc-prod-cb');
         const selected = [];
         cbs.forEach(cb => { if (cb.checked) selected.push(cb.value); });
-        if (selected.length === cbs.length || document.querySelector('#lcProductDropdown input[value="ALL"]')?.checked) return null; // All products selected
+        const allCb = document.querySelector('#lcProductDropdown input[value="ALL"]');
+        if (selected.length === cbs.length || (allCb && allCb.checked)) return null; // All products selected
         return selected;
     };
 
@@ -2752,7 +2688,8 @@ window.getLcSelectedOsgQty = function () {
         const cbs = document.querySelectorAll('.lc-branch-cb');
         const selected = [];
         cbs.forEach(cb => { if (cb.checked) selected.push(cb.value); });
-        if (selected.length === cbs.length || document.querySelector('#lcBranchDropdown input[value="ALL"]')?.checked) return null;
+        const allCb = document.querySelector('#lcBranchDropdown input[value="ALL"]');
+        if (selected.length === cbs.length || (allCb && allCb.checked)) return null;
         return selected;
     };
 
@@ -2784,7 +2721,8 @@ window.getLcSelectedOsgQty = function () {
         const cbs = document.querySelectorAll('.tc-branch-cb');
         const selected = [];
         cbs.forEach(cb => { if (cb.checked) selected.push(cb.value); });
-        if (selected.length === cbs.length || document.querySelector('#tcBranchDropdown input[value="ALL"]')?.checked) return null;
+        const allCb = document.querySelector('#tcBranchDropdown input[value="ALL"]');
+        if (selected.length === cbs.length || (allCb && allCb.checked)) return null;
         return selected;
     };
 
@@ -2815,40 +2753,67 @@ window.getLcSelectedOsgQty = function () {
     document.addEventListener('click', function(e) {
         const wrapper = document.getElementById('lcProductMultiWrapper');
         if (wrapper && !wrapper.contains(e.target)) {
-            if (inv) {
-                if (selectedProducts && !selectedProducts.includes(inv.product)) return;
-                s = inv.staff;
-            } else if (!selectedProducts && r.staff) {
-                s = r.staff; // staff-name fallback only when showing All Products
-            }
-            if (!s) return;
-            samByStaff[s] = (samByStaff[s] || 0) + (r.qty || 0);
+            const dropdown = document.getElementById('lcProductDropdown');
+            if(dropdown) dropdown.style.display = 'none';
+        }
+
+        const lcBranchWrapper = document.getElementById('lcBranchMultiWrapper');
+        if (lcBranchWrapper && !lcBranchWrapper.contains(e.target)) {
+            const bDropdown = document.getElementById('lcBranchDropdown');
+            if (bDropdown) bDropdown.style.display = 'none';
+        }
+
+        const tcBranchWrapper = document.getElementById('tcBranchMultiWrapper');
+        if (tcBranchWrapper && !tcBranchWrapper.contains(e.target)) {
+            const tcDropdown = document.getElementById('tcBranchDropdown');
+            if (tcDropdown) tcDropdown.style.display = 'none';
+        }
+    });
+
+    // ---- LOW CONV STAFF LOGIC ----
+    function buildStaffStats(selectedProducts = null) {
+        // Build invoice -> {staff, product} lookup from ALL product data
+        const invoiceData = {};
+        productData.forEach(r => { if (r.invoice) invoiceData[r.invoice] = { staff: r.staff || 'Unknown', product: r.category }; });
+
+        // Group product data by staff
+        const pByStaff = {};
+        productData.forEach(r => {
+            if (selectedProducts && !selectedProducts.includes(r.category)) return;
+            const s = r.staff || 'Unknown';
+            if (!pByStaff[s]) pByStaff[s] = { branch: r.branch, rbm: r.rbm, bdm: r.bdm, rows: [] };
+            pByStaff[s].rows.push(r);
         });
 
-        const allStaff = new Set([
-            ...Object.keys(pByStaff), ...Object.keys(oByStaff),
-            ...Object.keys(lgByStaff), ...Object.keys(samByStaff)
-        ]);
+        // Group OSG data by staff via invoice mapping
+        const oByStaff = {};
+        osgData.forEach(r => {
+            const inv = r.invoice ? invoiceData[r.invoice] : null;
+            const s = inv ? inv.staff : null;
+            const pName = inv ? inv.product : null;
+            if (!s) return;
+            if (selectedProducts && !selectedProducts.includes(pName)) return;
+            if (!oByStaff[s]) oByStaff[s] = [];
+            oByStaff[s].push(r);
+        });
+
+        const allStaff = new Set([...Object.keys(pByStaff), ...Object.keys(oByStaff)]);
         allStaff.delete('Unknown');
 
         const finalStats = Array.from(allStaff).map(name => {
             const pInfo = pByStaff[name] || { branch: '', rbm: '', bdm: '', rows: [] };
             const oRows = oByStaff[name] || [];
             const pQty = pInfo.rows.reduce((s, r) => s + r.qty, 0);
-            const oQty = oRows.reduce((s, r) => s + r.qty, 0);       // OSG file only
-            const lgOsgQty = lgByStaff[name] || 0;                    // LG AMC file only
-            const samsungOsgQty = samByStaff[name] || 0;              // Samsung file only
+            const oQty = oRows.reduce((s, r) => s + r.qty, 0);
             const pRev = pInfo.rows.reduce((s, r) => s + r.soldPrice, 0);
             const oRev = oRows.reduce((s, r) => s + r.soldPrice, 0);
-            // Qty Conv% uses OSG warranty only
             const qtyConv = pQty > 0 ? (oQty / pQty) * 100 : 0;
             const valConv = pRev > 0 ? (oRev / pRev) * 100 : 0;
-            return { name, branch: pInfo.branch, rbm: pInfo.rbm, bdm: pInfo.bdm, pQty, oQty, lgOsgQty, samsungOsgQty, pRev, oRev, qtyConv, valConv };
+            return { name, branch: pInfo.branch, rbm: pInfo.rbm, bdm: pInfo.bdm, pQty, oQty, pRev, oRev, qtyConv, valConv };
         });
         window.portalStaffStats = finalStats;
         return finalStats;
     }
-
 
     function renderLowConvPage() {
         if (productData.length === 0) {
@@ -2860,7 +2825,7 @@ window.getLcSelectedOsgQty = function () {
 
         const minQty = parseFloat($('lcMinQty').value) || 0;
         const maxConv = parseFloat($('lcMaxConv').value);
-        const selectedOsgQty = window.getLcSelectedOsgQty();
+        const minOsgQty = parseInt($('lcMinOsgQty').value) || 0;
         const selectedBranches = window.getLcSelectedBranches();
         const selRBM = $('lcRBM').value;
         const selBDM = $('lcBDM').value;
@@ -2885,9 +2850,64 @@ window.getLcSelectedOsgQty = function () {
             branchDrop.innerHTML = bHtml;
             window.updateLcBranchLabel();
         }
+        rbmEl.innerHTML = '<option value="">All RBMs</option>' +
+            rbmSet.map(r => `<option value="${r}" ${r === prevRBM ? 'selected' : ''}>${r}</option>`).join('');
+        bdmEl.innerHTML = '<option value="">All BDMs</option>' +
+            bdmSet.map(b => `<option value="${b}" ${b === prevBDM ? 'selected' : ''}>${b}</option>`).join('');
+
+        // Filter: minQty, maxConv, minOsgQty, optional Branch, optional RBM, optional BDM
+        const filtered = allStats
+            .filter(s => s.pQty >= minQty && s.qtyConv <= maxConv)
+            .filter(s => s.oQty >= minOsgQty)
+            .filter(s => !selectedBranches || selectedBranches.includes(s.branch))
+            .filter(s => !selRBM || s.rbm === selRBM)
+            .filter(s => !selBDM || s.bdm === selBDM)
+            .sort((a, b) => {
+                if (a.qtyConv !== b.qtyConv) return a.qtyConv - b.qtyConv;
+                return b.pQty - a.pQty;
+            });
+
+        $('lcCount').textContent = `${filtered.length} staff`;
+
+        // KPI summary
+        const totalPQty = filtered.reduce((s, r) => s + r.pQty, 0);
+        const totalOQty = filtered.reduce((s, r) => s + r.oQty, 0);
+        const totalPRev = filtered.reduce((s, r) => s + r.pRev, 0);
+        const zeroConvCount = filtered.filter(r => r.qtyConv === 0).length;
+        $('lcKpiRow').innerHTML = `
+            <div class="lc-kpi"><span class="lc-kpi-label">Zero Conv Staff</span><span class="lc-kpi-val loss-text">${zeroConvCount}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Total Product Qty</span><span class="lc-kpi-val">${formatNumber(totalPQty)}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Total OSG Qty (Sold)</span><span class="lc-kpi-val">${formatNumber(totalOQty)}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Opportunity Missed (Qty)</span><span class="lc-kpi-val loss-text">${formatNumber(totalPQty - totalOQty)}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Total Product Revenue</span><span class="lc-kpi-val">${fmtShortHtml(totalPRev)}</span></div>
+        `;
+
+        if (filtered.length === 0) {
+            $('lcTableWrapper').innerHTML = noDataHTML(`No staff found with â‰¥${minQty} product qty and ÃƒÂ¢Ã¢â‚¬Â°Ã‚Â¤${maxConv}% qty conversion.`);
+            return;
+        }
+
+        let html = `<table class="data-table">
+            <thead><tr>
                 <th>#</th><th>Staff</th><th>Branch</th><th>RBM</th><th>BDM</th>
-                <th>Prod Qty</th><th>OSG Qty</th><th style="color:#10b981;">LG</th><th style="color:#f59e0b;">SAMSUNG</th><th>Qty Conv%</th><th>Val Conv%</th><th>Prod Rev</th>
+                <th>Prod Qty</th><th>OSG Qty</th><th>Qty Conv%</th><th>Val Conv%</th><th>Prod Rev</th>
             </tr></thead><tbody>`;
+
+        filtered.forEach((e, i) => {
+            const convCls = e.qtyConv === 0 ? 'loss-val' : (e.qtyConv < 0.5 ? 'conv-warn' : 'conv-val');
+            const rank = i + 1;
+            const rankBadge = rank <= 3 ? `<span class="rank-badge rank-${rank}">${rank}</span>` : `<span class="rank-num">${rank}</span>`;
+            const dlIcon = `<button onclick="window.downloadStaffDetails('${e.name}', '${e.branch}')" title="Download Staff Details" style="background:none;border:none;cursor:pointer;color:var(--primary);padding:0;margin-left:8px;vertical-align:middle;display:inline-flex;align-items:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>`;
+            html += `<tr>
+                <td class="number-cell">${rankBadge}</td>
+                <td style="white-space:nowrap;"><strong>${e.name}</strong>${dlIcon}</td>
+                <td>${e.branch}</td>
+                <td>${e.rbm}</td>
+                <td>${e.bdm}</td>
+                <td class="number-cell"><strong>${e.pQty}</strong></td>
+                <td class="number-cell">${e.oQty}</td>
+                <td class="number-cell ${convCls}">${e.qtyConv.toFixed(2)}%</td>
+                <td class="number-cell conv-val">${e.valConv.toFixed(2)}%</td>
                 <td class="number-cell">${fmtShortHtml(e.pRev)}</td>
             </tr>`;
         });
@@ -2900,35 +2920,7 @@ window.getLcSelectedOsgQty = function () {
         if (productData.length === 0) return;
         const minQty = parseFloat($('lcMinQty').value) || 0;
         const maxConv = parseFloat($('lcMaxConv').value);
-        const selectedOsgQty = window.getLcSelectedOsgQty();
-        const selectedBranches = window.getLcSelectedBranches();
-        const selRBM = $('lcRBM').value;
-        const selBDM = $('lcBDM').value;
-        const selectedProducts = window.getLcSelectedProducts();
-        const allStats = buildStaffStats(selectedProducts);
-        const filtered = allStats
-            .filter(s => s.pQty >= minQty && s.qtyConv <= maxConv)
-            .filter(s => { if (!selectedOsgQty) return true; const q = s.oQty; if (q >= 5 && selectedOsgQty.includes('5+')) return true; return selectedOsgQty.includes(String(q)); })
-            .filter(s => !selectedBranches || selectedBranches.includes(s.branch))
-            .filter(s => !selRBM || s.rbm === selRBM)
-            .filter(s => !selBDM || s.bdm === selBDM)
-            .sort((a, b) => a.qtyConv - b.qtyConv || b.pQty - a.pQty);
-        if (filtered.length === 0) return;
-        const exportLimit = parseInt($('lcTopStaffExportLimit')?.value) || 15;
-        const finalExport = filtered.slice(0, exportLimit);
-        const hdr = ['Rank', 'Staff', 'Branch', 'RBM', 'BDM', 'Prod Qty', 'OSG Qty', 'Qty Conv%', 'Val Conv%', 'Prod Revenue'];
-        const data = finalExport.map((e, i) => [
-            i + 1, e.name, e.branch, e.rbm, e.bdm, e.pQty, e.oQty,
-            parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2)), Math.round(e.pRev)
-        ]);
-        exportToStyledExcel(data, hdr, 'low_conv_staff.xlsx', 'Low Conversion Staff');
-    }
-
-    function exportDetailedLowConvCSV() {
-        if (productData.length === 0) return;
-        const minQty = parseFloat($('lcMinQty').value) || 0;
-        const maxConv = parseFloat($('lcMaxConv').value);
-        const selectedOsgQty = window.getLcSelectedOsgQty();
+        const minOsgQty = parseInt($('lcMinOsgQty').value) || 0;
         const selectedBranches = window.getLcSelectedBranches();
         const selRBM = $('lcRBM').value;
         const selBDM = $('lcBDM').value;
@@ -2937,7 +2929,7 @@ window.getLcSelectedOsgQty = function () {
         const allStats = buildStaffStats(selectedProducts);
         const filteredStaff = allStats
             .filter(s => s.pQty >= minQty && s.qtyConv <= maxConv)
-            .filter(s => { if (!selectedOsgQty) return true; const q = s.oQty; if (q >= 5 && selectedOsgQty.includes('5+')) return true; return selectedOsgQty.includes(String(q)); })
+            .filter(s => s.oQty >= minOsgQty)
             .filter(s => !selectedBranches || selectedBranches.includes(s.branch))
             .filter(s => !selRBM || s.rbm === selRBM)
             .filter(s => !selBDM || s.bdm === selBDM);
@@ -2946,25 +2938,14 @@ window.getLcSelectedOsgQty = function () {
             alert("No staff match the current filters.");
             return;
         }
-        
-        // Sort worst staff first
+
+        // Apply Top Staff Limit ONLY for Export CSV
+        const exportLimitEl = $('lcTopStaffExportLimit');
+        const topLimit = exportLimitEl ? (parseInt(exportLimitEl.value) || 15) : 15;
         filteredStaff.sort((a, b) => a.qtyConv - b.qtyConv || b.pQty - a.pQty);
+        const topStaff = filteredStaff.slice(0, topLimit);
         
-        const maxStaffPerBranch = parseInt($('lcMaxStaffPerBranch')?.value) || 2;
-        const staffCounts = {};
-        const validStaffNames = new Set();
-        const staffRank = {};
-        let rnk = 0;`n        const staffTotals = {};
-        
-        for (const s of filteredStaff) {
-            if (!staffCounts[s.branch]) staffCounts[s.branch] = 0;
-            if (staffCounts[s.branch] < maxStaffPerBranch) {
-                staffCounts[s.branch]++;
-                validStaffNames.add(s.name);
-                if (staffRank[s.name] === undefined) { staffRank[s.name] = rnk++; }`n                staffTotals[s.name] = s.pQty;
-            }
-        }
-        
+        const validStaffNames = new Set(topStaff.map(s => s.name));
         const detailedMap = {};
         
         productData.forEach(r => {
@@ -2973,7 +2954,7 @@ window.getLcSelectedOsgQty = function () {
             if (selectedProducts && !selectedProducts.includes(r.category)) return;
             
             const cat = r.category || 'Unknown';
-            const key = s + '|' + cat;
+            const key = s + '|||' + cat;
             
             if (!detailedMap[key]) {
                 detailedMap[key] = {
@@ -2997,56 +2978,211 @@ window.getLcSelectedOsgQty = function () {
         });
         
         osgData.forEach(r => {
-            let s = null, cat = null;
             const inv = r.invoice ? invoiceData[r.invoice] : null;
-            if (inv) { s = inv.staff; cat = inv.product; }
-            else { s = r.staff; cat = mapLGAMCProductCategory(r.product) || 'Unknown'; }
-            if (!s || !validStaffNames.has(s)) return;
-            if (selectedProducts && cat && !selectedProducts.includes(cat)) return;
+            if (!inv) return;
             
-            const key = s + '|' + cat;
+            const s = inv.staff;
+            const cat = inv.product;
+            if (!validStaffNames.has(s)) return;
+            if (selectedProducts && !selectedProducts.includes(cat)) return;
+            
+            const key = s + '|||' + cat;
             if (detailedMap[key]) {
-                detailedMap[key].oQty += (r.qty || 0);
+                const qty = r.qty || 0;
+                detailedMap[key].oQty += qty;
+                
+                const osgBrand = (r.brand || '').toUpperCase();
+                if (osgBrand === 'LG') detailedMap[key].lgOsgQty += qty;
+                if (osgBrand === 'SAMSUNG') detailedMap[key].samsungOsgQty += qty;
             }
         });
 
         amcData.forEach(r => {
-            let s = null, cat = null;
             const inv = r.invoice ? invoiceData[r.invoice] : null;
-            if (inv) { s = inv.staff; cat = inv.product; }
-            else { s = r.staff; cat = mapLGAMCProductCategory(r.product) || 'Unknown'; }
-            if (!s || !validStaffNames.has(s)) return;
-            if (selectedProducts && cat && !selectedProducts.includes(cat)) return;
-            
-            const key = s + '|' + cat;
+            if (!inv) return;
+            const key = inv.staff + '|||' + inv.product;
             if (detailedMap[key]) {
-                detailedMap[key].lgOsgQty += (r.qty || 0);
+                const qty = r.qty || 0;
+                detailedMap[key].lgOsgQty += qty;
             }
         });
         
         samsungData.forEach(r => {
-            let s = null, cat = null;
             const inv = r.invoice ? invoiceData[r.invoice] : null;
-            if (inv) { s = inv.staff; cat = inv.product; }
-            else { s = r.staff; cat = mapLGAMCProductCategory(r.product) || 'Unknown'; }
-            if (!s || !validStaffNames.has(s)) return;
-            if (selectedProducts && cat && !selectedProducts.includes(cat)) return;
-            
-            const key = s + '|' + cat;
+            if (!inv) return;
+            const key = inv.staff + '|||' + inv.product;
             if (detailedMap[key]) {
-                detailedMap[key].samsungOsgQty += (r.qty || 0);
+                const qty = r.qty || 0;
+                detailedMap[key].samsungOsgQty += qty;
             }
         });
         
         const detailedRows = Object.values(detailedMap);
+        
+        // Compute Totals per Staff
+        const staffTotals = {};
+        detailedRows.forEach(r => {
+            if (!staffTotals[r.staff]) {
+                staffTotals[r.staff] = {
+                    branch: r.branch, rbm: r.rbm, bdm: r.bdm, staff: r.staff, product: 'TOTAL',
+                    pQty: 0, oQty: 0, lgOsgQty: 0, samsungOsgQty: 0
+                };
+            }
+            staffTotals[r.staff].pQty += r.pQty;
+            staffTotals[r.staff].oQty += r.oQty;
+            staffTotals[r.staff].lgOsgQty += r.lgOsgQty;
+            staffTotals[r.staff].samsungOsgQty += r.samsungOsgQty;
+        });
+
+        // Add TOTAL rows to detailedRows
+        Object.values(staffTotals).forEach(tot => detailedRows.push(tot));
+
         detailedRows.sort((a, b) => {
-            if (a.staff !== b.staff) return staffRank[a.staff] - staffRank[b.staff];
-            return b.pQty - a.pQty;
+            if (a.rbm !== b.rbm) return a.rbm.localeCompare(b.rbm);
+            if (a.branch !== b.branch) return a.branch.localeCompare(b.branch);
+            if (a.staff !== b.staff) return a.staff.localeCompare(b.staff);
+            // Ensure TOTAL comes first for the staff
+            if (a.product === 'TOTAL') return -1;
+            if (b.product === 'TOTAL') return 1;
+            return a.product.localeCompare(b.product);
         });
         
-        const hdr = ['BRANCH', 'RBM', 'BDM', 'Staff', 'Staff Total Qty', 'Product', 'Product Qty', 'OSG QTY', 'LG', 'SAMSUNG'];
+        const hdr = ['BRANCH', 'RBM', 'BDM', 'Staff', 'Product', 'Product Qty', 'OSG QTY', 'LG', 'SAMSUNG'];
         const data = detailedRows.map(r => [
-            r.branch, r.rbm, r.bdm, r.staff, staffTotals[r.staff], r.product, r.pQty, r.oQty, r.lgOsgQty, r.samsungOsgQty
+            r.branch, r.rbm, r.bdm, r.staff, r.product, r.pQty, r.oQty, r.lgOsgQty, r.samsungOsgQty
+        ]);
+        
+        exportToStyledExcel(data, hdr, 'low_conv_staff.xlsx', 'Low Conversion Staff');
+    }
+
+    function exportDetailedLowConvCSV() {
+        if (productData.length === 0) return;
+        const minQty = parseFloat($('lcMinQty').value) || 0;
+        const maxConv = parseFloat($('lcMaxConv').value);
+        const minOsgQty = parseInt($('lcMinOsgQty').value) || 0;
+        const selectedBranches = window.getLcSelectedBranches();
+        const selRBM = $('lcRBM').value;
+        const selBDM = $('lcBDM').value;
+        const selectedProducts = window.getLcSelectedProducts();
+        
+        const allStats = buildStaffStats(selectedProducts);
+        const filteredStaff = allStats
+            .filter(s => s.pQty >= minQty && s.qtyConv <= maxConv)
+            .filter(s => s.oQty >= minOsgQty)
+            .filter(s => !selectedBranches || selectedBranches.includes(s.branch))
+            .filter(s => !selRBM || s.rbm === selRBM)
+            .filter(s => !selBDM || s.bdm === selBDM);
+            
+        if (filteredStaff.length === 0) {
+            alert("No staff match the current filters.");
+            return;
+        }
+        
+        const validStaffNames = new Set(filteredStaff.map(s => s.name));
+        const detailedMap = {};
+        
+        productData.forEach(r => {
+            const s = r.staff || 'Unknown';
+            if (!validStaffNames.has(s)) return;
+            if (selectedProducts && !selectedProducts.includes(r.category)) return;
+            
+            const cat = r.category || 'Unknown';
+            const key = s + '|||' + cat;
+            
+            if (!detailedMap[key]) {
+                detailedMap[key] = {
+                    branch: r.branch || 'Unknown',
+                    rbm: r.rbm || 'Unknown',
+                    bdm: r.bdm || 'Unknown',
+                    staff: s,
+                    product: cat,
+                    pQty: 0,
+                    oQty: 0,
+                    lgOsgQty: 0,
+                    samsungOsgQty: 0
+                };
+            }
+            detailedMap[key].pQty += (r.qty || 0);
+        });
+        
+        const invoiceData = {};
+        productData.forEach(r => { 
+            if (r.invoice) invoiceData[r.invoice] = { staff: r.staff || 'Unknown', product: r.category }; 
+        });
+        
+        osgData.forEach(r => {
+            const inv = r.invoice ? invoiceData[r.invoice] : null;
+            if (!inv) return;
+            
+            const s = inv.staff;
+            const cat = inv.product;
+            if (!validStaffNames.has(s)) return;
+            if (selectedProducts && !selectedProducts.includes(cat)) return;
+            
+            const key = s + '|||' + cat;
+            if (detailedMap[key]) {
+                const qty = r.qty || 0;
+                detailedMap[key].oQty += qty;
+                
+                const osgBrand = (r.brand || '').toUpperCase();
+                if (osgBrand === 'LG') detailedMap[key].lgOsgQty += qty;
+                if (osgBrand === 'SAMSUNG') detailedMap[key].samsungOsgQty += qty;
+            }
+        });
+
+        amcData.forEach(r => {
+            const inv = r.invoice ? invoiceData[r.invoice] : null;
+            if (!inv) return;
+            const key = inv.staff + '|||' + inv.product;
+            if (detailedMap[key]) {
+                const qty = r.qty || 0;
+                detailedMap[key].lgOsgQty += qty;
+            }
+        });
+        
+        samsungData.forEach(r => {
+            const inv = r.invoice ? invoiceData[r.invoice] : null;
+            if (!inv) return;
+            const key = inv.staff + '|||' + inv.product;
+            if (detailedMap[key]) {
+                const qty = r.qty || 0;
+                detailedMap[key].samsungOsgQty += qty;
+            }
+        });
+        
+        const detailedRows = Object.values(detailedMap);
+        
+        // Compute Totals per Staff
+        const staffTotals = {};
+        detailedRows.forEach(r => {
+            if (!staffTotals[r.staff]) {
+                staffTotals[r.staff] = {
+                    branch: r.branch, rbm: r.rbm, bdm: r.bdm, staff: r.staff, product: 'TOTAL',
+                    pQty: 0, oQty: 0, lgOsgQty: 0, samsungOsgQty: 0
+                };
+            }
+            staffTotals[r.staff].pQty += r.pQty;
+            staffTotals[r.staff].oQty += r.oQty;
+            staffTotals[r.staff].lgOsgQty += r.lgOsgQty;
+            staffTotals[r.staff].samsungOsgQty += r.samsungOsgQty;
+        });
+
+        // Add TOTAL rows to detailedRows
+        Object.values(staffTotals).forEach(tot => detailedRows.push(tot));
+
+        detailedRows.sort((a, b) => {
+            if (a.rbm !== b.rbm) return a.rbm.localeCompare(b.rbm);
+            if (a.branch !== b.branch) return a.branch.localeCompare(b.branch);
+            if (a.staff !== b.staff) return a.staff.localeCompare(b.staff);
+            // Ensure TOTAL comes first for the staff
+            if (a.product === 'TOTAL') return -1;
+            if (b.product === 'TOTAL') return 1;
+            return a.product.localeCompare(b.product);
+        });
+        
+        const hdr = ['BRANCH', 'RBM', 'BDM', 'Staff', 'Product', 'Product Qty', 'OSG QTY', 'LG', 'SAMSUNG'];
+        const data = detailedRows.map(r => [
+            r.branch, r.rbm, r.bdm, r.staff, r.product, r.pQty, r.oQty, r.lgOsgQty, r.samsungOsgQty
         ]);
         
         exportToStyledExcel(data, hdr, 'detailed_low_conv_staff.xlsx', 'Detailed Low Conv Staff');
@@ -3268,7 +3404,7 @@ window.getLcSelectedOsgQty = function () {
         let html = '';
 
         // ---- Card 1: Overall Summary ----
-        html += insightCard('ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€¦Ã‚Â ', 'Overall Performance Summary', 'info', `
+        html += insightCard('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…Â ', 'Overall Performance Summary', 'info', `
             <div class="insight-metrics">
                 <div class="insight-metric"><span class="metric-val">${formatNumber(productData.length)}</span><span class="metric-label">Total Transactions</span></div>
                 <div class="insight-metric"><span class="metric-val">${totalStaff}</span><span class="metric-label">Active Staff</span></div>
@@ -3284,7 +3420,7 @@ window.getLcSelectedOsgQty = function () {
             const zeroTotalQty = zeroConvStaff.reduce((s, r) => s + r.pQty, 0);
             const zeroTotalRev = zeroConvStaff.reduce((s, r) => s + r.pRev, 0);
             const topZero = zeroConvStaff.sort((a, b) => b.pQty - a.pQty).slice(0, 5);
-            html += insightCard('', `Zero Conversion Alert ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“ ${zeroConvStaff.length} Staff`, 'danger', `
+            html += insightCard('', `Zero Conversion Alert ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ${zeroConvStaff.length} Staff`, 'danger', `
                 <p><strong>${zeroConvStaff.length} staff</strong> have sold <strong>${formatNumber(zeroTotalQty)} products</strong> (${fmtShortHtml(zeroTotalRev)} revenue) but <strong>zero OSG/warranty conversion</strong>.</p>
                 <div class="insight-tag-row">
                     ${topZero.map(s => `<span class="insight-tag danger">${s.name} (${s.pQty} qty)</span>`).join('')}
@@ -3298,7 +3434,7 @@ window.getLcSelectedOsgQty = function () {
 
         // ---- Card 3: Top Performers ----
         if (topQty.length > 0) {
-            html += insightCard('Ãƒâ€šÃ‚Â ', 'Top Performers ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“ Best Qty Conversion', 'success', `
+            html += insightCard('Ãƒâ€šÃ‚Â ', 'Top Performers ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Best Qty Conversion', 'success', `
                 <div class="insight-list">
                     ${topQty.map((s, i) => `
                         <div class="insight-list-item">
@@ -3319,7 +3455,7 @@ window.getLcSelectedOsgQty = function () {
         // ---- Card 4: Underperforming Branches ----
         const weakBranches = branchStats.filter(b => b.pQty >= 10 && b.qtyConv < 2).sort((a, b) => a.qtyConv - b.qtyConv).slice(0, 5);
         if (weakBranches.length > 0) {
-            html += insightCard('ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°', 'Underperforming Branches', 'warning', `
+            html += insightCard('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â°', 'Underperforming Branches', 'warning', `
                 <p>These branches have significant product sales but very low OSG conversion:</p>
                 <table class="data-table insight-table"><thead><tr>
                     <th>Branch</th><th>Prod Qty</th><th>OSG Qty</th><th>Qty Conv%</th>
@@ -3338,7 +3474,7 @@ window.getLcSelectedOsgQty = function () {
             const best = rbmSorted[0];
             const worst = rbmSorted[rbmSorted.length - 1];
             const gap = best.qtyConv - worst.qtyConv;
-            html += insightCard('ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¹Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥', 'RBM Performance Gap', gap > 5 ? 'warning' : 'info', `
+            html += insightCard('ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ‚Â¥', 'RBM Performance Gap', gap > 5 ? 'warning' : 'info', `
                 <div class="insight-compare">
                     <div class="compare-box success-bg">
                         <span class="compare-label">Best RBM</span>
@@ -3364,7 +3500,7 @@ window.getLcSelectedOsgQty = function () {
         const weakProds = prodSorted.slice(0, 3);
         const strongProds = prodSorted.slice(-3).reverse();
         if (prodSorted.length > 0) {
-            html += insightCard('ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹', 'Product Category Analysis', 'info', `
+            html += insightCard('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¹', 'Product Category Analysis', 'info', `
                 <div class="insight-compare">
                     <div class="compare-box success-bg" style="flex:1;">
                         <span class="compare-label">Strong Categories</span>
@@ -3384,12 +3520,12 @@ window.getLcSelectedOsgQty = function () {
         // ---- Card 7: Revenue Concentration Risk ----
         if (branchRevShare.length >= 3) {
             const top3Share = branchRevShare.slice(0, 3).reduce((s, b) => s + b.share, 0);
-            html += insightCard('ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â', 'Revenue Concentration', top3Share > 50 ? 'warning' : 'info', `
+            html += insightCard('ÃƒÂ¢Ã…Â¡Ã¢â‚¬â€œÃƒÂ¯Ã‚Â¸Ã‚Â', 'Revenue Concentration', top3Share > 50 ? 'warning' : 'info', `
                 <p>Top 3 branches contribute <strong>${top3Share.toFixed(1)}%</strong> of total product revenue:</p>
                 <div class="insight-tag-row">
                     ${branchRevShare.slice(0, 5).map(b => `<span class="insight-tag info">${b.name}: ${b.share.toFixed(1)}%</span>`).join('')}
                 </div>
-                ${top3Share > 50 ? '<p class="text-warning"> High concentration risk ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â underperformance in these branches would significantly impact overall numbers.</p>' : '<p class="text-success">ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ Revenue is fairly distributed ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â good diversification.</p>'}
+                ${top3Share > 50 ? '<p class="text-warning"> High concentration risk ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â underperformance in these branches would significantly impact overall numbers.</p>' : '<p class="text-success">ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Revenue is fairly distributed ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â good diversification.</p>'}
                 <div class="insight-solution">
                     <strong> Recommendation:</strong> ${top3Share > 50 ? 'Invest in growing smaller branches. Reduce dependency on top branches by improving performance of bottom 50%.' : 'Maintain balanced growth across all branches.'}
                 </div>
@@ -3454,7 +3590,7 @@ window.getLcSelectedOsgQty = function () {
         }
         deepAnalysisHtml += `</ul>`;
 
-        html += insightCard('ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â', 'Deep Root Cause Analysis', 'danger', `
+        html += insightCard('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â', 'Deep Root Cause Analysis', 'danger', `
             <p style="margin-bottom:1rem; color:var(--text-primary); font-weight:500;">Based on combinatorial data analysis, the primary drivers of lost conversion are:</p>
             ${deepAnalysisHtml}
         `);
@@ -3463,12 +3599,12 @@ window.getLcSelectedOsgQty = function () {
         const urgentActions = [];
         if (zeroConvStaff.length > 5) urgentActions.push(`Train ${zeroConvStaff.length} zero-conversion staff on OSG selling immediately`);
         if (weakBranches.length > 0) urgentActions.push(`Conduct branch visits to ${weakBranches.map(b => b.name).join(', ')}`);
-        if (conv.qtyConv < 5) urgentActions.push(`Overall qty conversion (${conv.qtyConv.toFixed(1)}%) is below target ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â launch org-wide OSG campaign`);
+        if (conv.qtyConv < 5) urgentActions.push(`Overall qty conversion (${conv.qtyConv.toFixed(1)}%) is below target ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â launch org-wide OSG campaign`);
         urgentActions.push('Review and update staff-wise weekly conversion targets');
         urgentActions.push('Share top performer success stories in team meetings');
         if (topQty.length > 0) urgentActions.push(`Reward top converters: ${topQty.slice(0, 3).map(s => s.name).join(', ')}`);
 
-        html += insightCard('', 'Action Plan ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Next Steps', 'action', `
+        html += insightCard('', 'Action Plan ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Next Steps', 'action', `
             <ol class="insight-actions">
                 ${urgentActions.map(a => `<li>${a}</li>`).join('')}
             </ol>
@@ -3671,6 +3807,271 @@ window.getLcSelectedOsgQty = function () {
             return { name: displayName, branch, rbm, bdm, pQty, oQty, pRev, oRev, qtyConv, valConv, products };
         });
     }
+    function renderLowConvPage() {
+        if (productData.length === 0) {
+            $('lcTableWrapper').innerHTML = noDataHTML('Upload data and generate reports first.');
+            $('lcKpiRow').innerHTML = '';
+            $('lcCount').textContent = '0 staff';
+            return;
+        }
+
+        const minQty = parseFloat($('lcMinQty').value) || 0;
+        const maxConv = parseFloat($('lcMaxConv').value);
+        const minOsgQty = parseInt($('lcMinOsgQty').value) || 0;
+        const selectedBranches = window.getLcSelectedBranches();
+        const selRBM = $('lcRBM').value;
+        const selBDM = $('lcBDM').value;
+
+        const allStats = buildStaffStats();
+
+        // Populate dropdowns (preserve selection)
+        const branchSet = [...new Set(allStats.map(s => s.branch).filter(Boolean))].sort();
+        const rbmSet = [...new Set(allStats.map(s => s.rbm).filter(Boolean))].sort();
+        const bdmSet = [...new Set(allStats.map(s => s.bdm).filter(Boolean))].sort();
+
+        const branchDrop = $('lcBranchDropdown');
+        const rbmEl = $('lcRBM');
+        const bdmEl = $('lcBDM');
+        const prevRBM = selRBM;
+        const prevBDM = selBDM;
+
+        if (branchDrop) {
+            let bHtml = `<label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="ALL" ${!selectedBranches ? 'checked' : ''} onchange="window.toggleAllLcBranches(this)"> <strong>All Branches</strong></label><hr style="margin: 4px 0; border: none; border-top: 1px solid var(--border);">`;
+            bHtml += branchSet.map(b => `<label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="${b}" class="lc-branch-cb" ${!selectedBranches || selectedBranches.includes(b) ? 'checked' : ''} onchange="window.updateLcBranchLabel()"> ${b}</label>`).join('');
+            branchDrop.innerHTML = bHtml;
+            window.updateLcBranchLabel();
+        }
+        rbmEl.innerHTML = '<option value="">All RBMs</option>' +
+            rbmSet.map(r => `<option value="${r}" ${r === prevRBM ? 'selected' : ''}>${r}</option>`).join('');
+        bdmEl.innerHTML = '<option value="">All BDMs</option>' +
+            bdmSet.map(b => `<option value="${b}" ${b === prevBDM ? 'selected' : ''}>${b}</option>`).join('');
+
+        // Filter: minQty, maxConv, minOsgQty, optional Branch, optional RBM, optional BDM
+        const filtered = allStats
+            .filter(s => s.pQty >= minQty && s.qtyConv <= maxConv)
+            .filter(s => s.oQty >= minOsgQty)
+            .filter(s => !selectedBranches || selectedBranches.includes(s.branch))
+            .filter(s => !selRBM || s.rbm === selRBM)
+            .filter(s => !selBDM || s.bdm === selBDM)
+            .sort((a, b) => {
+                if (a.qtyConv !== b.qtyConv) return a.qtyConv - b.qtyConv;
+                return b.pQty - a.pQty;
+            });
+
+        $('lcCount').textContent = `${filtered.length} staff`;
+
+        // KPI summary
+        const totalPQty = filtered.reduce((s, r) => s + r.pQty, 0);
+        const totalOQty = filtered.reduce((s, r) => s + r.oQty, 0);
+        const totalPRev = filtered.reduce((s, r) => s + r.pRev, 0);
+        const zeroConvCount = filtered.filter(r => r.qtyConv === 0).length;
+        $('lcKpiRow').innerHTML = `
+            <div class="lc-kpi"><span class="lc-kpi-label">Zero Conv Staff</span><span class="lc-kpi-val loss-text">${zeroConvCount}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Total Product Qty</span><span class="lc-kpi-val">${formatNumber(totalPQty)}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Total OSG Qty (Sold)</span><span class="lc-kpi-val">${formatNumber(totalOQty)}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Opportunity Missed (Qty)</span><span class="lc-kpi-val loss-text">${formatNumber(totalPQty - totalOQty)}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Total Product Revenue</span><span class="lc-kpi-val">${fmtShortHtml(totalPRev)}</span></div>
+        `;
+
+        if (filtered.length === 0) {
+            $('lcTableWrapper').innerHTML = noDataHTML(`No staff found with â‰¥${minQty} product qty and ÃƒÂ¢Ã¢â‚¬Â°Ã‚Â¤${maxConv}% qty conversion.`);
+            return;
+        }
+
+        let html = `<table class="data-table">
+            <thead><tr>
+                <th>#</th><th>Staff</th><th>Branch</th><th>RBM</th><th>BDM</th>
+                <th>Prod Qty</th><th>OSG Qty</th><th>Qty Conv%</th><th>Val Conv%</th><th>Prod Rev</th>
+            </tr></thead><tbody>`;
+
+        filtered.forEach((e, i) => {
+            const convCls = e.qtyConv === 0 ? 'loss-val' : (e.qtyConv < 0.5 ? 'conv-warn' : 'conv-val');
+            const rank = i + 1;
+            const rankBadge = rank <= 3 ? `<span class="rank-badge rank-${rank}">${rank}</span>` : `<span class="rank-num">${rank}</span>`;
+            const dlIcon = `<button onclick="window.downloadStaffDetails('${e.name}', '${e.branch}')" title="Download Staff Details" style="background:none;border:none;cursor:pointer;color:var(--primary);padding:0;margin-left:8px;vertical-align:middle;display:inline-flex;align-items:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>`;
+            html += `<tr>
+                <td class="number-cell">${rankBadge}</td>
+                <td style="white-space:nowrap;"><strong>${e.name}</strong>${dlIcon}</td>
+                <td>${e.branch}</td>
+                <td>${e.rbm}</td>
+                <td>${e.bdm}</td>
+                <td class="number-cell"><strong>${e.pQty}</strong></td>
+                <td class="number-cell">${e.oQty}</td>
+                <td class="number-cell ${convCls}">${e.qtyConv.toFixed(2)}%</td>
+                <td class="number-cell conv-val">${e.valConv.toFixed(2)}%</td>
+                <td class="number-cell">${fmtShortHtml(e.pRev)}</td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+        $('lcTableWrapper').innerHTML = html;
+    }
+
+    function exportLowConvCSV() {
+        if (productData.length === 0) return;
+        const minQty = parseFloat($('lcMinQty').value) || 0;
+        const maxConv = parseFloat($('lcMaxConv').value);
+        const minOsgQty = parseInt($('lcMinOsgQty').value) || 0;
+        const selectedBranches = window.getLcSelectedBranches();
+        const selRBM = $('lcRBM').value;
+        const selBDM = $('lcBDM').value;
+        const allStats = buildStaffStats();
+        const filtered = allStats
+            .filter(s => s.pQty >= minQty && s.qtyConv <= maxConv)
+            .filter(s => s.oQty >= minOsgQty)
+            .filter(s => !selectedBranches || selectedBranches.includes(s.branch))
+            .filter(s => !selRBM || s.rbm === selRBM)
+            .filter(s => !selBDM || s.bdm === selBDM)
+            .sort((a, b) => a.qtyConv - b.qtyConv || b.pQty - a.pQty);
+        if (filtered.length === 0) return;
+        const hdr = ['Rank', 'Staff', 'Branch', 'RBM', 'BDM', 'Prod Qty', 'OSG Qty', 'Qty Conv%', 'Val Conv%', 'Prod Revenue'];
+        const data = filtered.map((e, i) => [
+            i + 1, e.name, e.branch, e.rbm, e.bdm, e.pQty, e.oQty,
+            parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2)), Math.round(e.pRev)
+        ]);
+        exportToStyledExcel(data, hdr, 'low_conv_staff.xlsx', 'Low Conversion Staff');
+    }
+
+
+    // ---- TOP CONV STAFF PAGE ----
+    $('btnTCRefresh').addEventListener('click', renderTopConvPage);
+    $('btnTCExport').addEventListener('click', exportTopConvCSV);
+    document.querySelector('[data-section="topconv-section"]').addEventListener('click', () => {
+        setTimeout(renderTopConvPage, 50);
+    });
+
+    function renderTopConvPage() {
+        if (productData.length === 0) {
+            $('tcTableWrapper').innerHTML = noDataHTML('Upload data and generate reports first.');
+            $('tcKpiRow').innerHTML = '';
+            $('tcCount').textContent = '0 staff';
+            return;
+        }
+
+        const minQty = parseFloat($('tcMinQty').value) || 0;
+        const sortBy = $('tcSortBy').value; // 'qtyConv' or 'valConv'
+        const topN = parseInt($('tcTopN').value) || 50;
+        const selectedBranches = window.getTcSelectedBranches();
+        const selRBM = $('tcRBM').value;
+        const selBDM = $('tcBDM').value;
+
+        const allStats = buildStaffStats();
+
+        // Populate RBM and BDM dropdowns (preserve selection)
+        const branchSet = [...new Set(allStats.map(s => s.branch).filter(Boolean))].sort();
+        const rbmSet = [...new Set(allStats.map(s => s.rbm).filter(Boolean))].sort();
+        const bdmSet = [...new Set(allStats.map(s => s.bdm).filter(Boolean))].sort();
+        const branchDrop = $('tcBranchDropdown');
+        if (branchDrop) {
+            let bHtml = `<label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="ALL" ${!selectedBranches ? 'checked' : ''} onchange="window.toggleAllTcBranches(this)"> <strong>All Branches</strong></label><hr style="margin: 4px 0; border: none; border-top: 1px solid var(--border);">`;
+            bHtml += branchSet.map(b => `<label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="${b}" class="tc-branch-cb" ${!selectedBranches || selectedBranches.includes(b) ? 'checked' : ''} onchange="window.updateTcBranchLabel()"> ${b}</label>`).join('');
+            branchDrop.innerHTML = bHtml;
+            window.updateTcBranchLabel();
+        }
+        $('tcRBM').innerHTML = '<option value="">All RBMs</option>' +
+            rbmSet.map(r => `<option value="${r}" ${r === selRBM ? 'selected' : ''}>${r}</option>`).join('');
+        $('tcBDM').innerHTML = '<option value="">All BDMs</option>' +
+            bdmSet.map(b => `<option value="${b}" ${b === selBDM ? 'selected' : ''}>${b}</option>`).join('');
+
+        // Filter: must have >= minQty product qty AND conversion > 0, plus Branch/RBM/BDM filters
+        const eligible = allStats
+            .filter(s => s.pQty >= minQty && s[sortBy] > 0)
+            .filter(s => !selectedBranches || selectedBranches.includes(s.branch))
+            .filter(s => !selRBM || s.rbm === selRBM)
+            .filter(s => !selBDM || s.bdm === selBDM);
+
+        // Sort: primarily by absolute OSG volume (OSG Qty or OSG Revenue)
+        // This ensures staff with the highest actual number of conversions are at the top,
+        // which naturally requires both high Product Qty and high Conversion %.
+        const filtered = eligible
+            .sort((a, b) => {
+                const volA = sortBy === 'qtyConv' ? a.oQty : a.oRev;
+                const volB = sortBy === 'qtyConv' ? b.oQty : b.oRev;
+                if (volB !== volA) return volB - volA; // Highest OSG volume first
+                return b[sortBy] - a[sortBy];          // Tie-breaker: highest conversion %
+            })
+            .slice(0, topN);
+
+        $('tcCount').textContent = `${filtered.length} staff`;
+
+        // KPI summary
+        const avgQtyConv = filtered.length > 0 ? filtered.reduce((s, r) => s + r.qtyConv, 0) / filtered.length : 0;
+        const avgValConv = filtered.length > 0 ? filtered.reduce((s, r) => s + r.valConv, 0) / filtered.length : 0;
+        const totalOQty = filtered.reduce((s, r) => s + r.oQty, 0);
+        const totalORev = filtered.reduce((s, r) => s + r.oRev, 0);
+        const totalPRev = filtered.reduce((s, r) => s + r.pRev, 0);
+        $('tcKpiRow').innerHTML = `
+            <div class="lc-kpi"><span class="lc-kpi-label">Avg Qty Conv</span><span class="lc-kpi-val profit-text">${avgQtyConv.toFixed(2)}%</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Avg Val Conv</span><span class="lc-kpi-val profit-text">${avgValConv.toFixed(2)}%</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Total OSG Qty</span><span class="lc-kpi-val">${formatNumber(totalOQty)}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Total OSG Revenue</span><span class="lc-kpi-val">${fmtShortHtml(totalORev)}</span></div>
+            <div class="lc-kpi"><span class="lc-kpi-label">Total Prod Revenue</span><span class="lc-kpi-val">${fmtShortHtml(totalPRev)}</span></div>
+        `;
+
+        if (filtered.length === 0) {
+            $('tcTableWrapper').innerHTML = noDataHTML('No staff found matching criteria.');
+            return;
+        }
+
+        const sortLabel = sortBy === 'qtyConv' ? 'Qty Conv%' : 'Val Conv%';
+        let html = `<table class="data-table">
+            <thead><tr>
+                <th>#</th><th>Staff</th><th>Branch</th><th>RBM</th><th>BDM</th>
+                <th>Prod Qty</th><th>OSG Qty</th><th>Qty Conv%</th><th>Val Conv%</th><th>Prod Rev</th><th>OSG Rev</th>
+            </tr></thead><tbody>`;
+
+        filtered.forEach((e, i) => {
+            const rank = i + 1;
+            const rankBadge = rank <= 3 ? `<span class="rank-badge rank-${rank}">${rank}</span>` : `<span class="rank-num">${rank}</span>`;
+            const dlIcon = `<button onclick="window.downloadStaffDetails('${e.name}', '${e.branch}')" title="Download Staff Details" style="background:none;border:none;cursor:pointer;color:var(--primary);padding:0;margin-left:8px;vertical-align:middle;display:inline-flex;align-items:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>`;
+            html += `<tr>
+                <td class="number-cell">${rankBadge}</td>
+                <td style="white-space:nowrap;"><strong>${e.name}</strong>${dlIcon}</td>
+                <td>${e.branch}</td>
+                <td>${e.rbm}</td>
+                <td>${e.bdm}</td>
+                <td class="number-cell">${e.pQty}</td>
+                <td class="number-cell"><strong>${e.oQty}</strong></td>
+                <td class="number-cell profit-val">${e.qtyConv.toFixed(2)}%</td>
+                <td class="number-cell profit-val">${e.valConv.toFixed(2)}%</td>
+                <td class="number-cell">${fmtShortHtml(e.pRev)}</td>
+                <td class="number-cell">${fmtShortHtml(e.oRev)}</td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+        $('tcTableWrapper').innerHTML = html;
+    }
+
+    function exportTopConvCSV() {
+        if (productData.length === 0) return;
+        const minQty = parseFloat($('tcMinQty').value) || 0;
+        const sortBy = $('tcSortBy').value;
+        const topN = parseInt($('tcTopN').value) || 50;
+        const selectedBranches = window.getTcSelectedBranches();
+        const selRBM = $('tcRBM').value;
+        const selBDM = $('tcBDM').value;
+        const allStats = buildStaffStats();
+        const filtered = allStats
+            .filter(s => s.pQty >= minQty && s[sortBy] > 0)
+            .filter(s => !selectedBranches || selectedBranches.includes(s.branch))
+            .filter(s => !selRBM || s.rbm === selRBM)
+            .filter(s => !selBDM || s.bdm === selBDM)
+            .sort((a, b) => {
+                const volA = sortBy === 'qtyConv' ? a.oQty : a.oRev;
+                const volB = sortBy === 'qtyConv' ? b.oQty : b.oRev;
+                if (volB !== volA) return volB - volA; // Highest OSG volume first
+                return b[sortBy] - a[sortBy];          // Tie-breaker: highest conversion %
+            })
+            .slice(0, topN);
+        if (filtered.length === 0) return;
+        const hdr = ['Rank', 'Staff', 'Branch', 'RBM', 'BDM', 'Prod Qty', 'OSG Qty', 'Qty Conv%', 'Val Conv%', 'Prod Revenue', 'OSG Revenue'];
+        const data = filtered.map((e, i) => [
+            i + 1, e.name, e.branch, e.rbm, e.bdm, e.pQty, e.oQty,
+            parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2)), Math.round(e.pRev), Math.round(e.oRev)
+        ]);
+        exportToStyledExcel(data, hdr, 'top_conv_staff.xlsx', 'Top Conversion Staff');
+    }
 
     // ---- DEEP INSIGHTS PAGE ----
     $('btnInsightsRefresh').addEventListener('click', renderInsightsPage);
@@ -3748,7 +4149,7 @@ window.getLcSelectedOsgQty = function () {
         let html = '';
 
         // ---- Card 1: Overall Summary ----
-        html += insightCard('ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ', 'Overall Performance Summary', 'info', `
+        html += insightCard('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã…Â ', 'Overall Performance Summary', 'info', `
             <div class="insight-metrics">
                 <div class="insight-metric"><span class="metric-val">${formatNumber(productData.length)}</span><span class="metric-label">Total Transactions</span></div>
                 <div class="insight-metric"><span class="metric-val">${totalStaff}</span><span class="metric-label">Active Staff</span></div>
@@ -3764,7 +4165,7 @@ window.getLcSelectedOsgQty = function () {
             const zeroTotalQty = zeroConvStaff.reduce((s, r) => s + r.pQty, 0);
             const zeroTotalRev = zeroConvStaff.reduce((s, r) => s + r.pRev, 0);
             const topZero = zeroConvStaff.sort((a, b) => b.pQty - a.pQty).slice(0, 5);
-            html += insightCard('', `Zero Conversion Alert ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ${zeroConvStaff.length} Staff`, 'danger', `
+            html += insightCard('', `Zero Conversion Alert ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ${zeroConvStaff.length} Staff`, 'danger', `
                 <p><strong>${zeroConvStaff.length} staff</strong> have sold <strong>${formatNumber(zeroTotalQty)} products</strong> (${fmtShortHtml(zeroTotalRev)} revenue) but <strong>zero OSG/warranty conversion</strong>.</p>
                 <div class="insight-tag-row">
                     ${topZero.map(s => `<span class="insight-tag danger">${s.name} (${s.pQty} qty)</span>`).join('')}
@@ -3778,7 +4179,7 @@ window.getLcSelectedOsgQty = function () {
 
         // ---- Card 3: Top Performers ----
         if (topQty.length > 0) {
-            html += insightCard('ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ', 'Top Performers ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Best Qty Conversion', 'success', `
+            html += insightCard('Ãƒâ€šÃ‚Â ', 'Top Performers ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Best Qty Conversion', 'success', `
                 <div class="insight-list">
                     ${topQty.map((s, i) => `
                         <div class="insight-list-item">
@@ -3799,7 +4200,7 @@ window.getLcSelectedOsgQty = function () {
         // ---- Card 4: Underperforming Branches ----
         const weakBranches = branchStats.filter(b => b.pQty >= 10 && b.qtyConv < 2).sort((a, b) => a.qtyConv - b.qtyConv).slice(0, 5);
         if (weakBranches.length > 0) {
-            html += insightCard('ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°', 'Underperforming Branches', 'warning', `
+            html += insightCard('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â°', 'Underperforming Branches', 'warning', `
                 <p>These branches have significant product sales but very low OSG conversion:</p>
                 <table class="data-table insight-table"><thead><tr>
                     <th>Branch</th><th>Prod Qty</th><th>OSG Qty</th><th>Qty Conv%</th>
@@ -3818,7 +4219,7 @@ window.getLcSelectedOsgQty = function () {
             const best = rbmSorted[0];
             const worst = rbmSorted[rbmSorted.length - 1];
             const gap = best.qtyConv - worst.qtyConv;
-            html += insightCard('ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¹Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥', 'RBM Performance Gap', gap > 5 ? 'warning' : 'info', `
+            html += insightCard('ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ‚Â¥', 'RBM Performance Gap', gap > 5 ? 'warning' : 'info', `
                 <div class="insight-compare">
                     <div class="compare-box success-bg">
                         <span class="compare-label">Best RBM</span>
@@ -3844,7 +4245,7 @@ window.getLcSelectedOsgQty = function () {
         const weakProds = prodSorted.slice(0, 3);
         const strongProds = prodSorted.slice(-3).reverse();
         if (prodSorted.length > 0) {
-            html += insightCard('ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¹', 'Product Category Analysis', 'info', `
+            html += insightCard('ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã¢â‚¬Â¹', 'Product Category Analysis', 'info', `
                 <div class="insight-compare">
                     <div class="compare-box success-bg" style="flex:1;">
                         <span class="compare-label">Strong Categories</span>
@@ -3864,12 +4265,12 @@ window.getLcSelectedOsgQty = function () {
         // ---- Card 7: Revenue Concentration Risk ----
         if (branchRevShare.length >= 3) {
             const top3Share = branchRevShare.slice(0, 3).reduce((s, b) => s + b.share, 0);
-            html += insightCard('ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â', 'Revenue Concentration', top3Share > 50 ? 'warning' : 'info', `
+            html += insightCard('ÃƒÂ¢Ã…Â¡Ã¢â‚¬â€œÃƒÂ¯Ã‚Â¸Ã‚Â', 'Revenue Concentration', top3Share > 50 ? 'warning' : 'info', `
                 <p>Top 3 branches contribute <strong>${top3Share.toFixed(1)}%</strong> of total product revenue:</p>
                 <div class="insight-tag-row">
                     ${branchRevShare.slice(0, 5).map(b => `<span class="insight-tag info">${b.name}: ${b.share.toFixed(1)}%</span>`).join('')}
                 </div>
-                ${top3Share > 50 ? '<p class="text-warning"> High concentration risk ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â underperformance in these branches would significantly impact overall numbers.</p>' : '<p class="text-success">ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ Revenue is fairly distributed ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â good diversification.</p>'}
+                ${top3Share > 50 ? '<p class="text-warning"> High concentration risk ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â underperformance in these branches would significantly impact overall numbers.</p>' : '<p class="text-success">ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Revenue is fairly distributed ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â good diversification.</p>'}
                 <div class="insight-solution">
                     <strong> Recommendation:</strong> ${top3Share > 50 ? 'Invest in growing smaller branches. Reduce dependency on top branches by improving performance of bottom 50%.' : 'Maintain balanced growth across all branches.'}
                 </div>
@@ -3934,7 +4335,7 @@ window.getLcSelectedOsgQty = function () {
         }
         deepAnalysisHtml += `</ul>`;
 
-        html += insightCard('ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â', 'Deep Root Cause Analysis', 'danger', `
+        html += insightCard('ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â', 'Deep Root Cause Analysis', 'danger', `
             <p style="margin-bottom:1rem; color:var(--text-primary); font-weight:500;">Based on combinatorial data analysis, the primary drivers of lost conversion are:</p>
             ${deepAnalysisHtml}
         `);
@@ -3943,12 +4344,12 @@ window.getLcSelectedOsgQty = function () {
         const urgentActions = [];
         if (zeroConvStaff.length > 5) urgentActions.push(`Train ${zeroConvStaff.length} zero-conversion staff on OSG selling immediately`);
         if (weakBranches.length > 0) urgentActions.push(`Conduct branch visits to ${weakBranches.map(b => b.name).join(', ')}`);
-        if (conv.qtyConv < 5) urgentActions.push(`Overall qty conversion (${conv.qtyConv.toFixed(1)}%) is below target ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â launch org-wide OSG campaign`);
+        if (conv.qtyConv < 5) urgentActions.push(`Overall qty conversion (${conv.qtyConv.toFixed(1)}%) is below target ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â launch org-wide OSG campaign`);
         urgentActions.push('Review and update staff-wise weekly conversion targets');
         urgentActions.push('Share top performer success stories in team meetings');
         if (topQty.length > 0) urgentActions.push(`Reward top converters: ${topQty.slice(0, 3).map(s => s.name).join(', ')}`);
 
-        html += insightCard('', 'Action Plan ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Next Steps', 'action', `
+        html += insightCard('', 'Action Plan ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Next Steps', 'action', `
             <ol class="insight-actions">
                 ${urgentActions.map(a => `<li>${a}</li>`).join('')}
             </ol>
@@ -4377,7 +4778,7 @@ function exportFutureStoresCSV() {
         addSheet('RBM WISE', aoa2, merges2, false, 0);
 
         // 3. STORE WISE Sheet
-        const aoa3 = [['FUTURE STORES ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â STORE WISE'], ['BDM', 'Branch', 'Product', 'Product Qty', qtyName, 'Qty Conv%', 'Val Conv%', 'OVERALL Qty Conv%', 'OVERALL Val Conv%']];
+        const aoa3 = [['FUTURE STORES â€” STORE WISE'], ['BDM', 'Branch', 'Product', 'Product Qty', qtyName, 'Qty Conv%', 'Val Conv%', 'OVERALL Qty Conv%', 'OVERALL Val Conv%']];
         const merges3 = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 8 } }];
         
         const bdmBranchMap = {};
@@ -4488,7 +4889,7 @@ function exportFutureStoresCSV() {
         if (selBDM) filtP = filtP.filter(r => r.bdm === selBDM);
         if (selProduct) filtP = filtP.filter(r => r.product === selProduct);
 
-        // Build invoice lookup from product data ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â only count OSG entries that match a product invoice
+        // Build invoice lookup from product data ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â only count OSG entries that match a product invoice
         const productInvoices = new Set();
         filtP.forEach(r => { if (r.invoice) productInvoices.add(r.invoice); });
 
@@ -5134,8 +5535,8 @@ function exportFutureStoresCSV() {
                 ? `Caller_Report_${selectedCaller}_${dateStr}.xlsx`
                 : `Caller_Report_All_${dateStr}.xlsx`;
             const sheetTitle = selectedCaller
-                ? `WITHOUT OSG CALLER REPORT ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ${dateStr} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ${selectedCaller.toUpperCase()}`
-                : `WITHOUT OSG CALLER REPORT ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ${dateStr}`;
+                ? `WITHOUT OSG CALLER REPORT â€”Â ${dateStr} â€”Â ${selectedCaller.toUpperCase()}`
+                : `WITHOUT OSG CALLER REPORT â€”Â ${dateStr}`;
 
             // Build AOA
             const aoa = [];
@@ -5246,7 +5647,7 @@ function exportFutureStoresCSV() {
                         const rowBg = callerIdx % 2 === 0 ? '0F172A' : '1E293B';
 
                         if (C === 0) {
-                            // Caller name cell ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â colored left border + avatar-style bg
+                            // Caller name cell â€”Â colored left border + avatar-style bg
                             ws[addr].s = {
                                 fill: { patternType: 'solid', fgColor: { rgb: rowBg } },
                                 font: { color: { rgb: callerHex }, bold: true, sz: 10, name: 'Calibri' },
@@ -5303,7 +5704,7 @@ function exportFutureStoresCSV() {
 
         if (tab === 'main') {
             if (!window._wosgMainData) return;
-            title = 'WITHOUT OSG MAIN REPORT ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ' + dateStr;
+            title = 'WITHOUT OSG MAIN REPORT â€”Â ' + dateStr;
             fileName = 'Without_OSG_Main_Report_' + dateStr + '.xlsx';
             aoa.push([title]);
             aoa.push(['SUMMARY', ...cols, 'TOTAL VALUE', 'TOTAL COUNT']);
@@ -5325,7 +5726,7 @@ function exportFutureStoresCSV() {
             });
         } else if (tab === 'caller') {
             if (!window._wosgCallerData || !window._wosgCallers) return;
-            title = 'WITHOUT OSG CALLER REPORT ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ' + dateStr;
+            title = 'WITHOUT OSG CALLER REPORT â€”Â ' + dateStr;
             fileName = 'Without_OSG_Caller_Report_' + dateStr + '.xlsx';
             aoa.push([title]);
             aoa.push(['CALLER', ...cols, 'TOTAL VALUE', 'TOTAL COUNT']);
@@ -5348,7 +5749,7 @@ function exportFutureStoresCSV() {
             });
         } else if (tab === 'daily') {
             if (!window._wosgDailyData) return;
-            title = 'WITHOUT OSG DAILY REPORT ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ' + dateStr;
+            title = 'WITHOUT OSG DAILY REPORT â€”Â ' + dateStr;
             fileName = 'Without_OSG_Daily_Report_' + dateStr + '.xlsx';
             aoa.push([title]);
             aoa.push(['DATE', ...cols, 'TOTAL VALUE', 'TOTAL COUNT']);
@@ -5370,7 +5771,7 @@ function exportFutureStoresCSV() {
             });
         } else if (tab === 'monthly') {
             if (!window._wosgMonthlyData) return;
-            title = 'WITHOUT OSG MONTHLY REPORT ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ' + dateStr;
+            title = 'WITHOUT OSG MONTHLY REPORT â€”Â ' + dateStr;
             fileName = 'Without_OSG_Monthly_Report_' + dateStr + '.xlsx';
             aoa.push([title]);
             aoa.push(['MONTH', ...cols, 'TOTAL VALUE', 'TOTAL COUNT']);
@@ -5424,10 +5825,10 @@ function exportFutureStoresCSV() {
             window.coDueTodayFilter = !window.coDueTodayFilter;
             if (window.coDueTodayFilter) {
                 btnDue.style.boxShadow = '0 0 0 3px rgba(239,68,68,0.5)';
-                btnDue.innerHTML = 'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ Clear Due Today';
+                btnDue.innerHTML = 'ÃƒÂ¢Ã‚ÂÃ…â€™ Clear Due Today';
             } else {
                 btnDue.style.boxShadow = '0 2px 8px rgba(239,68,68,0.3)';
-                btnDue.innerHTML = 'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¥ Due Today';
+                btnDue.innerHTML = 'ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â¥ Due Today';
             }
             renderCustomersOSGPage();
         });
@@ -5475,12 +5876,12 @@ function exportFutureStoresCSV() {
                 coStatusMap[fbKey(inv)] = childSnap.val();
                 const st = coStatusMap[fbKey(inv)];
 
-                // If another caller made ANY selection ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ instantly remove from this caller's view
+                // If another caller made ANY selection ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ instantly remove from this caller's view
                 if (st.calledBy && st.calledBy !== currentCaller) {
                     const rowEl = document.getElementById('co-row-' + fbKey(inv));
                     if (rowEl) rowEl.remove();
                 } else {
-                    // Own row or unclaimed ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ update status colour in-place
+                    // Own row or unclaimed ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ update status colour in-place
                     const rowEl = document.getElementById('co-row-' + fbKey(inv));
                     if (rowEl && !rowEl.contains(document.activeElement)) {
                         const rowData = (coCurrentRows || []).find(r => fbKey(r.invoice) === inv);
@@ -5491,7 +5892,7 @@ function exportFutureStoresCSV() {
                 if (typeof updateCoStatsInPlace === 'function') updateCoStatsInPlace();
             });
 
-            // ===== INITIAL FULL LOAD (once) ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â then render page =====
+            // ===== INITIAL FULL LOAD (once) â€”Â then render page =====
             coLiveRef.once('value', snap => {
                 const data = snap.val() || {};
                 Object.keys(data).forEach(inv => { coStatusMap[fbKey(inv)] = data[inv]; });
@@ -5539,7 +5940,7 @@ function exportFutureStoresCSV() {
         banner.colSpan = 10;
         banner.style.cssText = `position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
             background:${claimBg};color:${claimColor};font-weight:700;font-size:0.85rem;gap:8px;border-radius:6px;`;
-        banner.innerHTML = `<span style="font-size:1.1rem;">ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢</span> Claimed by <strong>${callerName}</strong> ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â removing from your list...`;
+        banner.innerHTML = `<span style="font-size:1.1rem;">ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ¢â‚¬â„¢</span> Claimed by <strong>${callerName}</strong> â€”Â removing from your list...`;
         rowEl.innerHTML = '';
         rowEl.appendChild(banner);
         rowEl.classList.add('co-row-claiming');
@@ -5798,7 +6199,7 @@ function exportFutureStoresCSV() {
             statusFiltered.forEach(r => missedUnique.push(r));
         }
 
-        // Apply manual caller filter dropdown (admin view ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â shows rows by a specific caller)
+        // Apply manual caller filter dropdown (admin view â€”Â shows rows by a specific caller)
         if (selCallerFilter) {
             const filtered = missedUnique.filter(r => {
                 const st = coStatusMap[fbKey(r.invoice)] || {};
@@ -5839,7 +6240,7 @@ function exportFutureStoresCSV() {
         }
 
         if (missedUnique.length === 0) {
-            $('coMissedTable').innerHTML = noDataHTML('All invoices have OSG entries ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â great conversion! ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°');
+            $('coMissedTable').innerHTML = noDataHTML('All invoices have OSG entries ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â great conversion! Ãƒâ€šÃ‚Â°');
             return;
         }
 
@@ -5900,7 +6301,7 @@ function exportFutureStoresCSV() {
                 ">
                     <span style="width:24px;height:24px;border-radius:50%;background:${c.color};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;">${c.name[0]}</span>
                     ${c.name}
-                    ${currentCaller === c.name ? '<span style="font-size:0.7rem;opacity:0.8;">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Active</span>' : ''}
+                    ${currentCaller === c.name ? '<span style="font-size:0.7rem;opacity:0.8;">â€”Â Active</span>' : ''}
                 </button>`).join('')}
             </div>
             ${currentCaller
@@ -5934,7 +6335,7 @@ function exportFutureStoresCSV() {
                     padding:10px 28px;border-radius:20px;border:1.5px solid var(--accent);
                     background:transparent;color:var(--accent);font-family:inherit;
                     font-size:0.88rem;font-weight:600;cursor:pointer;transition:all 0.2s;
-                ">ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ Load ${Math.min(remaining, 100)} more (${remaining} remaining)</button>
+                ">ÃƒÂ¢Ã‚Â¬Ã¢â‚¬Â¡ Load ${Math.min(remaining, 100)} more (${remaining} remaining)</button>
                </div>` : '';
 
         $('coMissedTable').innerHTML = statsBar + callerSelector + tableHeader + rowsHTML + '</tbody></table></div>' + loadMoreBtn;
@@ -5980,7 +6381,7 @@ function exportFutureStoresCSV() {
                     wrap.innerHTML = `<button onclick="window.coLoadMore()" style="
                         padding:10px 28px;border-radius:20px;border:1.5px solid var(--accent);
                         background:transparent;color:var(--accent);font-family:inherit;
-                        font-size:0.88rem;font-weight:600;cursor:pointer;">ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ Load ${Math.min(remaining2, 100)} more (${remaining2} remaining)</button>`;
+                        font-size:0.88rem;font-weight:600;cursor:pointer;">ÃƒÂ¢Ã‚Â¬Ã¢â‚¬Â¡ Load ${Math.min(remaining2, 100)} more (${remaining2} remaining)</button>`;
                 } else {
                     wrap.remove();
                 }
@@ -6175,8 +6576,8 @@ function exportFutureStoresCSV() {
         // Added 'follow-up' and 'bought' options to Interest
         const interestBtnOptions = `
             <option value="" ${!st.interest ? 'selected' : ''}>- Select -</option>
-            <option value="interested" ${st.interest === 'interested' ? 'selected' : ''}>ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ Interested</option>
-            <option value="not-interested" ${st.interest === 'not-interested' ? 'selected' : ''}>ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ Not Interested</option>
+            <option value="interested" ${st.interest === 'interested' ? 'selected' : ''}>ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Interested</option>
+            <option value="not-interested" ${st.interest === 'not-interested' ? 'selected' : ''}>ÃƒÂ¢Ã‚ÂÃ…â€™ Not Interested</option>
             <option value="follow-up" ${st.interest === 'follow-up' ? 'selected' : ''}>Follow-up</option>
             <option value="bought" ${st.interest === 'bought' ? 'selected' : ''}>Closed</option>
         `;
@@ -6214,8 +6615,8 @@ function exportFutureStoresCSV() {
                     background:var(--bg-input); color:var(--text-primary); outline:none; max-width:140px; ${opcStyle}">
                     <option value="" ${!st.callStatus ? 'selected' : ''}>- Status -</option>
                     <option value="connected" ${st.callStatus === 'connected' ? 'selected' : ''}>Connected</option>
-                    <option value="not-connected" ${st.callStatus === 'not-connected' ? 'selected' : ''}>ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â´ Not Connected</option>
-                    <option value="disconnected" ${st.callStatus === 'disconnected' ? 'selected' : ''}>ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Âµ Disconnected</option>
+                    <option value="not-connected" ${st.callStatus === 'not-connected' ? 'selected' : ''}>ÃƒÂ°Ã…Â¸Ã¢â‚¬ÂÃ‚Â´ Not Connected</option>
+                    <option value="disconnected" ${st.callStatus === 'disconnected' ? 'selected' : ''}>ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Âµ Disconnected</option>
                 </select>
                 ${callerInfo}
             </div>` : '';
@@ -6261,7 +6662,7 @@ function exportFutureStoresCSV() {
                 const prod = r.product || 'your product';
                 const inv = r.invoice || '';
                 const val = r.soldPrice && r.soldPrice > 0 ? ' (worth \u20B9' + r.soldPrice.toLocaleString('en-IN') + ')' : '';
-                const msg = 'Dear ' + name + ',\n\nGreetings from myG ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â \n\nThank you for your recent purchase of *' + prod + '*' + val + ' (Invoice: ' + inv + ').\n\n We noticed your purchase does not yet include an *OSG Extended Warranty* plan. OSG covers:\n\nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ Extended protection beyond manufacturer warranty\nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ Free doorstep repair service\nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ Zero hidden charges\nÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ Instant claim processing\n\nSecuring your device takes just a minute ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â and gives you complete peace of mind! \n\nWould you be interested? Reply *YES* and we will take care of everything.\n\nWarm regards,\nmyG Team';
+                const msg = 'Dear ' + name + ',\n\nGreetings from myG ÃƒÂ°Ã…Â¸Ã‹Å“Ã…Â \n\nThank you for your recent purchase of *' + prod + '*' + val + ' (Invoice: ' + inv + ').\n\n We noticed your purchase does not yet include an *OSG Extended Warranty* plan. OSG covers:\n\nÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Extended protection beyond manufacturer warranty\nÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Free doorstep repair service\nÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Zero hidden charges\nÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Instant claim processing\n\nSecuring your device takes just a minute â€”Â and gives you complete peace of mind! \n\nWould you be interested? Reply *YES* and we will take care of everything.\n\nWarm regards,\nmyG Team';
                 return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
             })()}" target="_blank" title="WhatsApp (English)" style="color:#25D366;display:flex;padding:5px;border-radius:50%;background:rgba(37,211,102,0.12);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>` : ''}
                     ${r.customerNo ? `<a href="${(function () {
@@ -6510,12 +6911,12 @@ function exportFutureStoresCSV() {
         else html += '<li>No significantly underperforming branches detected.</li>';
         html += '</ul></div>';
 
-        html += '<div style="margin-bottom: 16px;"><strong>ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â½ Missed Premium Device Attachments:</strong><ul style="margin:8px 0 0 20px; color:var(--text-muted); line-height: 1.6;">';
+        html += '<div style="margin-bottom: 16px;"><strong>ÃƒÂ°Ã…Â¸Ã¢â‚¬â„¢Ã…Â½ Missed Premium Device Attachments:</strong><ul style="margin:8px 0 0 20px; color:var(--text-muted); line-height: 1.6;">';
         if (premiumMisses.length) premiumMisses.forEach(m => html += `<li><strong>${m.staff} (${m.branch})</strong> sold a ${m.product} for ${fmtShortHtml(m.soldPrice)} without OSG (Inv: ${m.invoice}).</li>`);
         else html += '<li>Great job! High-value premium products seem to be attached correctly.</li>';
         html += '</ul></div>';
 
-        html += '<div><strong>ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¹Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¤ Highest Opportunity Staff:</strong><ul style="margin:8px 0 0 20px; color:var(--text-muted); line-height: 1.6;">';
+        html += '<div><strong>ÃƒÂ°Ã…Â¸Ã¢â‚¬ËœÃ‚Â¤ Highest Opportunity Staff:</strong><ul style="margin:8px 0 0 20px; color:var(--text-muted); line-height: 1.6;">';
         if (worstStaff.length) worstStaff.forEach(s => html += `<li><strong>${s.staff} (${s.branch})</strong>: Delivered ${s.pQ} units physically but achieved only ${s.conv.toFixed(1)}% conversion.</li>`);
         else html += '<li>Staff metrics look solid across the board (or volume threshold not met).</li>';
         html += '</ul></div>';
@@ -6580,7 +6981,7 @@ function exportFutureStoresCSV() {
             });
         });
 
-        // Filter change ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ re-render
+        // Filter change ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ re-render
         ['fsDashRBM', 'fsDashBDM', 'fsDashBranch', 'fsDashStaff'].forEach(id => {
             const el = $(id);
             if (el) el.addEventListener('change', () => renderFsExportDashboard(false));
@@ -7083,7 +7484,7 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
                 // Status colour
                 const onTrack = currentConv >= targetConv;
                 const statusColor = onTrack ? '#10b981' : (currentConv >= targetConv * 0.8 ? '#f59e0b' : '#ef4444');
-                const statusLabel = onTrack ? 'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â½ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¯ On Target!' : (daysLeft === 0 ? 'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂºÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Month Ended' : 'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¸ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Behind Target');
+                const statusLabel = onTrack ? 'ÃƒÂ°Ã…Â¸Ã…Â½Ã‚Â¯ On Target!' : (daysLeft === 0 ? 'ÃƒÂ¢Ã¢â‚¬ÂºÃ¢â‚¬Â Month Ended' : 'ÃƒÂ¢Ã…Â¡Ã‚Â ÃƒÂ¯Ã‚Â¸Ã‚Â Behind Target');
 
                 // KPI cards
                 const kpiDefs = [
@@ -7205,7 +7606,7 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
                                     <td style="text-align:right;">${r.pQty.toLocaleString('en-IN')}</td>
                                     <td style="text-align:right;">${r.oQty.toLocaleString('en-IN')}</td>
                                     <td style="text-align:right;font-weight:700;color:${r.isOnTrack?'#10b981':'#ef4444'};">${r.conv.toFixed(1)}%</td>
-                                    <td style="text-align:right;color:${r.rbmGap>0?'#ef4444':'#10b981'};font-weight:600;">${r.rbmGap > 0 ? r.rbmGap.toLocaleString('en-IN') : 'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ Done'}</td>
+                                    <td style="text-align:right;color:${r.rbmGap>0?'#ef4444':'#10b981'};font-weight:600;">${r.rbmGap > 0 ? r.rbmGap.toLocaleString('en-IN') : 'ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Done'}</td>
                                     <td style="text-align:right;font-weight:700;color:${r.rbmDaily>0?'#f97316':'#10b981'};">${r.rbmDaily > 0 ? r.rbmDaily : '-'}</td>
                                     <td style="text-align:center;"><span style="padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:700;background:${r.isOnTrack?'rgba(16,185,129,0.12)':'rgba(239,68,68,0.12)'};color:${r.isOnTrack?'#10b981':'#ef4444'};">${r.isOnTrack?'On Track':'Behind'}</span></td>
                                 </tr>`).join('')}
@@ -7233,11 +7634,11 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
         // Expose globally so onclick attribute in HTML can call it
         window.renderForecastPage = renderForecastPage;
 
-        // Nav click ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â auto-render when switching to this page
+        // Nav click â€”Â auto-render when switching to this page
         var fcNavBtn = document.querySelector('[data-section="forecast-section"]');
         if (fcNavBtn) fcNavBtn.addEventListener('click', function() { setTimeout(renderForecastPage, 100); });
 
-        // Calculate button ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â use getElementById directly (most reliable)
+        // Calculate button â€”Â use getElementById directly (most reliable)
         var fcCalcBtn = document.getElementById('btnForecastCalc');
         if (fcCalcBtn) fcCalcBtn.addEventListener('click', renderForecastPage);
     })();
@@ -7325,7 +7726,7 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
     async function sendMessageToAI(userMessage) {
         var apiKey = localStorage.getItem('nova_ai_api_key');
         if (!apiKey) {
-            addMessage('I need an OpenRouter API Key to work. Click the ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â Settings icon above to add it.', 'error');
+            addMessage('I need an OpenRouter API Key to work. Click the âš™ï¸ Settings icon above to add it.', 'error');
             return;
         }
         addMessage(userMessage, 'user');
@@ -7440,30 +7841,3 @@ document.addEventListener('DOMContentLoaded', function initAIAssistant() {
 
 // End of Main IIFE
 })();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
