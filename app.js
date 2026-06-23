@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 // Analytics Portal ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â Conversion Reports
 // Dual-file: Product Data + OSG Data
 // Value Conversion = OSG Sold Price / Product Sold Price
@@ -2707,8 +2707,7 @@
             if (label) label.textContent = checked.join(', ');
         }
     };
-
-    window.getLcSelectedOsgQty = function () {
+window.getLcSelectedOsgQty = function () {
         if (!document.getElementById('lcOsgQtyDropdown')) return null;
         const cbs = document.querySelectorAll('.lc-osgqty-cb');
         const selected = [];
@@ -2816,71 +2815,6 @@
     document.addEventListener('click', function(e) {
         const wrapper = document.getElementById('lcProductMultiWrapper');
         if (wrapper && !wrapper.contains(e.target)) {
-            const dropdown = document.getElementById('lcProductDropdown');
-            if(dropdown) dropdown.style.display = 'none';
-        }
-
-        const lcBranchWrapper = document.getElementById('lcBranchMultiWrapper');
-        if (lcBranchWrapper && !lcBranchWrapper.contains(e.target)) {
-            const bDropdown = document.getElementById('lcBranchDropdown');
-            if (bDropdown) bDropdown.style.display = 'none';
-        }
-
-        const tcBranchWrapper = document.getElementById('tcBranchMultiWrapper');
-        if (tcBranchWrapper && !tcBranchWrapper.contains(e.target)) {
-            const tcDropdown = document.getElementById('tcBranchDropdown');
-            if (tcDropdown) tcDropdown.style.display = 'none';
-        }
-    });
-
-    // ---- LOW CONV STAFF LOGIC ----
-    function buildStaffStats(selectedProducts = null) {
-        // Build invoice -> {staff, product} lookup from ALL product data
-        const invoiceData = {};
-        productData.forEach(r => { if (r.invoice) invoiceData[r.invoice] = { staff: r.staff || 'Unknown', product: r.category }; });
-
-        // Group product data by staff
-        const pByStaff = {};
-        productData.forEach(r => {
-            if (selectedProducts && !selectedProducts.includes(r.category)) return;
-            const s = r.staff || 'Unknown';
-            if (!pByStaff[s]) pByStaff[s] = { branch: r.branch, rbm: r.rbm, bdm: r.bdm, rows: [] };
-            pByStaff[s].rows.push(r);
-        });
-
-        // OSG: invoice match first, then staff name from OSG row as fallback
-        const oByStaff = {};
-        osgData.forEach(r => {
-            let s = null, pName = null;
-            const inv = r.invoice ? invoiceData[r.invoice] : null;
-            if (inv) { s = inv.staff; pName = inv.product; }
-            else if (r.staff) { s = r.staff; }
-            if (!s) return;
-            if (selectedProducts && pName && !selectedProducts.includes(pName)) return;
-            if (!oByStaff[s]) oByStaff[s] = [];
-            oByStaff[s].push(r);
-        });
-
-        // LG AMC: invoice match (with category filter) first; staff name fallback ONLY when no product filter
-        const lgByStaff = {};
-        amcData.forEach(r => {
-            let s = null;
-            const inv = r.invoice ? invoiceData[r.invoice] : null;
-            if (inv) {
-                if (selectedProducts && !selectedProducts.includes(inv.product)) return;
-                s = inv.staff;
-            } else if (!selectedProducts && r.staff) {
-                s = r.staff; // staff-name fallback only when showing All Products
-            }
-            if (!s) return;
-            lgByStaff[s] = (lgByStaff[s] || 0) + (r.qty || 0);
-        });
-
-        // Samsung: invoice match (with category filter) first; staff name fallback ONLY when no product filter
-        const samByStaff = {};
-        samsungData.forEach(r => {
-            let s = null;
-            const inv = r.invoice ? invoiceData[r.invoice] : null;
             if (inv) {
                 if (selectedProducts && !selectedProducts.includes(inv.product)) return;
                 s = inv.staff;
