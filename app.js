@@ -4580,7 +4580,7 @@ function exportFutureStoresCSV() {
         
         flatDataAll.forEach(d => {
             if (!prodMap[d.product]) prodMap[d.product] = { pQ:0, pR:0, q:0, r:0 };
-            if (d.rbm && d.rbm.toUpperCase() !== 'GENERAL') {
+            if (d.rbm) {
                 if (!rbmMap[d.rbm]) rbmMap[d.rbm] = { pQ:0, pR:0, q:0, r:0, prods: {} };
                 if (!rbmMap[d.rbm].prods[d.product]) rbmMap[d.rbm].prods[d.product] = { pQ:0, pR:0, q:0, r:0 };
             }
@@ -4593,7 +4593,7 @@ function exportFutureStoresCSV() {
             prodMap[d.product].pQ += myPQ; prodMap[d.product].pR += myPR;
             prodMap[d.product].q += myQ; prodMap[d.product].r += myR;
             
-            if (d.rbm && d.rbm.toUpperCase() !== 'GENERAL') {
+            if (d.rbm) {
                 rbmMap[d.rbm].pQ += myPQ; rbmMap[d.rbm].pR += myPR;
                 rbmMap[d.rbm].q += myQ; rbmMap[d.rbm].r += myR;
                 rbmMap[d.rbm].prods[d.product].pQ += myPQ; rbmMap[d.rbm].prods[d.product].pR += myPR;
@@ -4667,12 +4667,13 @@ function exportFutureStoresCSV() {
         const aoa3 = [['FUTURE STORES â€” STORE WISE'], ['BDM', 'Branch', 'Product', 'Product Qty', qtyName, 'Qty Conv%', 'Val Conv%', 'OVERALL Qty Conv%', 'OVERALL Val Conv%']];
         const merges3 = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 8 } }];
         
-        const bdmBranchMap = {};
+        const rbmBdmBranchMap = {};
         flatDataFuture.forEach(d => {
-            if (!bdmBranchMap[d.bdm]) bdmBranchMap[d.bdm] = {};
-            if (!bdmBranchMap[d.bdm][d.branch]) bdmBranchMap[d.bdm][d.branch] = {};
-            if (!bdmBranchMap[d.bdm][d.branch][d.product]) bdmBranchMap[d.bdm][d.branch][d.product] = { pQ:0, pR:0, q:0, r:0 };
-            const p = bdmBranchMap[d.bdm][d.branch][d.product];
+            if (!rbmBdmBranchMap[d.rbm]) rbmBdmBranchMap[d.rbm] = {};
+            if (!rbmBdmBranchMap[d.rbm][d.bdm]) rbmBdmBranchMap[d.rbm][d.bdm] = {};
+            if (!rbmBdmBranchMap[d.rbm][d.bdm][d.branch]) rbmBdmBranchMap[d.rbm][d.bdm][d.branch] = {};
+            if (!rbmBdmBranchMap[d.rbm][d.bdm][d.branch][d.product]) rbmBdmBranchMap[d.rbm][d.bdm][d.branch][d.product] = { pQ:0, pR:0, q:0, r:0 };
+            const p = rbmBdmBranchMap[d.rbm][d.bdm][d.branch][d.product];
             
             let myPQ = 0, myPR = 0, myQ = 0, myR = 0;
             if (brandType === 'OSG') { myPQ = d.pQty; myPR = d.pRev; myQ = d.oQty; myR = d.oRev; }
@@ -4682,28 +4683,33 @@ function exportFutureStoresCSV() {
             p.pQ+=myPQ; p.pR+=myPR; p.q+=myQ; p.r+=myR;
         });
 
-        let bdmStart = 2;
-        Object.keys(bdmBranchMap).sort().forEach(bdm => {
-            let branchStart = bdmStart;
-            Object.keys(bdmBranchMap[bdm]).sort().forEach(branch => {
-                let pStart = branchStart;
-                let t_pQ=0, t_pR=0, t_q=0, t_r=0;
-                const prods = Object.keys(bdmBranchMap[bdm][branch]).sort();
-                prods.forEach(k => {
-                    const p = bdmBranchMap[bdm][branch][k];
-                    t_pQ+=p.pQ; t_pR+=p.pR; t_q+=p.q; t_r+=p.r;
-                    aoa3.push([bdm, branch, k, p.pQ, p.q, calcConv(p.q, p.pQ), calcConv(p.r, p.pR), '', '']);
-                    branchStart++;
+        let rbmStart = 2;
+        Object.keys(rbmBdmBranchMap).sort().forEach(rbm => {
+            let bdmStart = rbmStart;
+            Object.keys(rbmBdmBranchMap[rbm]).sort().forEach(bdm => {
+                let branchStart = bdmStart;
+                Object.keys(rbmBdmBranchMap[rbm][bdm]).sort().forEach(branch => {
+                    let pStart = branchStart;
+                    let t_pQ=0, t_pR=0, t_q=0, t_r=0;
+                    const prods = Object.keys(rbmBdmBranchMap[rbm][bdm][branch]).sort();
+                    prods.forEach(k => {
+                        const p = rbmBdmBranchMap[rbm][bdm][branch][k];
+                        t_pQ+=p.pQ; t_pR+=p.pR; t_q+=p.q; t_r+=p.r;
+                        aoa3.push([rbm, bdm, branch, k, p.pQ, p.q, calcConv(p.q, p.pQ), calcConv(p.r, p.pR), '', '']);
+                        branchStart++;
+                    });
+                    aoa3[pStart][8] = calcConv(t_q, t_pQ); aoa3[pStart][9] = calcConv(t_r, t_pR);
+                    if (branchStart > pStart + 1) {
+                        merges3.push({ s: { r: pStart, c: 2 }, e: { r: branchStart - 1, c: 2 } });
+                        merges3.push({ s: { r: pStart, c: 8 }, e: { r: branchStart - 1, c: 8 } });
+                        merges3.push({ s: { r: pStart, c: 9 }, e: { r: branchStart - 1, c: 9 } });
+                    }
                 });
-                aoa3[pStart][7] = calcConv(t_q, t_pQ); aoa3[pStart][8] = calcConv(t_r, t_pR);
-                if (branchStart > pStart + 1) {
-                    merges3.push({ s: { r: pStart, c: 1 }, e: { r: branchStart - 1, c: 1 } });
-                    merges3.push({ s: { r: pStart, c: 7 }, e: { r: branchStart - 1, c: 7 } });
-                    merges3.push({ s: { r: pStart, c: 8 }, e: { r: branchStart - 1, c: 8 } });
-                }
+                if (branchStart > bdmStart + 1) merges3.push({ s: { r: bdmStart, c: 1 }, e: { r: branchStart - 1, c: 1 } });
+                bdmStart = branchStart;
             });
-            if (branchStart > bdmStart + 1) merges3.push({ s: { r: bdmStart, c: 0 }, e: { r: branchStart - 1, c: 0 } });
-            bdmStart = branchStart;
+            if (bdmStart > rbmStart + 1) merges3.push({ s: { r: rbmStart, c: 0 }, e: { r: bdmStart - 1, c: 0 } });
+            rbmStart = bdmStart;
         });
         addSheet('STORE WISE', aoa3, merges3, false, 0);
 
