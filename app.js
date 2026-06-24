@@ -4664,8 +4664,8 @@ function exportFutureStoresCSV() {
         addSheet('RBM WISE', aoa2, merges2, false, 0);
 
         // 3. STORE WISE Sheet
-        const aoa3 = [['FUTURE STORES â€” STORE WISE'], ['BDM', 'Branch', 'Product', 'Product Qty', qtyName, 'Qty Conv%', 'Val Conv%', 'OVERALL Qty Conv%', 'OVERALL Val Conv%']];
-        const merges3 = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 8 } }];
+        const aoa3 = [['FUTURE STORES \u2014 STORE WISE'], ['RBM', 'BDM', 'Branch', 'Product', 'Product Qty', qtyName, 'Qty Conv%', 'Val Conv%', 'OVERALL Qty Conv%', 'OVERALL Val Conv%']];
+        const merges3 = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 9 } }];
         
         const rbmBdmBranchMap = {};
         flatDataFuture.forEach(d => {
