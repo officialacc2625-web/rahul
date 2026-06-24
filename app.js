@@ -833,7 +833,13 @@
             r.bdm = strVal(row, mapping.bdm);
             r.staff = strVal(row, mapping.staff);
             r.product = strVal(row, mapping.product);
-            r.category = normalizeProductCategory(strVal(row, mapping.category));
+            const rawCat = strVal(row, mapping.category);
+            let normCat = normalizeProductCategory(rawCat);
+            if (normCat === rawCat && r.product) {
+                const normProd = normalizeProductCategory(r.product);
+                if (normProd !== r.product) normCat = normProd;
+            }
+            r.category = normCat;
             r.brand = strVal(row, mapping.brand);
             r.invoice = strVal(row, mapping.invoice);
             r.customerName = strVal(row, mapping.customerName);
@@ -979,7 +985,13 @@
             r.branch = strVal(row, mapping.branch);
             r.storeCode = strVal(row, mapping.storeCode);
             r.product = strVal(row, mapping.product);
-            r.category = normalizeProductCategory(strVal(row, mapping.category));
+            const rawCat = strVal(row, mapping.category);
+            let normCat = normalizeProductCategory(rawCat);
+            if (normCat === rawCat && r.product) {
+                const normProd = normalizeProductCategory(r.product);
+                if (normProd !== r.product) normCat = normProd;
+            }
+            r.category = normCat;
             r.brand = strVal(row, mapping.brand);
             r.soldPrice = num(getVal(row, mapping.soldPrice, 0));
             r.qty = parseFloat(strVal(row, mapping.qty)) || 1;
