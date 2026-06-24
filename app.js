@@ -182,7 +182,7 @@
         rbm: ['rbm', 'rbm name', 'region', 'regional manager', 'regional business manager', 'rsm'],
         bdm: ['bdm', 'bdm name', 'business development manager', 'area manager', 'asm'],
         staff: ['staff', 'staff name', 'salesperson', 'sales person', 'employee', 'employee name', 'promoter', 'promoter name', 'executive'],
-        product: ['product', 'product name', 'product type', 'product group', 'model', 'model name', 'item name'],
+        product: ['product', 'product name', 'product type', 'product group', 'model', 'model name', 'item name', 'item', 'item description', 'item desc', 'description', 'material', 'material description', 'material desc'],
         category: ['category', 'item category', 'item group', 'product category', 'sub category'],
         brand: ['brand', 'brand name', 'make'],
         soldPrice: ['sold price', 'soldprice', 'selling price', 'sale price', 'mop', 'net amount', 'net value', 'total amount', 'amount', 'sale amount', 'sale value', 'value', 'net sales value'],
@@ -208,7 +208,7 @@
     const OSG_COL_MAP = {
         branch: ['store name', 'store', 'branch', 'branch name', 'outlet', 'outlet name', 'shop name'],
         storeCode: ['store code', 'store id', 'outlet code'],
-        product: ['product', 'product name', 'product type', 'model', 'model name', 'item name', 'product group'],
+        product: ['product', 'product name', 'product type', 'model', 'model name', 'item name', 'product group', 'item', 'item description', 'item desc', 'description', 'material', 'material description', 'material desc', 'sku', 'sku desc'],
         category: ['category', 'product category', 'item category'],
         brand: ['brand', 'brand name', 'make'],
         soldPrice: ['sold price', 'soldprice', 'plan price', 'selling price', 'net amount', 'amount', 'value', 'net value', 'sale price', 'mop', 'total amount', 'premium', 'premium amount'],
