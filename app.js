@@ -900,6 +900,10 @@
         // TV / Display
         if (/\bTV\b/.test(name) || name.includes('TELEVISION') || name.includes('MONITOR')) return 'TV';
 
+        // If no abbreviation matched, return as-is (uppercase for consistency)
+        return rawName;
+    }
+
     // ---- UNIVERSAL CATEGORY NORMALIZER (for Product & OSG files) ----
     // Maps raw category column values to one of the 9 standard categories
     function normalizeProductCategory(raw) {
