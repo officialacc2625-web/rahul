@@ -182,8 +182,8 @@
         rbm: ['rbm', 'rbm name', 'region', 'regional manager', 'regional business manager', 'rsm'],
         bdm: ['bdm', 'bdm name', 'business development manager', 'area manager', 'asm'],
         staff: ['staff', 'staff name', 'salesperson', 'sales person', 'employee', 'employee name', 'promoter', 'promoter name', 'executive'],
-        product: ['product', 'product name', 'product type', 'product group', 'model', 'model name', 'item name', 'item', 'item description', 'item desc', 'description', 'material', 'material description', 'material desc'],
-        category: ['category', 'item category', 'item group', 'product category', 'sub category'],
+        product: ['product', 'item description', 'material description', 'product name', 'item name', 'model name', 'model', 'item desc', 'material desc', 'description', 'item', 'product type', 'product group'],
+        category: ['sub category', 'item group', 'item category', 'category', 'product category'],
         brand: ['brand', 'brand name', 'make'],
         soldPrice: ['sold price', 'soldprice', 'selling price', 'sale price', 'mop', 'net amount', 'net value', 'total amount', 'amount', 'sale amount', 'sale value', 'value', 'net sales value'],
         taxableVal: ['taxable value', 'taxable', 'taxable amount', 'taxable val'],
@@ -830,9 +830,15 @@
             const r = {};
             r.branch = strVal(row, mapping.branch);
             r.rbm = strVal(row, mapping.rbm);
+            if (!r.rbm) return null; // Skip rows missing RBM
             r.bdm = strVal(row, mapping.bdm);
             r.staff = strVal(row, mapping.staff);
             r.product = strVal(row, mapping.product);
+            
+            if (!r.rbm) {
+                window._missingRbmAlerts = window._missingRbmAlerts || [];
+                window._missingRbmAlerts.push(row);
+            }
             const rawCat = strVal(row, mapping.category);
             let normCat = normalizeProductCategory(rawCat);
             if (normCat === rawCat && r.product) {
@@ -1136,20 +1142,20 @@
                         try {
                             const wb = XLSX.read(data, { type: 'array', cellDates: true, dense: true });
                             let allRows = [];
-                            for (let si = 0; si < wb.SheetNames.length; si++) {
-                                const sheetName = wb.SheetNames[si];
-                                updateLoadingMsg('Parsing sheet ' + (si + 1) + '/' + wb.SheetNames.length + '...');
-                                const sheet = wb.Sheets[sheetName];
-                                const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-                                if (json.length === 0) continue;
+                            const sheetName = wb.SheetNames[0];
+                            updateLoadingMsg('Parsing main sheet...');
+                            const sheet = wb.Sheets[sheetName];
+                            const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+                            if (json.length > 0) {
                                 const headers = Object.keys(json[0]);
                                 console.log('[Sheet: ' + sheetName + '] ' + json.length + ' rows');
                                 const mapping = autoMapColumns(headers, colMap);
                                 for (let i = 0; i < json.length; i++) {
-                                    allRows.push(rowMapper(json[i], mapping));
+                                    const mapped = rowMapper(json[i], mapping);
+                                    if (mapped) allRows.push(mapped);
                                 }
                             }
-                            if (allRows.length === 0) { reject(new Error('No data')); return; }
+                            if (allRows.length === 0) { reject(new Error('No data in the first sheet')); return; }
                             updateLoadingMsg('Loaded ' + allRows.length.toLocaleString() + ' rows!');
                             console.log('[Total] ' + allRows.length + ' rows');
                             resolve(allRows);
@@ -1191,7 +1197,8 @@
                     updateLoadingMsg('Processing ' + json.length.toLocaleString() + ' rows...');
                     var allRows = [];
                     for (var i = 0; i < json.length; i++) {
-                        allRows.push(rowMapper(json[i], mapping));
+                        const mapped = rowMapper(json[i], mapping);
+                        if (mapped) allRows.push(mapped);
                         if (i % 100000 === 0 && i > 0) {
                             updateLoadingMsg('Row ' + i.toLocaleString() + ' / ' + json.length.toLocaleString());
                         }
