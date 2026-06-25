@@ -841,9 +841,16 @@
             }
             const rawCat = strVal(row, mapping.category);
             let normCat = normalizeProductCategory(rawCat);
-            if (normCat === rawCat && r.product) {
+            
+            const STANDARD_CATEGORIES = ['MICROWAVE OVEN', 'WASHING MACHINE', 'DRYER', 'REFRIGERATOR', 'AC', 'TV', 'AUDIO SYSTEM', 'HOME APPLIANCE', 'DISH WASHER', 'SMALL APPLIANCE'];
+            
+            // If category column didn't give a standard category, check the product column
+            if (!STANDARD_CATEGORIES.includes(normCat) && r.product) {
                 const normProd = normalizeProductCategory(r.product);
-                if (normProd !== r.product) normCat = normProd;
+                // If the product column normalizes to a standard category, use it!
+                if (STANDARD_CATEGORIES.includes(normProd) || normProd !== r.product) {
+                    normCat = normProd;
+                }
             }
             r.category = normCat;
             r.brand = strVal(row, mapping.brand);
@@ -893,32 +900,33 @@
         // TV / Display
         if (/\bTV\b/.test(name) || name.includes('TELEVISION') || name.includes('MONITOR')) return 'TV';
 
-        // If no abbreviation matched, return as-is (uppercase for consistency)
-        return rawName;
-    }
-
     // ---- UNIVERSAL CATEGORY NORMALIZER (for Product & OSG files) ----
-    // Maps raw category column values ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ one of the 9 standard categories
+    // Maps raw category column values to one of the 9 standard categories
     function normalizeProductCategory(raw) {
         if (!raw) return raw;
         const c = raw.toUpperCase().trim();
-        if (c.includes('MICROWAVE') || c.includes('MWO') || c.includes('OVEN')) return 'MICROWAVE OVEN';
-        if (c.includes('WASHING MACHINE') || c.includes('WASHER') || /\bWM\b/.test(c)) return 'WASHING MACHINE';
+        
+        // Exact matches for TVs
+        if (c === '32' || c === '40-45' || c === '43' || c === '50' || c === '55' || c === '65' || c === '75' || c === '85') return 'TV';
+
+        if (c.includes('MICROWAVE') || c.includes('MWO') || c.includes('OVEN') || c.includes('MS2043')) return 'MICROWAVE OVEN';
+        if (c.includes('WASHING MACHINE') || c.includes('WASHER') || /\bWM\b/.test(c) || c.includes('KG')) return 'WASHING MACHINE';
         if (c.includes('DRYER')) return 'DRYER';
         if (c.includes('REFRIGERATOR') || c.includes('FRIDGE') || c.includes('FROST FREE')
-            || c.includes('DIRECT COOL') || c.includes('SIDE BY SIDE') || /\bREF\b/.test(c)) return 'REFRIGERATOR';
+            || c.includes('DIRECT COOL') || c.includes('SIDE BY SIDE') || /\bREF\b/.test(c) || c.includes('LTR') || c.includes('LITER')) return 'REFRIGERATOR';
         if (c.includes('AIR CONDITIONER') || c.includes('SPLIT') || c.includes('WINDOW AC')
-            || /\bAC\b/.test(c)) return 'AC';
+            || /\bAC\b/.test(c) || c.includes('TON')) return 'AC';
         if (c.includes('TELEVISION') || c.includes('TV') || c.includes('LED') || c.includes('OLED')
-            || c.includes('MONITOR') || c.includes('DISPLAY')) return 'TV';
+            || c.includes('MONITOR') || c.includes('DISPLAY') || c.includes('INCH')) return 'TV';
         if (c.includes('AUDIO') || c.includes('SOUND') || c.includes('SPEAKER')
             || c.includes('HOME THEATER') || c.includes('HOME THEATRE')) return 'AUDIO SYSTEM';
         if (c.includes('CHIMNEY') || c.includes('HOB') || c.includes('INDUCTION')
             || c.includes('VACUUM') || c.includes('VACCUM') || c.includes('WATER PURIFIER')
             || c.includes('PURIFIER') || c.includes('WATER HEATER') || c.includes('GEYSER')
-            || c.includes('HOME APPLIANCE')) return 'HOME APPLIANCE';
+            || c.includes('HOME APPLIANCE') || c.includes('750W') || /\bMG\b/.test(c) || c.includes('MIXER')) return 'HOME APPLIANCE';
         if (c.includes('DISH WASHER') || c.includes('DISHWASHER')) return 'DISH WASHER';
-        // Return the original if not matched â€”Â keeps custom categories intact
+        
+        // Return the original if not matched â€”Â  keeps custom categories intact
         return raw;
     }
 
