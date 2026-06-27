@@ -3078,12 +3078,12 @@
             return a.product.localeCompare(b.product);
         });
         
-        const hdr = ['BRANCH', 'RBM', 'BDM', 'Staff', 'Product', 'Product Qty', 'OSG QTY', 'LG', 'SAMSUNG'];
+        const hdr = ['RBM', 'BDM', 'BRANCH', 'Staff', 'Product', 'Product Qty', 'OSG QTY', 'LG', 'SAMSUNG'];
         const data = detailedRows.map(r => [
-            r.branch, r.rbm, r.bdm, r.staff, r.product, r.pQty, r.oQty, r.lgOsgQty, r.samsungOsgQty
+            r.rbm, r.bdm, r.branch, r.staff, r.product, r.pQty, r.oQty, r.lgOsgQty, r.samsungOsgQty
         ]);
         
-        exportToStyledExcel(data, hdr, 'low_conv_staff.xlsx', 'Low Conversion Staff');
+        exportToStyledExcel(data, hdr, 'low_conv_staff.xlsx', 'Low Conversion Staff', 3);
     }
 
     function exportDetailedLowConvCSV() {
