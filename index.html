@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>CRM-DATA ANALYTICS PORTAL</title>
     <meta name="description"
-        content="myG My Gen Digital Hub — Analytics & CRM Dashboard for OSG conversion tracking and customer follow-ups.">
+        content="myG My Gen Digital Hub â€” Analytics & CRM Dashboard for OSG conversion tracking and customer follow-ups.">
 
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
@@ -277,15 +277,15 @@
                 </button>
 
                 <div class="upload-instructions">
-                    <h3>📋 How Conversion is Calculated</h3>
+                    <h3>ðŸ“‹ How Conversion is Calculated</h3>
                     <div class="formula-grid">
                         <div class="formula-card">
                             <span class="formula-label">Value Conversion</span>
-                            <span class="formula-eq">= OSG Sold Price ÷ Product Sold Price × 100</span>
+                            <span class="formula-eq">= OSG Sold Price Ã· Product Sold Price Ã— 100</span>
                         </div>
                         <div class="formula-card">
                             <span class="formula-label">Quantity Conversion</span>
-                            <span class="formula-eq">= OSG Quantity ÷ Product Quantity × 100</span>
+                            <span class="formula-eq">= OSG Quantity Ã· Product Quantity Ã— 100</span>
                         </div>
                     </div>
                     <p class="formula-note">Upload both <strong>Product</strong> and <strong>OSG</strong> files. Data is
@@ -462,31 +462,31 @@
 
             <!-- LG AMC KPI Row (shown only when AMC data is uploaded) -->
             <div id="lgAmcKpiRow" style="display:none; margin-bottom:24px;">
-                <h2 class="section-heading">🛡️ LG AMC Conversion (LG Products Only)</h2>
+                <h2 class="section-heading">ðŸ›¡ï¸ LG AMC Conversion (LG Products Only)</h2>
                 <div class="kpi-grid">
                     <div class="kpi-card kpi-revenue">
-                        <div class="kpi-icon">🔒</div>
+                        <div class="kpi-icon">ðŸ”’</div>
                         <div class="kpi-content">
                             <span class="kpi-label">Total AMC Qty</span>
                             <span class="kpi-value" id="kpiAmcTotal" style="color:#8b5cf6;">0</span>
                         </div>
                     </div>
                     <div class="kpi-card kpi-revenue" style="border-top-color:#06b6d4;">
-                        <div class="kpi-icon" style="background:rgba(6,182,212,0.1);color:#06b6d4;">💰</div>
+                        <div class="kpi-icon" style="background:rgba(6,182,212,0.1);color:#06b6d4;">ðŸ’°</div>
                         <div class="kpi-content">
                             <span class="kpi-label">Total AMC Sale</span>
-                            <span class="kpi-value" id="kpiAmcSale" style="color:#06b6d4;">₹0</span>
+                            <span class="kpi-value" id="kpiAmcSale" style="color:#06b6d4;">â‚¹0</span>
                         </div>
                     </div>
                     <div class="kpi-card kpi-loss">
-                        <div class="kpi-icon">❌</div>
+                        <div class="kpi-icon">âŒ</div>
                         <div class="kpi-content">
                             <span class="kpi-label">LG Prdt WITHOUT AMC</span>
                             <span class="kpi-value" id="kpiAmcWithout" style="color:#ef4444;">0</span>
                         </div>
                     </div>
                     <div class="kpi-card kpi-valconv">
-                        <div class="kpi-icon">📊</div>
+                        <div class="kpi-icon">ðŸ“Š</div>
                         <div class="kpi-content">
                             <span class="kpi-label">AMC Conv%</span>
                             <span class="kpi-value" id="kpiAmcConv" style="color:#f59e0b;">0%</span>
@@ -497,31 +497,31 @@
 
             <!-- Samsung KPI Row (shown only when Samsung data is uploaded) -->
             <div id="samsungKpiRow" style="display:none; margin-bottom:24px;">
-                <h2 class="section-heading">📱 Samsung Conversion (Samsung Products Only)</h2>
+                <h2 class="section-heading">ðŸ“± Samsung Conversion (Samsung Products Only)</h2>
                 <div class="kpi-grid">
                     <div class="kpi-card kpi-revenue" style="border-top-color:#1e3a8a;">
-                        <div class="kpi-icon" style="background:rgba(30,58,138,0.1);color:#1e3a8a;">📱</div>
+                        <div class="kpi-icon" style="background:rgba(30,58,138,0.1);color:#1e3a8a;">ðŸ“±</div>
                         <div class="kpi-content">
                             <span class="kpi-label">Total Samsung Qty</span>
                             <span class="kpi-value" id="kpiSamsungTotal" style="color:#1e3a8a;">0</span>
                         </div>
                     </div>
                     <div class="kpi-card kpi-revenue" style="border-top-color:#3b82f6;">
-                        <div class="kpi-icon" style="background:rgba(59,130,246,0.1);color:#3b82f6;">💰</div>
+                        <div class="kpi-icon" style="background:rgba(59,130,246,0.1);color:#3b82f6;">ðŸ’°</div>
                         <div class="kpi-content">
                             <span class="kpi-label">Total Samsung Sale</span>
-                            <span class="kpi-value" id="kpiSamsungSale" style="color:#3b82f6;">₹0</span>
+                            <span class="kpi-value" id="kpiSamsungSale" style="color:#3b82f6;">â‚¹0</span>
                         </div>
                     </div>
                     <div class="kpi-card kpi-loss">
-                        <div class="kpi-icon">❌</div>
+                        <div class="kpi-icon">âŒ</div>
                         <div class="kpi-content">
                             <span class="kpi-label">Samsung WITHOUT Care</span>
                             <span class="kpi-value" id="kpiSamsungWithout" style="color:#ef4444;">0</span>
                         </div>
                     </div>
                     <div class="kpi-card kpi-valconv" style="border-top-color:#10b981;">
-                        <div class="kpi-icon" style="background:rgba(16,185,129,0.1);color:#10b981;">📊</div>
+                        <div class="kpi-icon" style="background:rgba(16,185,129,0.1);color:#10b981;">ðŸ“Š</div>
                         <div class="kpi-content">
                             <span class="kpi-label">Samsung Conv%</span>
                             <span class="kpi-value" id="kpiSamsungConv" style="color:#10b981;">0%</span>
@@ -628,20 +628,24 @@
                         <input type="number" id="lcMaxConv" value="1" min="0" step="0.5">
                     </div>
                     <div class="lowconv-control-group">
-                        <label for="lcMinOsgQty">Min OSG Qty</label>
-                        <select id="lcMinOsgQty">
-                            <option value="0" selected>All (0+)</option>
-                            <option value="1">1+</option>
-                            <option value="2">2+</option>
-                            <option value="3">3+</option>
-                            <option value="5">5+</option>
-                            <option value="10">10+</option>
-                            <option value="15">15+</option>
-                            <option value="20">20+</option>
-                            <option value="25">25+</option>
-                            <option value="50">50+</option>
-                        </select>
-                    </div>
+                          <label>OSG Qty</label>
+                          <div id="lcOsgQtyMultiWrapper" style="position: relative; min-width: 140px;">
+                              <div id="lcOsgQtySelectBtn" style="padding: 9px 14px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem;" onclick="document.getElementById('lcOsgQtyDropdown').style.display = document.getElementById('lcOsgQtyDropdown').style.display === 'none' ? 'block' : 'none'">
+                                  <span id="lcOsgQtyLabel" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 8px;">All OSG Qty</span>
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink: 0;"><polyline points="6 9 12 15 18 9"/></svg>
+                              </div>
+                              <div id="lcOsgQtyDropdown" style="display: none; position: absolute; top: 100%; left: 0; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-top: 4px; padding: 8px; z-index: 999; max-height: 250px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.2); width: max-content; min-width: 100%;">
+                                  <label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="ALL" checked onchange="window.toggleAllLcOsgQty(this)"> <strong>All OSG Qty</strong></label>
+                                  <hr style="margin: 4px 0; border: none; border-top: 1px solid var(--border);">
+                                  <label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="0" checked class="lc-osgqty-cb" onchange="window.updateLcOsgQtyLabel()"> 0</label>
+                                  <label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="1" checked class="lc-osgqty-cb" onchange="window.updateLcOsgQtyLabel()"> 1</label>
+                                  <label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="2" checked class="lc-osgqty-cb" onchange="window.updateLcOsgQtyLabel()"> 2</label>
+                                  <label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="3" checked class="lc-osgqty-cb" onchange="window.updateLcOsgQtyLabel()"> 3</label>
+                                  <label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="4" checked class="lc-osgqty-cb" onchange="window.updateLcOsgQtyLabel()"> 4</label>
+                                  <label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="5+" checked class="lc-osgqty-cb" onchange="window.updateLcOsgQtyLabel()"> 5+</label>
+                              </div>
+                          </div>
+                      </div>
                     <div class="lowconv-control-group">
                         <label>Products</label>
                         <div id="lcProductMultiWrapper" style="position: relative; min-width: 140px;">
@@ -696,7 +700,7 @@
                         </svg>
                         Refresh
                     </button>
-                    <button class="btn-export" id="btnLCExport">
+                    <div style="display: flex; align-items: center; gap: 6px;"><input type="number" id="lcTopStaffExportLimit" value="15" min="1" max="500" style="width: 55px; padding: 6px 4px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.85rem; text-align: center; background: #fff;" title="Number of top staff to export"></div><button class="btn-export" id="btnLCExport">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -705,6 +709,20 @@
                         </svg>
                         Export CSV
                     </button>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <input type="number" id="lcMaxStaffPerBranch" value="2" min="1" max="50" style="width: 48px; padding: 6px 4px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.85rem; text-align: center; background: #fff;" title="Max low conv staff per branch to include">
+                        <button class="btn-export" id="btnLCExportDetailed" style="background:#fef3c7; color:#d97706; border-color:#fde68a;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                                <line x1="16" y1="13" x2="8" y2="13" />
+                                <line x1="16" y1="17" x2="8" y2="17" />
+                                <polyline points="10 9 9 9 8 9" />
+                            </svg>
+                            Detailed Export
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Summary KPI row -->
@@ -713,7 +731,7 @@
                 <!-- Table -->
                 <div class="lowconv-table-wrap">
                     <div class="report-header" style="margin-bottom:12px;">
-                        <h2>Staff — High Qty Sale, Low Qty Conversion</h2>
+                        <h2>Staff â€” High Qty Sale, Low Qty Conversion</h2>
                         <span class="lc-badge" id="lcCount">0 staff</span>
                     </div>
                     <div class="table-wrapper" id="lcTableWrapper">
@@ -800,7 +818,7 @@
                 <!-- Table -->
                 <div class="lowconv-table-wrap">
                     <div class="report-header" style="margin-bottom:12px;">
-                        <h2>Top Performing Staff — High Qty Sale & High Qty Conversion</h2>
+                        <h2>Top Performing Staff â€” High Qty Sale & High Qty Conversion</h2>
                         <span class="tc-badge" id="tcCount">0 staff</span>
                     </div>
                     <div class="table-wrapper" id="tcTableWrapper">
@@ -939,7 +957,7 @@
                 <!-- Table -->
                 <div class="lowconv-table-wrap">
                     <div class="report-header" style="margin-bottom:12px;">
-                        <h2>Future Stores — Staff Conversion</h2>
+                        <h2>Future Stores â€” Staff Conversion</h2>
                         <span class="tc-badge" id="fsCount">0 staff</span>
                     </div>
                     <div class="table-wrapper" id="fsTableWrapper">
@@ -975,7 +993,7 @@
                             Month</span>
                     </div>
                     <span id="coMonthBadge"
-                        style="background:#F26522;color:#fff;font-size:0.85rem;font-weight:700;padding:5px 14px;border-radius:20px;letter-spacing:0.03em;">—</span>
+                        style="background:#F26522;color:#fff;font-size:0.85rem;font-weight:700;padding:5px 14px;border-radius:20px;letter-spacing:0.03em;">â€”</span>
                     <div style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap;">
                         <label style="font-size:0.78rem;color:var(--text-muted);font-weight:600;">View Archive:</label>
                         <select id="coMonthSwitcher" onchange="window.switchCoMonth(this.value)"
@@ -998,7 +1016,7 @@
                 <!-- Controls -->
                 <div class="lowconv-controls">
                     <div class="lowconv-control-group">
-                        <label for="coBrand">🏷️ Brand</label>
+                        <label for="coBrand">ðŸ·ï¸ Brand</label>
                         <select id="coBrand">
                             <option value="">All Brands</option>
                         </select>
@@ -1028,7 +1046,7 @@
                         </select>
                     </div>
                     <div class="lowconv-control-group">
-                        <label>📆 Purchase Date</label>
+                        <label>ðŸ“† Purchase Date</label>
                         <button id="coDateFilterBtn" onclick="window.coCalWidget._showFilter(this)">
                             <span id="coDateFilterLabel">All Dates</span>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -1039,7 +1057,7 @@
                         <input type="hidden" id="coDateFilter" value="">
                     </div>
                     <div class="lowconv-control-group">
-                        <label for="coCallerFilter">👤 Caller</label>
+                        <label for="coCallerFilter">ðŸ‘¤ Caller</label>
                         <select id="coCallerFilter">
                             <option value="">All Callers</option>
                             <option value="Harmiya">Harmiya</option>
@@ -1049,23 +1067,23 @@
                         </select>
                     </div>
                     <div class="lowconv-control-group">
-                        <label for="coStatusFilter">📋 CRM Status</label>
+                        <label for="coStatusFilter">ðŸ“‹ CRM Status</label>
                         <select id="coStatusFilter">
                             <option value="">All Statuses</option>
-                            <option value="follow-up">📅 Follow-up</option>
-                            <option value="interested">✅ Interested</option>
-                            <option value="not-interested">❌ Not Interested</option>
-                            <option value="connected">📞 Connected</option>
-                            <option value="not-connected">🔕 Not Connected</option>
+                            <option value="follow-up">ðŸ“… Follow-up</option>
+                            <option value="interested">âœ… Interested</option>
+                            <option value="not-interested">âŒ Not Interested</option>
+                            <option value="connected">ðŸ“ž Connected</option>
+                            <option value="not-connected">ðŸ”• Not Connected</option>
                         </select>
                     </div>
                     <div class="lowconv-control-group">
                         <label for="coSort">Sort By</label>
                         <select id="coSort">
-                            <option value="value-desc">💰 Value: High → Low</option>
-                            <option value="value-asc">💰 Value: Low → High</option>
-                            <option value="name-asc">🔤 Customer: A → Z</option>
-                            <option value="name-desc">🔤 Customer: Z → A</option>
+                            <option value="value-desc">ðŸ’° Value: High â†’ Low</option>
+                            <option value="value-asc">ðŸ’° Value: Low â†’ High</option>
+                            <option value="name-asc">ðŸ”¤ Customer: A â†’ Z</option>
+                            <option value="name-desc">ðŸ”¤ Customer: Z â†’ A</option>
                         </select>
                     </div>
                     <button class="btn-apply-filter" id="btnCORefresh">
@@ -1087,7 +1105,7 @@
                     </button>
                     <button class="btn-apply-filter" id="btnCODueToday"
                         style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border: none; box-shadow: 0 2px 8px rgba(239,68,68,0.3);">
-                        🔥 Due Today
+                        ðŸ”¥ Due Today
                     </button>
                 </div>
 
@@ -1097,7 +1115,7 @@
                 <div
                     style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;">
                     <span
-                        style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-right:4px;">🔗
+                        style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-right:4px;">ðŸ”—
                         Quick Links</span>
                     <a href="https://osg.mygoal.biz/priceCheck.html" target="_blank" rel="noopener"
                         style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;border-radius:8px;font-size:0.82rem;font-weight:700;text-decoration:none;transition:all 0.2s;box-shadow:0 2px 8px rgba(59,130,246,0.3);"
@@ -1265,7 +1283,7 @@
                                 <th>Pincode</th>
                                 <th>Area Name</th>
                                 <th class="text-right">Total Product Qty</th>
-                                <th class="text-right">Product Rev (₹)</th>
+                                <th class="text-right">Product Rev (â‚¹)</th>
                                 <th class="text-right">OSG Qty</th>
                                 <th class="text-right">OSG %</th>
                                 <th class="text-right">LG-AMC Qty</th>
@@ -1427,7 +1445,7 @@
             </div>
 
             <div class="card fade-in" style="animation-delay:0.1s; margin-top:1.5rem;">
-                <div class="card-header"><h3>Total Revenue Trend (₹)</h3></div>
+                <div class="card-header"><h3>Total Revenue Trend (â‚¹)</h3></div>
                 <div style="padding:1rem; height:320px; position:relative;">
                     <canvas id="trendRevChart"></canvas>
                 </div>
@@ -1554,7 +1572,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js" charset="UTF-8"></script>
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js" charset="UTF-8"></script>
 
-    <script src="app.js?v=137" charset="UTF-8"></script>
+    <script src="app.js?v=138" charset="UTF-8"></script>
 
     <!-- PWA Service Worker + Install Banner -->
     <script>
@@ -1570,7 +1588,7 @@
                         newSW.addEventListener('statechange', () => {
                             if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
                                 newSW.postMessage({ type: 'SKIP_WAITING' });
-                                console.log('[SW] New version activated — reloading...');
+                                console.log('[SW] New version activated â€” reloading...');
                                 window.location.reload();
                             }
                         });
@@ -1579,7 +1597,7 @@
             });
         }
 
-        // Smart Install Prompt — shows a custom banner instead of default browser prompt
+        // Smart Install Prompt â€” shows a custom banner instead of default browser prompt
         let _deferredPrompt = null;
         window.addEventListener('beforeinstallprompt', e => {
             e.preventDefault();
@@ -1649,8 +1667,8 @@
                 <span class="ai-status">Online - Analyzing Data</span>
             </div>
             <div class="ai-header-controls">
-                <button id="aiSettingsBtn" title="Settings" class="ai-icon-btn">⚙️</button>
-                <button id="aiCloseBtn" title="Close" class="ai-icon-btn">✖</button>
+                <button id="aiSettingsBtn" title="Settings" class="ai-icon-btn">âš™ï¸</button>
+                <button id="aiCloseBtn" title="Close" class="ai-icon-btn">âœ–</button>
             </div>
         </div>
         <div id="aiChatMessages" class="ai-chat-messages">
@@ -1661,7 +1679,7 @@
         <div class="ai-chat-input-area" style="flex-direction: column; gap: 8px;">
             <div style="display: flex; gap: 8px; width: 100%;">
                 <input type="text" id="aiChatInput" placeholder="Ask about sales, losses, or conversions..." autocomplete="off" style="flex: 1;">
-                <button id="aiChatSendBtn">➤</button>
+                <button id="aiChatSendBtn">âž¤</button>
             </div>
             <div style="display: flex; align-items: center; gap: 6px; padding: 0 4px;">
                 <label class="switch" style="position: relative; display: inline-block; width: 34px; height: 20px;">
@@ -1683,7 +1701,7 @@
         <div class="modal-content" style="max-width:400px;">
             <div class="modal-header">
                 <h2>AI Settings</h2>
-                <button class="close-modal" id="closeAiSettingsModal">✕</button>
+                <button class="close-modal" id="closeAiSettingsModal">âœ•</button>
             </div>
             <div class="modal-body">
                 <div class="form-group" style="margin-bottom:15px;">
@@ -1700,3 +1718,4 @@
 </body>
 
 </html>
+

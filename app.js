@@ -182,8 +182,8 @@
         rbm: ['rbm', 'rbm name', 'region', 'regional manager', 'regional business manager', 'rsm'],
         bdm: ['bdm', 'bdm name', 'business development manager', 'area manager', 'asm'],
         staff: ['staff', 'staff name', 'salesperson', 'sales person', 'employee', 'employee name', 'promoter', 'promoter name', 'executive'],
-        product: ['product', 'product name', 'product type', 'product group', 'model', 'model name', 'item name'],
-        category: ['category', 'item category', 'item group', 'product category', 'sub category'],
+        product: ['product', 'item description', 'material description', 'product name', 'item name', 'model name', 'model', 'item desc', 'material desc', 'description', 'item', 'product type', 'product group'],
+        category: ['sub category', 'item group', 'item category', 'category', 'product category'],
         brand: ['brand', 'brand name', 'make'],
         soldPrice: ['sold price', 'soldprice', 'selling price', 'sale price', 'mop', 'net amount', 'net value', 'total amount', 'amount', 'sale amount', 'sale value', 'value', 'net sales value'],
         taxableVal: ['taxable value', 'taxable', 'taxable amount', 'taxable val'],
@@ -208,7 +208,7 @@
     const OSG_COL_MAP = {
         branch: ['store name', 'store', 'branch', 'branch name', 'outlet', 'outlet name', 'shop name'],
         storeCode: ['store code', 'store id', 'outlet code'],
-        product: ['product', 'product name', 'product type', 'model', 'model name', 'item name', 'product group'],
+        product: ['product', 'product name', 'product type', 'model', 'model name', 'item name', 'product group', 'item', 'item description', 'item desc', 'description', 'material', 'material description', 'material desc', 'sku', 'sku desc'],
         category: ['category', 'product category', 'item category'],
         brand: ['brand', 'brand name', 'make'],
         soldPrice: ['sold price', 'soldprice', 'plan price', 'selling price', 'net amount', 'amount', 'value', 'net value', 'sale price', 'mop', 'total amount', 'premium', 'premium amount'],
@@ -715,7 +715,7 @@
                             cancelledInv.add(nr.invoice);
                         }
                     });
-                    productData = productData.filter(r => !cancelledInv.has(r.invoice) && (r.qty || 0) > 0);
+                    productData = productData.filter(r => !cancelledInv.has(r.invoice));
 
                     allData = [...productData, ...amcData];
 
@@ -830,10 +830,29 @@
             const r = {};
             r.branch = strVal(row, mapping.branch);
             r.rbm = strVal(row, mapping.rbm);
+            if (!r.rbm) return null; // Skip rows missing RBM
             r.bdm = strVal(row, mapping.bdm);
             r.staff = strVal(row, mapping.staff);
             r.product = strVal(row, mapping.product);
-            r.category = normalizeProductCategory(strVal(row, mapping.category));
+            
+            if (!r.rbm) {
+                window._missingRbmAlerts = window._missingRbmAlerts || [];
+                window._missingRbmAlerts.push(row);
+            }
+            const rawCat = strVal(row, mapping.category);
+            let normCat = normalizeProductCategory(rawCat);
+            
+            const STANDARD_CATEGORIES = ['MICROWAVE OVEN', 'WASHING MACHINE', 'DRYER', 'REFRIGERATOR', 'AC', 'TV', 'AUDIO SYSTEM', 'HOME APPLIANCE', 'DISH WASHER', 'SMALL APPLIANCE'];
+            
+            // If category column didn't give a standard category, check the product column
+            if (!STANDARD_CATEGORIES.includes(normCat) && r.product) {
+                const normProd = normalizeProductCategory(r.product);
+                // If the product column normalizes to a standard category, use it!
+                if (STANDARD_CATEGORIES.includes(normProd) || normProd !== r.product) {
+                    normCat = normProd;
+                }
+            }
+            r.category = normCat;
             r.brand = strVal(row, mapping.brand);
             r.invoice = strVal(row, mapping.invoice);
             r.customerName = strVal(row, mapping.customerName);
@@ -886,27 +905,32 @@
     }
 
     // ---- UNIVERSAL CATEGORY NORMALIZER (for Product & OSG files) ----
-    // Maps raw category column values ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ one of the 9 standard categories
+    // Maps raw category column values to one of the 9 standard categories
     function normalizeProductCategory(raw) {
         if (!raw) return raw;
         const c = raw.toUpperCase().trim();
-        if (c.includes('MICROWAVE') || c.includes('MWO') || c.includes('OVEN')) return 'MICROWAVE OVEN';
-        if (c.includes('WASHING MACHINE') || c.includes('WASHER') || /\bWM\b/.test(c)) return 'WASHING MACHINE';
+        
+        // Exact matches for TVs
+        if (c === '32' || c === '40-45' || c === '43' || c === '50' || c === '55' || c === '65' || c === '75' || c === '85') return 'TV';
+
+        if (c.includes('MICROWAVE') || c.includes('MWO') || c.includes('OVEN') || c.includes('MS2043')) return 'MICROWAVE OVEN';
+        if (c.includes('WASHING MACHINE') || c.includes('WASHER') || /\bWM\b/.test(c) || c.includes('KG')) return 'WASHING MACHINE';
         if (c.includes('DRYER')) return 'DRYER';
         if (c.includes('REFRIGERATOR') || c.includes('FRIDGE') || c.includes('FROST FREE')
-            || c.includes('DIRECT COOL') || c.includes('SIDE BY SIDE') || /\bREF\b/.test(c)) return 'REFRIGERATOR';
+            || c.includes('DIRECT COOL') || c.includes('SIDE BY SIDE') || /\bREF\b/.test(c) || c.includes('LTR') || c.includes('LITER')) return 'REFRIGERATOR';
         if (c.includes('AIR CONDITIONER') || c.includes('SPLIT') || c.includes('WINDOW AC')
-            || /\bAC\b/.test(c)) return 'AC';
+            || /\bAC\b/.test(c) || c.includes('TON')) return 'AC';
         if (c.includes('TELEVISION') || c.includes('TV') || c.includes('LED') || c.includes('OLED')
-            || c.includes('MONITOR') || c.includes('DISPLAY')) return 'TV';
+            || c.includes('MONITOR') || c.includes('DISPLAY') || c.includes('INCH')) return 'TV';
         if (c.includes('AUDIO') || c.includes('SOUND') || c.includes('SPEAKER')
             || c.includes('HOME THEATER') || c.includes('HOME THEATRE')) return 'AUDIO SYSTEM';
         if (c.includes('CHIMNEY') || c.includes('HOB') || c.includes('INDUCTION')
             || c.includes('VACUUM') || c.includes('VACCUM') || c.includes('WATER PURIFIER')
             || c.includes('PURIFIER') || c.includes('WATER HEATER') || c.includes('GEYSER')
-            || c.includes('HOME APPLIANCE')) return 'HOME APPLIANCE';
+            || c.includes('HOME APPLIANCE') || c.includes('750W') || /\bMG\b/.test(c) || c.includes('MIXER')) return 'HOME APPLIANCE';
         if (c.includes('DISH WASHER') || c.includes('DISHWASHER')) return 'DISH WASHER';
-        // Return the original if not matched â€”Â keeps custom categories intact
+        
+        // Return the original if not matched â€”Â  keeps custom categories intact
         return raw;
     }
 
@@ -979,7 +1003,13 @@
             r.branch = strVal(row, mapping.branch);
             r.storeCode = strVal(row, mapping.storeCode);
             r.product = strVal(row, mapping.product);
-            r.category = normalizeProductCategory(strVal(row, mapping.category));
+            const rawCat = strVal(row, mapping.category);
+            let normCat = normalizeProductCategory(rawCat);
+            if (normCat === rawCat && r.product) {
+                const normProd = normalizeProductCategory(r.product);
+                if (normProd !== r.product) normCat = normProd;
+            }
+            r.category = normCat;
             r.brand = strVal(row, mapping.brand);
             r.soldPrice = num(getVal(row, mapping.soldPrice, 0));
             r.qty = parseFloat(strVal(row, mapping.qty)) || 1;
@@ -1124,20 +1154,20 @@
                         try {
                             const wb = XLSX.read(data, { type: 'array', cellDates: true, dense: true });
                             let allRows = [];
-                            for (let si = 0; si < wb.SheetNames.length; si++) {
-                                const sheetName = wb.SheetNames[si];
-                                updateLoadingMsg('Parsing sheet ' + (si + 1) + '/' + wb.SheetNames.length + '...');
-                                const sheet = wb.Sheets[sheetName];
-                                const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-                                if (json.length === 0) continue;
+                            const sheetName = wb.SheetNames[0];
+                            updateLoadingMsg('Parsing main sheet...');
+                            const sheet = wb.Sheets[sheetName];
+                            const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+                            if (json.length > 0) {
                                 const headers = Object.keys(json[0]);
                                 console.log('[Sheet: ' + sheetName + '] ' + json.length + ' rows');
                                 const mapping = autoMapColumns(headers, colMap);
                                 for (let i = 0; i < json.length; i++) {
-                                    allRows.push(rowMapper(json[i], mapping));
+                                    const mapped = rowMapper(json[i], mapping);
+                                    if (mapped) allRows.push(mapped);
                                 }
                             }
-                            if (allRows.length === 0) { reject(new Error('No data')); return; }
+                            if (allRows.length === 0) { reject(new Error('No data in the first sheet')); return; }
                             updateLoadingMsg('Loaded ' + allRows.length.toLocaleString() + ' rows!');
                             console.log('[Total] ' + allRows.length + ' rows');
                             resolve(allRows);
@@ -1179,7 +1209,8 @@
                     updateLoadingMsg('Processing ' + json.length.toLocaleString() + ' rows...');
                     var allRows = [];
                     for (var i = 0; i < json.length; i++) {
-                        allRows.push(rowMapper(json[i], mapping));
+                        const mapped = rowMapper(json[i], mapping);
+                        if (mapped) allRows.push(mapped);
                         if (i % 100000 === 0 && i > 0) {
                             updateLoadingMsg('Row ' + i.toLocaleString() + ' / ' + json.length.toLocaleString());
                         }
@@ -1531,13 +1562,13 @@
                     <td style="padding:10px 12px; border:1px solid #e2e8f0; font-weight:600;">Total Product Qty</td>
                     <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right;">${formatNumber(totalQty)}</td>
                     <td style="padding:10px 12px; border:1px solid #e2e8f0; font-weight:600;">Total Product Revenue</td>
-                    <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right;">â‚¹${fmtShortHtml(totalRev)}</td>
+                    <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right;">\u20B9${fmtShortHtml(totalRev)}</td>
                 </tr>
                 <tr>
                     <td style="padding:10px 12px; border:1px solid #e2e8f0; font-weight:600;">OSG Qty</td>
                     <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right;">${formatNumber(osgQty)}</td>
                     <td style="padding:10px 12px; border:1px solid #e2e8f0; font-weight:600;">OSG Revenue</td>
-                    <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right;">â‚¹${fmtShortHtml(osgRev)}</td>
+                    <td style="padding:10px 12px; border:1px solid #e2e8f0; text-align:right;">\u20B9${fmtShortHtml(osgRev)}</td>
                 </tr>
                 <tr style="background:#f8fafc;">
                     <td style="padding:10px 12px; border:1px solid #e2e8f0; font-weight:600;">Qty Conversion</td>
@@ -1564,7 +1595,7 @@
                     <tr style="background:${i % 2 === 0 ? '#f8fafc' : '#fff'};">
                         <td style="padding:8px 12px; border:1px solid #e2e8f0; font-weight:600;">${name}</td>
                         <td style="padding:8px 12px; border:1px solid #e2e8f0; text-align:right;">${formatNumber(d.qty)}</td>
-                        <td style="padding:8px 12px; border:1px solid #e2e8f0; text-align:right;">â‚¹${fmtShortHtml(d.rev)}</td>
+                        <td style="padding:8px 12px; border:1px solid #e2e8f0; text-align:right;">\u20B9${fmtShortHtml(d.rev)}</td>
                     </tr>
                 `).join('')}
             </table>
@@ -1668,7 +1699,7 @@
             const kpiAmcConv = document.getElementById('kpiAmcConv');
 
             if (kpiAmcTotal) kpiAmcTotal.textContent = formatNumber(amcTotalQty);
-            if (kpiAmcSale) kpiAmcSale.textContent = 'â‚¹' + fmtShort(amcTotalSale);
+            if (kpiAmcSale) kpiAmcSale.textContent = '\u20B9' + fmtShort(amcTotalSale);
             if (kpiAmcWithout) kpiAmcWithout.textContent = formatNumber(withoutAmcQty);
             if (kpiAmcConv) kpiAmcConv.textContent = amcConvPct.toFixed(2) + '%';
         } else if (lgAmcKpiRow) {
@@ -1704,7 +1735,7 @@
             const kpiSamsungConv = document.getElementById('kpiSamsungConv');
 
             if (kpiSamsungTotal) kpiSamsungTotal.textContent = formatNumber(samsungOsgTotalQty);
-            if (kpiSamsungSale) kpiSamsungSale.textContent = 'â‚¹' + fmtShort(samsungOsgTotalSale);
+            if (kpiSamsungSale) kpiSamsungSale.textContent = '\u20B9' + fmtShort(samsungOsgTotalSale);
             if (kpiSamsungWithout) kpiSamsungWithout.textContent = formatNumber(withoutSamsungQty);
             if (kpiSamsungConv) kpiSamsungConv.textContent = samsungConvPct.toFixed(2) + '%';
         } else if (samsungKpiRow) {
@@ -1778,7 +1809,7 @@
         const elC = document.getElementById('prodKpiCategories');
         const elA = document.getElementById('prodKpiAvgConv');
         if (elQ) elQ.textContent = formatNumber(totalQty);
-        if (elR) elR.textContent = 'â‚¹' + fmtShort(totalRev);
+        if (elR) elR.textContent = '\u20B9' + fmtShort(totalRev);
         if (elC) elC.textContent = cats.length;
         if (elA) elA.textContent = avgConv.toFixed(2) + '%';
 
@@ -1811,7 +1842,7 @@
                 data: {
                     labels,
                     datasets: [{
-                        label: 'Revenue (â‚¹)',
+                        label: 'Revenue (\u20B9)',
                         data: revData,
                         backgroundColor: CHART_COLORS,
                         borderRadius: 6,
@@ -1822,9 +1853,9 @@
                     ...chartDefaults,
                     scales: {
                         x: { ticks: { color: '#94a3b8', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                        y: { ticks: { color: '#94a3b8', callback: v => 'â‚¹' + fmtShort(v) }, grid: { color: 'rgba(255,255,255,0.07)' } }
+                        y: { ticks: { color: '#94a3b8', callback: v => '\u20B9' + fmtShort(v) }, grid: { color: 'rgba(255,255,255,0.07)' } }
                     },
-                    plugins: { ...chartDefaults.plugins, tooltip: { callbacks: { label: ctx => 'â‚¹' + formatNumber(ctx.parsed.y) } } }
+                    plugins: { ...chartDefaults.plugins, tooltip: { callbacks: { label: ctx => '\u20B9' + formatNumber(ctx.parsed.y) } } }
                 }
             });
         }
@@ -1895,12 +1926,12 @@
                     ${c.name}
                 </td>
                 <td class="text-right">${formatNumber(c.pQty)}</td>
-                <td class="text-right">â‚¹${fmtShortHtml(c.pRev)}</td>
+                <td class="text-right">\u20B9${fmtShortHtml(c.pRev)}</td>
                 <td class="text-right">${formatNumber(c.oQty)}</td>
                 <td class="text-right">${fmtPct(c.osgConv)}</td>
                 <td class="text-right">${formatNumber(c.aQty)}</td>
                 <td class="text-right">${fmtPct(c.amcConv)}</td>
-                <td class="text-right">â‚¹${fmtShortHtml(c.avgPrice)}</td>
+                <td class="text-right">\u20B9${fmtShortHtml(c.avgPrice)}</td>
             </tr>
         `).join('');
     }
@@ -1993,7 +2024,7 @@
                 data: {
                     labels,
                     datasets: [{
-                        label: 'Total Revenue (â‚¹)',
+                        label: 'Total Revenue (\u20B9)',
                         data: revData,
                         borderColor: '#10b981',
                         backgroundColor: 'rgba(16,185,129,0.15)',
@@ -2005,11 +2036,11 @@
                     ...chartDefaults,
                     scales: {
                         ...chartDefaults.scales,
-                        y: { ...chartDefaults.scales.y, ticks: { ...chartDefaults.scales.y.ticks, callback: v => 'â‚¹' + fmtShort(v) } }
+                        y: { ...chartDefaults.scales.y, ticks: { ...chartDefaults.scales.y.ticks, callback: v => '\u20B9' + fmtShort(v) } }
                     },
                     plugins: {
                         ...chartDefaults.plugins,
-                        tooltip: { callbacks: { label: ctx => 'â‚¹' + formatNumber(ctx.parsed.y) } }
+                        tooltip: { callbacks: { label: ctx => '\u20B9' + formatNumber(ctx.parsed.y) } }
                     }
                 }
             });
@@ -2113,7 +2144,7 @@
                         ${pincodeAreaCache[grp.pincode] ? pincodeAreaCache[grp.pincode] : 'Loading...'}
                     </td>
                     <td class="text-right">${fmtNum(pQty)}</td>
-                    <td class="text-right">â‚¹${fmtShortHtml(pRev)}</td>
+                    <td class="text-right">\u20B9${fmtShortHtml(pRev)}</td>
                     <td class="text-right">${fmtNum(oQty)}</td>
                     <td class="text-right">${fmtPct(osgQtyC)}</td>
                     <td class="text-right">${fmtNum(aQty)}</td>
@@ -2551,6 +2582,7 @@
     // ---- LOW CONV STAFF PAGE ----
     $('btnLCRefresh').addEventListener('click', renderLowConvPage);
     $('btnLCExport').addEventListener('click', exportLowConvCSV);
+    if ($('btnLCExportDetailed')) $('btnLCExportDetailed').addEventListener('click', exportDetailedLowConvCSV);
 
     // Also refresh whenever user navigates to the page
     document.querySelector('[data-section="lowconv-section"]').addEventListener('click', () => {
@@ -2655,7 +2687,8 @@
         const cbs = document.querySelectorAll('.lc-prod-cb');
         const selected = [];
         cbs.forEach(cb => { if (cb.checked) selected.push(cb.value); });
-        if (selected.length === cbs.length || document.querySelector('#lcProductDropdown input[value="ALL"]')?.checked) return null; // All products selected
+        const allCb = document.querySelector('#lcProductDropdown input[value="ALL"]');
+        if (selected.length === cbs.length || (allCb && allCb.checked)) return null; // All products selected
         return selected;
     };
 
@@ -2686,7 +2719,8 @@
         const cbs = document.querySelectorAll('.lc-branch-cb');
         const selected = [];
         cbs.forEach(cb => { if (cb.checked) selected.push(cb.value); });
-        if (selected.length === cbs.length || document.querySelector('#lcBranchDropdown input[value="ALL"]')?.checked) return null;
+        const allCb = document.querySelector('#lcBranchDropdown input[value="ALL"]');
+        if (selected.length === cbs.length || (allCb && allCb.checked)) return null;
         return selected;
     };
 
@@ -2718,7 +2752,8 @@
         const cbs = document.querySelectorAll('.tc-branch-cb');
         const selected = [];
         cbs.forEach(cb => { if (cb.checked) selected.push(cb.value); });
-        if (selected.length === cbs.length || document.querySelector('#tcBranchDropdown input[value="ALL"]')?.checked) return null;
+        const allCb = document.querySelector('#tcBranchDropdown input[value="ALL"]');
+        if (selected.length === cbs.length || (allCb && allCb.checked)) return null;
         return selected;
     };
 
@@ -2921,21 +2956,284 @@
         const selRBM = $('lcRBM').value;
         const selBDM = $('lcBDM').value;
         const selectedProducts = window.getLcSelectedProducts();
+        
         const allStats = buildStaffStats(selectedProducts);
-        const filtered = allStats
+        const filteredStaff = allStats
             .filter(s => s.pQty >= minQty && s.qtyConv <= maxConv)
             .filter(s => s.oQty >= minOsgQty)
             .filter(s => !selectedBranches || selectedBranches.includes(s.branch))
             .filter(s => !selRBM || s.rbm === selRBM)
-            .filter(s => !selBDM || s.bdm === selBDM)
-            .sort((a, b) => a.qtyConv - b.qtyConv || b.pQty - a.pQty);
-        if (filtered.length === 0) return;
-        const hdr = ['Rank', 'Staff', 'Branch', 'RBM', 'BDM', 'Prod Qty', 'OSG Qty', 'Qty Conv%', 'Val Conv%', 'Prod Revenue'];
-        const data = filtered.map((e, i) => [
-            i + 1, e.name, e.branch, e.rbm, e.bdm, e.pQty, e.oQty,
-            parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2)), Math.round(e.pRev)
+            .filter(s => !selBDM || s.bdm === selBDM);
+            
+        if (filteredStaff.length === 0) {
+            alert("No staff match the current filters.");
+            return;
+        }
+
+        // Apply Top Staff Limit ONLY for Export CSV
+        const exportLimitEl = $('lcTopStaffExportLimit');
+        const topLimit = exportLimitEl ? (parseInt(exportLimitEl.value) || 15) : 15;
+        filteredStaff.sort((a, b) => a.qtyConv - b.qtyConv || b.pQty - a.pQty);
+        const topStaff = filteredStaff.slice(0, topLimit);
+        
+        const validStaffNames = new Set(topStaff.map(s => s.name));
+        const detailedMap = {};
+        
+        productData.forEach(r => {
+            const s = r.staff || 'Unknown';
+            if (!validStaffNames.has(s)) return;
+            if (selectedProducts && !selectedProducts.includes(r.category)) return;
+            
+            const cat = r.category || 'Unknown';
+            const key = s + '|||' + cat;
+            
+            if (!detailedMap[key]) {
+                detailedMap[key] = {
+                    branch: r.branch || 'Unknown',
+                    rbm: r.rbm || 'Unknown',
+                    bdm: r.bdm || 'Unknown',
+                    staff: s,
+                    product: cat,
+                    pQty: 0,
+                    oQty: 0,
+                    lgOsgQty: 0,
+                    samsungOsgQty: 0
+                };
+            }
+            detailedMap[key].pQty += (r.qty || 0);
+        });
+        
+        const invoiceData = {};
+        productData.forEach(r => { 
+            if (r.invoice) invoiceData[r.invoice] = { staff: r.staff || 'Unknown', product: r.category }; 
+        });
+        
+        osgData.forEach(r => {
+            const inv = r.invoice ? invoiceData[r.invoice] : null;
+            if (!inv) return;
+            
+            const s = inv.staff;
+            const cat = inv.product;
+            if (!validStaffNames.has(s)) return;
+            if (selectedProducts && !selectedProducts.includes(cat)) return;
+            
+            const key = s + '|||' + cat;
+            if (detailedMap[key]) {
+                const qty = r.qty || 0;
+                detailedMap[key].oQty += qty;
+                
+                const osgBrand = (r.brand || '').toUpperCase();
+                if (osgBrand === 'LG') detailedMap[key].lgOsgQty += qty;
+                if (osgBrand === 'SAMSUNG') detailedMap[key].samsungOsgQty += qty;
+            }
+        });
+
+        amcData.forEach(r => {
+            const inv = r.invoice ? invoiceData[r.invoice] : null;
+            if (!inv) return;
+            const key = inv.staff + '|||' + inv.product;
+            if (detailedMap[key]) {
+                const qty = r.qty || 0;
+                detailedMap[key].lgOsgQty += qty;
+            }
+        });
+        
+        samsungData.forEach(r => {
+            const inv = r.invoice ? invoiceData[r.invoice] : null;
+            if (!inv) return;
+            const key = inv.staff + '|||' + inv.product;
+            if (detailedMap[key]) {
+                const qty = r.qty || 0;
+                detailedMap[key].samsungOsgQty += qty;
+            }
+        });
+        
+        const detailedRows = Object.values(detailedMap);
+        
+        // Compute Totals per Staff
+        const staffTotals = {};
+        detailedRows.forEach(r => {
+            if (!staffTotals[r.staff]) {
+                staffTotals[r.staff] = {
+                    branch: r.branch, rbm: r.rbm, bdm: r.bdm, staff: r.staff, product: 'TOTAL',
+                    pQty: 0, oQty: 0, lgOsgQty: 0, samsungOsgQty: 0
+                };
+            }
+            staffTotals[r.staff].pQty += r.pQty;
+            staffTotals[r.staff].oQty += r.oQty;
+            staffTotals[r.staff].lgOsgQty += r.lgOsgQty;
+            staffTotals[r.staff].samsungOsgQty += r.samsungOsgQty;
+        });
+
+        // Add TOTAL rows to detailedRows
+        Object.values(staffTotals).forEach(tot => detailedRows.push(tot));
+
+        detailedRows.sort((a, b) => {
+            if (a.rbm !== b.rbm) return a.rbm.localeCompare(b.rbm);
+            if (a.branch !== b.branch) return a.branch.localeCompare(b.branch);
+            if (a.staff !== b.staff) return a.staff.localeCompare(b.staff);
+            // Ensure TOTAL comes first for the staff
+            if (a.product === 'TOTAL') return -1;
+            if (b.product === 'TOTAL') return 1;
+            return a.product.localeCompare(b.product);
+        });
+        
+        const hdr = ['BRANCH', 'RBM', 'BDM', 'Staff', 'Product', 'Product Qty', 'OSG QTY', 'LG', 'SAMSUNG'];
+        const data = detailedRows.map(r => [
+            r.branch, r.rbm, r.bdm, r.staff, r.product, r.pQty, r.oQty, r.lgOsgQty, r.samsungOsgQty
         ]);
+        
         exportToStyledExcel(data, hdr, 'low_conv_staff.xlsx', 'Low Conversion Staff');
+    }
+
+    function exportDetailedLowConvCSV() {
+        if (productData.length === 0) return;
+        const minQty = parseFloat($('lcMinQty').value) || 0;
+        const maxConv = parseFloat($('lcMaxConv').value);
+        const minOsgQty = parseInt($('lcMinOsgQty').value) || 0;
+        const selectedBranches = window.getLcSelectedBranches();
+        const selRBM = $('lcRBM').value;
+        const selBDM = $('lcBDM').value;
+        const selectedProducts = window.getLcSelectedProducts();
+        
+        const allStats = buildStaffStats(selectedProducts);
+        const filteredStaff = allStats
+            .filter(s => s.pQty >= minQty && s.qtyConv <= maxConv)
+            .filter(s => s.oQty >= minOsgQty)
+            .filter(s => !selectedBranches || selectedBranches.includes(s.branch))
+            .filter(s => !selRBM || s.rbm === selRBM)
+            .filter(s => !selBDM || s.bdm === selBDM);
+            
+        if (filteredStaff.length === 0) {
+            alert("No staff match the current filters.");
+            return;
+        }
+
+        // Apply Max Staff Per Branch limit
+        const limitEl = $('lcMaxStaffPerBranch');
+        const maxPerBranch = limitEl ? (parseInt(limitEl.value) || 50) : 50;
+        
+        const staffByBranch = {};
+        filteredStaff.forEach(s => {
+            if (!staffByBranch[s.branch]) staffByBranch[s.branch] = [];
+            staffByBranch[s.branch].push(s);
+        });
+
+        let finalStaffList = [];
+        Object.values(staffByBranch).forEach(branchStaff => {
+            branchStaff.sort((a, b) => a.qtyConv - b.qtyConv || b.pQty - a.pQty);
+            finalStaffList = finalStaffList.concat(branchStaff.slice(0, maxPerBranch));
+        });
+        
+        const validStaffNames = new Set(finalStaffList.map(s => s.name));
+        const detailedMap = {};
+        
+        productData.forEach(r => {
+            const s = r.staff || 'Unknown';
+            if (!validStaffNames.has(s)) return;
+            if (selectedProducts && !selectedProducts.includes(r.category)) return;
+            
+            const cat = r.category || 'Unknown';
+            const key = s + '|||' + cat;
+            
+            if (!detailedMap[key]) {
+                detailedMap[key] = {
+                    branch: r.branch || 'Unknown',
+                    rbm: r.rbm || 'Unknown',
+                    bdm: r.bdm || 'Unknown',
+                    staff: s,
+                    product: cat,
+                    pQty: 0,
+                    oQty: 0,
+                    lgOsgQty: 0,
+                    samsungOsgQty: 0
+                };
+            }
+            detailedMap[key].pQty += (r.qty || 0);
+        });
+        
+        const invoiceData = {};
+        productData.forEach(r => { 
+            if (r.invoice) invoiceData[r.invoice] = { staff: r.staff || 'Unknown', product: r.category }; 
+        });
+        
+        osgData.forEach(r => {
+            const inv = r.invoice ? invoiceData[r.invoice] : null;
+            if (!inv) return;
+            
+            const s = inv.staff;
+            const cat = inv.product;
+            if (!validStaffNames.has(s)) return;
+            if (selectedProducts && !selectedProducts.includes(cat)) return;
+            
+            const key = s + '|||' + cat;
+            if (detailedMap[key]) {
+                const qty = r.qty || 0;
+                detailedMap[key].oQty += qty;
+                
+                const osgBrand = (r.brand || '').toUpperCase();
+                if (osgBrand === 'LG') detailedMap[key].lgOsgQty += qty;
+                if (osgBrand === 'SAMSUNG') detailedMap[key].samsungOsgQty += qty;
+            }
+        });
+
+        amcData.forEach(r => {
+            const inv = r.invoice ? invoiceData[r.invoice] : null;
+            if (!inv) return;
+            const key = inv.staff + '|||' + inv.product;
+            if (detailedMap[key]) {
+                const qty = r.qty || 0;
+                detailedMap[key].lgOsgQty += qty;
+            }
+        });
+        
+        samsungData.forEach(r => {
+            const inv = r.invoice ? invoiceData[r.invoice] : null;
+            if (!inv) return;
+            const key = inv.staff + '|||' + inv.product;
+            if (detailedMap[key]) {
+                const qty = r.qty || 0;
+                detailedMap[key].samsungOsgQty += qty;
+            }
+        });
+        
+        const detailedRows = Object.values(detailedMap);
+        
+        // Compute Totals per Staff
+        const staffTotals = {};
+        detailedRows.forEach(r => {
+            if (!staffTotals[r.staff]) {
+                staffTotals[r.staff] = {
+                    branch: r.branch, rbm: r.rbm, bdm: r.bdm, staff: r.staff, product: 'TOTAL',
+                    pQty: 0, oQty: 0, lgOsgQty: 0, samsungOsgQty: 0
+                };
+            }
+            staffTotals[r.staff].pQty += r.pQty;
+            staffTotals[r.staff].oQty += r.oQty;
+            staffTotals[r.staff].lgOsgQty += r.lgOsgQty;
+            staffTotals[r.staff].samsungOsgQty += r.samsungOsgQty;
+        });
+
+        // Add TOTAL rows to detailedRows
+        Object.values(staffTotals).forEach(tot => detailedRows.push(tot));
+
+        detailedRows.sort((a, b) => {
+            if (a.rbm !== b.rbm) return a.rbm.localeCompare(b.rbm);
+            if (a.branch !== b.branch) return a.branch.localeCompare(b.branch);
+            if (a.staff !== b.staff) return a.staff.localeCompare(b.staff);
+            // Ensure TOTAL comes first for the staff
+            if (a.product === 'TOTAL') return -1;
+            if (b.product === 'TOTAL') return 1;
+            return a.product.localeCompare(b.product);
+        });
+        
+        const hdr = ['RBM', 'BDM', 'BRANCH', 'Staff', 'Product', 'Product Qty', 'OSG QTY', 'LG', 'SAMSUNG'];
+        const data = detailedRows.map(r => [
+            r.rbm, r.bdm, r.branch, r.staff, r.product, r.pQty, r.oQty, r.lgOsgQty, r.samsungOsgQty
+        ]);
+        
+        // Pass 3 as the last parameter to merge the first 3 columns (RBM, BDM, BRANCH)
+        exportToStyledExcel(data, hdr, 'detailed_low_conv_staff.xlsx', 'Detailed Low Conv Staff', 3);
     }
 
 
@@ -3557,132 +3855,6 @@
             return { name: displayName, branch, rbm, bdm, pQty, oQty, pRev, oRev, qtyConv, valConv, products };
         });
     }
-    function renderLowConvPage() {
-        if (productData.length === 0) {
-            $('lcTableWrapper').innerHTML = noDataHTML('Upload data and generate reports first.');
-            $('lcKpiRow').innerHTML = '';
-            $('lcCount').textContent = '0 staff';
-            return;
-        }
-
-        const minQty = parseFloat($('lcMinQty').value) || 0;
-        const maxConv = parseFloat($('lcMaxConv').value);
-        const minOsgQty = parseInt($('lcMinOsgQty').value) || 0;
-        const selectedBranches = window.getLcSelectedBranches();
-        const selRBM = $('lcRBM').value;
-        const selBDM = $('lcBDM').value;
-
-        const allStats = buildStaffStats();
-
-        // Populate dropdowns (preserve selection)
-        const branchSet = [...new Set(allStats.map(s => s.branch).filter(Boolean))].sort();
-        const rbmSet = [...new Set(allStats.map(s => s.rbm).filter(Boolean))].sort();
-        const bdmSet = [...new Set(allStats.map(s => s.bdm).filter(Boolean))].sort();
-
-        const branchDrop = $('lcBranchDropdown');
-        const rbmEl = $('lcRBM');
-        const bdmEl = $('lcBDM');
-        const prevRBM = selRBM;
-        const prevBDM = selBDM;
-
-        if (branchDrop) {
-            let bHtml = `<label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="ALL" ${!selectedBranches ? 'checked' : ''} onchange="window.toggleAllLcBranches(this)"> <strong>All Branches</strong></label><hr style="margin: 4px 0; border: none; border-top: 1px solid var(--border);">`;
-            bHtml += branchSet.map(b => `<label style="display: flex; align-items: center; gap: 8px; padding: 4px 0; cursor: pointer; color: var(--text-primary); text-transform: none; font-weight: 500; font-size: 0.85rem; margin:0;"><input type="checkbox" value="${b}" class="lc-branch-cb" ${!selectedBranches || selectedBranches.includes(b) ? 'checked' : ''} onchange="window.updateLcBranchLabel()"> ${b}</label>`).join('');
-            branchDrop.innerHTML = bHtml;
-            window.updateLcBranchLabel();
-        }
-        rbmEl.innerHTML = '<option value="">All RBMs</option>' +
-            rbmSet.map(r => `<option value="${r}" ${r === prevRBM ? 'selected' : ''}>${r}</option>`).join('');
-        bdmEl.innerHTML = '<option value="">All BDMs</option>' +
-            bdmSet.map(b => `<option value="${b}" ${b === prevBDM ? 'selected' : ''}>${b}</option>`).join('');
-
-        // Filter: minQty, maxConv, minOsgQty, optional Branch, optional RBM, optional BDM
-        const filtered = allStats
-            .filter(s => s.pQty >= minQty && s.qtyConv <= maxConv)
-            .filter(s => s.oQty >= minOsgQty)
-            .filter(s => !selectedBranches || selectedBranches.includes(s.branch))
-            .filter(s => !selRBM || s.rbm === selRBM)
-            .filter(s => !selBDM || s.bdm === selBDM)
-            .sort((a, b) => {
-                if (a.qtyConv !== b.qtyConv) return a.qtyConv - b.qtyConv;
-                return b.pQty - a.pQty;
-            });
-
-        $('lcCount').textContent = `${filtered.length} staff`;
-
-        // KPI summary
-        const totalPQty = filtered.reduce((s, r) => s + r.pQty, 0);
-        const totalOQty = filtered.reduce((s, r) => s + r.oQty, 0);
-        const totalPRev = filtered.reduce((s, r) => s + r.pRev, 0);
-        const zeroConvCount = filtered.filter(r => r.qtyConv === 0).length;
-        $('lcKpiRow').innerHTML = `
-            <div class="lc-kpi"><span class="lc-kpi-label">Zero Conv Staff</span><span class="lc-kpi-val loss-text">${zeroConvCount}</span></div>
-            <div class="lc-kpi"><span class="lc-kpi-label">Total Product Qty</span><span class="lc-kpi-val">${formatNumber(totalPQty)}</span></div>
-            <div class="lc-kpi"><span class="lc-kpi-label">Total OSG Qty (Sold)</span><span class="lc-kpi-val">${formatNumber(totalOQty)}</span></div>
-            <div class="lc-kpi"><span class="lc-kpi-label">Opportunity Missed (Qty)</span><span class="lc-kpi-val loss-text">${formatNumber(totalPQty - totalOQty)}</span></div>
-            <div class="lc-kpi"><span class="lc-kpi-label">Total Product Revenue</span><span class="lc-kpi-val">${fmtShortHtml(totalPRev)}</span></div>
-        `;
-
-        if (filtered.length === 0) {
-            $('lcTableWrapper').innerHTML = noDataHTML(`No staff found with â‰¥${minQty} product qty and ÃƒÂ¢Ã¢â‚¬Â°Ã‚Â¤${maxConv}% qty conversion.`);
-            return;
-        }
-
-        let html = `<table class="data-table">
-            <thead><tr>
-                <th>#</th><th>Staff</th><th>Branch</th><th>RBM</th><th>BDM</th>
-                <th>Prod Qty</th><th>OSG Qty</th><th>Qty Conv%</th><th>Val Conv%</th><th>Prod Rev</th>
-            </tr></thead><tbody>`;
-
-        filtered.forEach((e, i) => {
-            const convCls = e.qtyConv === 0 ? 'loss-val' : (e.qtyConv < 0.5 ? 'conv-warn' : 'conv-val');
-            const rank = i + 1;
-            const rankBadge = rank <= 3 ? `<span class="rank-badge rank-${rank}">${rank}</span>` : `<span class="rank-num">${rank}</span>`;
-            const dlIcon = `<button onclick="window.downloadStaffDetails('${e.name}', '${e.branch}')" title="Download Staff Details" style="background:none;border:none;cursor:pointer;color:var(--primary);padding:0;margin-left:8px;vertical-align:middle;display:inline-flex;align-items:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>`;
-            html += `<tr>
-                <td class="number-cell">${rankBadge}</td>
-                <td style="white-space:nowrap;"><strong>${e.name}</strong>${dlIcon}</td>
-                <td>${e.branch}</td>
-                <td>${e.rbm}</td>
-                <td>${e.bdm}</td>
-                <td class="number-cell"><strong>${e.pQty}</strong></td>
-                <td class="number-cell">${e.oQty}</td>
-                <td class="number-cell ${convCls}">${e.qtyConv.toFixed(2)}%</td>
-                <td class="number-cell conv-val">${e.valConv.toFixed(2)}%</td>
-                <td class="number-cell">${fmtShortHtml(e.pRev)}</td>
-            </tr>`;
-        });
-
-        html += '</tbody></table>';
-        $('lcTableWrapper').innerHTML = html;
-    }
-
-    function exportLowConvCSV() {
-        if (productData.length === 0) return;
-        const minQty = parseFloat($('lcMinQty').value) || 0;
-        const maxConv = parseFloat($('lcMaxConv').value);
-        const minOsgQty = parseInt($('lcMinOsgQty').value) || 0;
-        const selectedBranches = window.getLcSelectedBranches();
-        const selRBM = $('lcRBM').value;
-        const selBDM = $('lcBDM').value;
-        const allStats = buildStaffStats();
-        const filtered = allStats
-            .filter(s => s.pQty >= minQty && s.qtyConv <= maxConv)
-            .filter(s => s.oQty >= minOsgQty)
-            .filter(s => !selectedBranches || selectedBranches.includes(s.branch))
-            .filter(s => !selRBM || s.rbm === selRBM)
-            .filter(s => !selBDM || s.bdm === selBDM)
-            .sort((a, b) => a.qtyConv - b.qtyConv || b.pQty - a.pQty);
-        if (filtered.length === 0) return;
-        const hdr = ['Rank', 'Staff', 'Branch', 'RBM', 'BDM', 'Prod Qty', 'OSG Qty', 'Qty Conv%', 'Val Conv%', 'Prod Revenue'];
-        const data = filtered.map((e, i) => [
-            i + 1, e.name, e.branch, e.rbm, e.bdm, e.pQty, e.oQty,
-            parseFloat(e.qtyConv.toFixed(2)), parseFloat(e.valConv.toFixed(2)), Math.round(e.pRev)
-        ]);
-        exportToStyledExcel(data, hdr, 'low_conv_staff.xlsx', 'Low Conversion Staff');
-    }
-
-
     // ---- TOP CONV STAFF PAGE ----
     $('btnTCRefresh').addEventListener('click', renderTopConvPage);
     $('btnTCExport').addEventListener('click', exportTopConvCSV);
@@ -4444,7 +4616,7 @@ function exportFutureStoresCSV() {
         
         flatDataAll.forEach(d => {
             if (!prodMap[d.product]) prodMap[d.product] = { pQ:0, pR:0, q:0, r:0 };
-            if (d.rbm && d.rbm.toUpperCase() !== 'GENERAL') {
+            if (d.rbm) {
                 if (!rbmMap[d.rbm]) rbmMap[d.rbm] = { pQ:0, pR:0, q:0, r:0, prods: {} };
                 if (!rbmMap[d.rbm].prods[d.product]) rbmMap[d.rbm].prods[d.product] = { pQ:0, pR:0, q:0, r:0 };
             }
@@ -4457,7 +4629,7 @@ function exportFutureStoresCSV() {
             prodMap[d.product].pQ += myPQ; prodMap[d.product].pR += myPR;
             prodMap[d.product].q += myQ; prodMap[d.product].r += myR;
             
-            if (d.rbm && d.rbm.toUpperCase() !== 'GENERAL') {
+            if (d.rbm) {
                 rbmMap[d.rbm].pQ += myPQ; rbmMap[d.rbm].pR += myPR;
                 rbmMap[d.rbm].q += myQ; rbmMap[d.rbm].r += myR;
                 rbmMap[d.rbm].prods[d.product].pQ += myPQ; rbmMap[d.rbm].prods[d.product].pR += myPR;
@@ -4528,15 +4700,16 @@ function exportFutureStoresCSV() {
         addSheet('RBM WISE', aoa2, merges2, false, 0);
 
         // 3. STORE WISE Sheet
-        const aoa3 = [['FUTURE STORES â€” STORE WISE'], ['BDM', 'Branch', 'Product', 'Product Qty', qtyName, 'Qty Conv%', 'Val Conv%', 'OVERALL Qty Conv%', 'OVERALL Val Conv%']];
-        const merges3 = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 8 } }];
+        const aoa3 = [['FUTURE STORES \u2014 STORE WISE'], ['RBM', 'BDM', 'Branch', 'Product', 'Product Qty', qtyName, 'Qty Conv%', 'Val Conv%', 'OVERALL Qty Conv%', 'OVERALL Val Conv%']];
+        const merges3 = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 9 } }];
         
-        const bdmBranchMap = {};
+        const rbmBdmBranchMap = {};
         flatDataFuture.forEach(d => {
-            if (!bdmBranchMap[d.bdm]) bdmBranchMap[d.bdm] = {};
-            if (!bdmBranchMap[d.bdm][d.branch]) bdmBranchMap[d.bdm][d.branch] = {};
-            if (!bdmBranchMap[d.bdm][d.branch][d.product]) bdmBranchMap[d.bdm][d.branch][d.product] = { pQ:0, pR:0, q:0, r:0 };
-            const p = bdmBranchMap[d.bdm][d.branch][d.product];
+            if (!rbmBdmBranchMap[d.rbm]) rbmBdmBranchMap[d.rbm] = {};
+            if (!rbmBdmBranchMap[d.rbm][d.bdm]) rbmBdmBranchMap[d.rbm][d.bdm] = {};
+            if (!rbmBdmBranchMap[d.rbm][d.bdm][d.branch]) rbmBdmBranchMap[d.rbm][d.bdm][d.branch] = {};
+            if (!rbmBdmBranchMap[d.rbm][d.bdm][d.branch][d.product]) rbmBdmBranchMap[d.rbm][d.bdm][d.branch][d.product] = { pQ:0, pR:0, q:0, r:0 };
+            const p = rbmBdmBranchMap[d.rbm][d.bdm][d.branch][d.product];
             
             let myPQ = 0, myPR = 0, myQ = 0, myR = 0;
             if (brandType === 'OSG') { myPQ = d.pQty; myPR = d.pRev; myQ = d.oQty; myR = d.oRev; }
@@ -4546,28 +4719,33 @@ function exportFutureStoresCSV() {
             p.pQ+=myPQ; p.pR+=myPR; p.q+=myQ; p.r+=myR;
         });
 
-        let bdmStart = 2;
-        Object.keys(bdmBranchMap).sort().forEach(bdm => {
-            let branchStart = bdmStart;
-            Object.keys(bdmBranchMap[bdm]).sort().forEach(branch => {
-                let pStart = branchStart;
-                let t_pQ=0, t_pR=0, t_q=0, t_r=0;
-                const prods = Object.keys(bdmBranchMap[bdm][branch]).sort();
-                prods.forEach(k => {
-                    const p = bdmBranchMap[bdm][branch][k];
-                    t_pQ+=p.pQ; t_pR+=p.pR; t_q+=p.q; t_r+=p.r;
-                    aoa3.push([bdm, branch, k, p.pQ, p.q, calcConv(p.q, p.pQ), calcConv(p.r, p.pR), '', '']);
-                    branchStart++;
+        let rbmStart = 2;
+        Object.keys(rbmBdmBranchMap).sort().forEach(rbm => {
+            let bdmStart = rbmStart;
+            Object.keys(rbmBdmBranchMap[rbm]).sort().forEach(bdm => {
+                let branchStart = bdmStart;
+                Object.keys(rbmBdmBranchMap[rbm][bdm]).sort().forEach(branch => {
+                    let pStart = branchStart;
+                    let t_pQ=0, t_pR=0, t_q=0, t_r=0;
+                    const prods = Object.keys(rbmBdmBranchMap[rbm][bdm][branch]).sort();
+                    prods.forEach(k => {
+                        const p = rbmBdmBranchMap[rbm][bdm][branch][k];
+                        t_pQ+=p.pQ; t_pR+=p.pR; t_q+=p.q; t_r+=p.r;
+                        aoa3.push([rbm, bdm, branch, k, p.pQ, p.q, calcConv(p.q, p.pQ), calcConv(p.r, p.pR), '', '']);
+                        branchStart++;
+                    });
+                    aoa3[pStart][8] = calcConv(t_q, t_pQ); aoa3[pStart][9] = calcConv(t_r, t_pR);
+                    if (branchStart > pStart + 1) {
+                        merges3.push({ s: { r: pStart, c: 2 }, e: { r: branchStart - 1, c: 2 } });
+                        merges3.push({ s: { r: pStart, c: 8 }, e: { r: branchStart - 1, c: 8 } });
+                        merges3.push({ s: { r: pStart, c: 9 }, e: { r: branchStart - 1, c: 9 } });
+                    }
                 });
-                aoa3[pStart][7] = calcConv(t_q, t_pQ); aoa3[pStart][8] = calcConv(t_r, t_pR);
-                if (branchStart > pStart + 1) {
-                    merges3.push({ s: { r: pStart, c: 1 }, e: { r: branchStart - 1, c: 1 } });
-                    merges3.push({ s: { r: pStart, c: 7 }, e: { r: branchStart - 1, c: 7 } });
-                    merges3.push({ s: { r: pStart, c: 8 }, e: { r: branchStart - 1, c: 8 } });
-                }
+                if (branchStart > bdmStart + 1) merges3.push({ s: { r: bdmStart, c: 1 }, e: { r: branchStart - 1, c: 1 } });
+                bdmStart = branchStart;
             });
-            if (branchStart > bdmStart + 1) merges3.push({ s: { r: bdmStart, c: 0 }, e: { r: branchStart - 1, c: 0 } });
-            bdmStart = branchStart;
+            if (bdmStart > rbmStart + 1) merges3.push({ s: { r: rbmStart, c: 0 }, e: { r: bdmStart - 1, c: 0 } });
+            rbmStart = bdmStart;
         });
         addSheet('STORE WISE', aoa3, merges3, false, 0);
 
@@ -6411,7 +6589,7 @@ function exportFutureStoresCSV() {
                 const name = (r.customerName || 'Customer').split(' ')[0];
                 const prod = r.product || 'your product';
                 const inv = r.invoice || '';
-                const val = r.soldPrice && r.soldPrice > 0 ? ' (worth â‚¹' + r.soldPrice.toLocaleString('en-IN') + ')' : '';
+                const val = r.soldPrice && r.soldPrice > 0 ? ' (worth \u20B9' + r.soldPrice.toLocaleString('en-IN') + ')' : '';
                 const msg = 'Dear ' + name + ',\n\nGreetings from myG ÃƒÂ°Ã…Â¸Ã‹Å“Ã…Â \n\nThank you for your recent purchase of *' + prod + '*' + val + ' (Invoice: ' + inv + ').\n\n We noticed your purchase does not yet include an *OSG Extended Warranty* plan. OSG covers:\n\nÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Extended protection beyond manufacturer warranty\nÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Free doorstep repair service\nÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Zero hidden charges\nÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Instant claim processing\n\nSecuring your device takes just a minute â€”Â and gives you complete peace of mind! \n\nWould you be interested? Reply *YES* and we will take care of everything.\n\nWarm regards,\nmyG Team';
                 return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
             })()}" target="_blank" title="WhatsApp (English)" style="color:#25D366;display:flex;padding:5px;border-radius:50%;background:rgba(37,211,102,0.12);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>` : ''}
@@ -6420,7 +6598,7 @@ function exportFutureStoresCSV() {
                 const name = (r.customerName || 'Customer').split(' ')[0];
                 const prod = r.product || 'your product';
                 const inv = r.invoice || '';
-                const priceStr = r.soldPrice && r.soldPrice > 0 ? ' (â‚¹' + r.soldPrice.toLocaleString('en-IN') + ')' : '';
+                const priceStr = r.soldPrice && r.soldPrice > 0 ? ' (\u20B9' + r.soldPrice.toLocaleString('en-IN') + ')' : '';
                 const msgML = '\u0d2a\u0d4d\u0d30\u0d3f\u0d2f ' + name + ',\n\nmyG-\u0d7d \u0d28\u0d3f\u0d28\u0d4d\u0d28\u0d41\u0d33\u0d4d\u0d33 \u0d06\u0d36\u0d02\u0d38\u0d15\u0d7e\n\n\u0d28\u0d3f\u0d19\u0d4d\u0d19\u0d7e \u0d05\u0d1f\u0d41\u0d24\u0d4d\u0d24\u0d3f\u0d1f\u0d46 \u0d35\u0d3e\u0d19\u0d4d\u0d19\u0d3f\u0d2f ' + prod + priceStr + ' \u0d28\u0d4d \u0d28\u0d28\u0d4d\u0d26\u0d3f. (\u0d07\u0d7b\u0d35\u0d4b\u0d2f\u0d4d\u0d38\u0d4d: ' + inv + ').\n\n \u0d28\u0d3f\u0d19\u0d4d\u0d19\u0d33\u0d41\u0d1f\u0d46 \u0d2a\u0d7c\u0d1a\u0d4d\u0d1a\u0d47\u0d38\u0d3f\u0d7d \u0d07\u0d24\u0d41\u0d35\u0d30\u0d46 OSG \u0d0e\u0d15\u0d4d\u0d38\u0d4d\u0d31\u0d4d\u0d1f\u0d7b\u0d21\u0d21\u0d4d \u0d35\u0d3e\u0d31\u0d7b\u0d4d\u0d31\u0d3f \u0d2a\u0d4d\u0d32\u0d3e\u0d7b \u0d09\u0d7e\u0d2a\u0d4d\u0d2a\u0d46\u0d1f\u0d41\u0d24\u0d4d\u0d24\u0d3f\u0d2f\u0d3f\u0d1f\u0d4d\u0d1f\u0d3f\u0d32\u0d4d\u0d32 \u0d0e\u0d28\u0d4d\u0d28\u0d4d \u0d1e\u0d19\u0d4d\u0d19\u0d7e \u0d36\u0d4d\u0d30\u0d26\u0d4d\u0d27\u0d3f\u0d1a\u0d4d\u0d1a\u0d41. OSG \u0d35\u0d34\u0d3f \u0d28\u0d3f\u0d19\u0d4d\u0d19\u0d7e\u0d15\u0d4d\u0d15\u0d4d \u0d32\u0d2d\u0d3f\u0d15\u0d4d\u0d15\u0d41\u0d28\u0d4d\u0d28\u0d24\u0d4d:\n\u0d28\u0d3f\u0d19\u0d4d\u0d19\u0d7e\u0d15\u0d4d\u0d15\u0d4d \u0d24\u0d3e\u0d32\u0d4d\u0d2a\u0d30\u0d4d\u0d2f\u0d2e\u0d41\u0d23\u0d4d\u0d1f\u0d4b? YES \u0d0e\u0d28\u0d4d\u0d28\u0d4d \u0d2e\u0d31\u0d41\u0d2a\u0d1f\u0d3f \u0d28\u0d7d\u0d15\u0d41\u0d15, \u0d2c\u0d3e\u0d15\u0d4d\u0d15\u0d3f \u0d15\u0d3e\u0d30\u0d4d\u0d2f\u0d19\u0d4d\u0d19\u0d7e \u0d1e\u0d19\u0d4d\u0d19\u0d7e \u0d1a\u0d46\u0d2f\u0d4d\u0d24\u0d41 \u0d24\u0d30\u0d3e\u0d02.\n\n\u0d38\u0d4d\u0d28\u0d47\u0d39\u0d24\u0d4d\u0d24\u0d4b\u0d1f\u0d46,\n\u0d1f\u0d40\u0d02 myG';
                 return 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msgML);
             })()}" target="_blank" title="WhatsApp (Malayalam)" style="color:#25D366;display:flex;padding:3px 6px;border-radius:12px;background:rgba(37,211,102,0.12);font-size:0.75rem;font-weight:700;text-decoration:none;align-items:center;">ML</a>` : ''}
@@ -6478,7 +6656,7 @@ function exportFutureStoresCSV() {
     }
 
     // ---- EXCEL UTILITIES (PROFESSIONAL) ----
-    function exportToStyledExcel(dataBody, headers, filename, sheetName = 'Report') {
+    function exportToStyledExcel(dataBody, headers, filename, sheetName = 'Report', mergeFirstNCols = 0) {
         const wb = XLSX.utils.book_new();
         const data = [headers, ...dataBody];
         const ws = XLSX.utils.aoa_to_sheet(data);
@@ -6507,10 +6685,31 @@ function exportFutureStoresCSV() {
 
         const altRowStyle = {
             ...cellStyle,
-            fill: { fgColor: { rgb: 'F8FAFC' } }
+            fill: { fgColor: { rgb: 'F8FAFC' } } // F8FAFC is a light cool gray/blue
         };
 
+        let staffColIndex = -1;
+        for (let i = 0; i < headers.length; i++) {
+            if (headers[i].toUpperCase() === 'STAFF' || headers[i].toUpperCase() === 'STAFF NAME') {
+                staffColIndex = i;
+                break;
+            }
+        }
+
+        let isAlt = false;
+        let lastStaff = null;
+
         for (let R = 0; R < data.length; ++R) {
+            if (R > 0 && staffColIndex !== -1) {
+                const currentStaff = data[R][staffColIndex];
+                if (currentStaff !== lastStaff) {
+                    isAlt = !isAlt;
+                    lastStaff = currentStaff;
+                }
+            } else if (R > 0) {
+                isAlt = R % 2 === 0;
+            }
+
             for (let C = 0; C < headers.length; ++C) {
                 const cell_ref = XLSX.utils.encode_cell({ c: C, r: R });
                 if (!ws[cell_ref]) ws[cell_ref] = { t: 's', v: '' };
@@ -6518,7 +6717,7 @@ function exportFutureStoresCSV() {
                 if (R === 0) {
                     ws[cell_ref].s = headerStyle;
                 } else {
-                    let baseStyle = R % 2 === 0 ? { ...altRowStyle } : { ...cellStyle };
+                    let baseStyle = isAlt ? { ...altRowStyle } : { ...cellStyle };
                     const h = headers[C].toUpperCase();
                     
                     if (ws[cell_ref].t === 'n') {
@@ -6548,7 +6747,7 @@ function exportFutureStoresCSV() {
                                 baseStyle = { ...baseStyle, font: { color: { rgb: "9A3412" }, bold: true }, fill: { fgColor: { rgb: "FEF08A" } } };
                             }
                         } else if (isCurrencyCol) {
-                            baseStyle.z = '"â‚¹"#,##0'; // No decimals
+                            baseStyle.z = '"\u20B9"#,##0'; // No decimals
                         } else {
                             baseStyle.z = '#,##0'; // Commas, no decimals
                         }
@@ -6560,6 +6759,32 @@ function exportFutureStoresCSV() {
                         }
                     }
                     ws[cell_ref].s = baseStyle;
+                }
+            }
+        }
+        
+        if (mergeFirstNCols > 0) {
+            ws['!merges'] = [];
+            for (let c = 0; c < mergeFirstNCols; c++) {
+                let startRow = 1; // Row 0 is headers
+                while (startRow < data.length) {
+                    let endRow = startRow;
+                    while (endRow + 1 < data.length) {
+                        let same = true;
+                        // For a cell to merge, its value AND all parent column values must match
+                        for (let p = 0; p <= c; p++) {
+                            if (data[endRow + 1][p] !== data[startRow][p]) {
+                                same = false;
+                                break;
+                            }
+                        }
+                        if (same) endRow++;
+                        else break;
+                    }
+                    if (endRow > startRow) {
+                        ws['!merges'].push({ s: { r: startRow, c: c }, e: { r: endRow, c: c } });
+                    }
+                    startRow = endRow + 1;
                 }
             }
         }
@@ -6575,19 +6800,19 @@ function exportFutureStoresCSV() {
         arr.forEach(r => { const k = r[key] || 'Unknown'; if (!m[k]) m[k] = []; m[k].push(r); });
         return m;
     }
-    function formatCurrency(n) { return 'â‚¹' + n.toLocaleString('en-IN', { maximumFractionDigits: 0 }); }
+    function formatCurrency(n) { return '\u20B9' + n.toLocaleString('en-IN', { maximumFractionDigits: 0 }); }
     function fmtShort(n) {
-        if (Math.abs(n) >= 1e7) return 'â‚¹' + (n / 1e7).toFixed(1) + 'Cr';
-        if (Math.abs(n) >= 1e5) return 'â‚¹' + (n / 1e5).toFixed(1) + 'L';
-        if (Math.abs(n) >= 1e3) return 'â‚¹' + (n / 1e3).toFixed(1) + 'K';
-        return 'â‚¹' + n.toFixed(0);
+        if (Math.abs(n) >= 1e7) return '\u20B9' + (n / 1e7).toFixed(1) + 'Cr';
+        if (Math.abs(n) >= 1e5) return '\u20B9' + (n / 1e5).toFixed(1) + 'L';
+        if (Math.abs(n) >= 1e3) return '\u20B9' + (n / 1e3).toFixed(1) + 'K';
+        return '\u20B9' + n.toFixed(0);
     }
             function fmtShortHtml(n) {
-        return '<span title="â‚¹' + Number(n).toLocaleString('en-IN') + '" style="cursor:help; border-bottom:1px dotted #94a3b8;">' + fmtShort(n) + '</span>';
+        return '<span title="\u20B9' + Number(n).toLocaleString('en-IN') + '" style="cursor:help; border-bottom:1px dotted #94a3b8;">' + fmtShort(n) + '</span>';
     }
     function formatNumber(n) { return n.toLocaleString('en-IN'); }
     function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
-    function truncate(s, len) { return s.length > len ? s.substring(0, len) + 'ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦' : s; }
+    function truncate(s, len) { return s.length > len ? s.substring(0, len) + '...' : s; }
     function showLoading(show) { loadingOverlay.classList.toggle('active', show); }
     function q(s) { return '"' + (s || '').replace(/"/g, '""') + '"'; }
 
@@ -6679,7 +6904,7 @@ function exportFutureStoresCSV() {
             reasonHTML += `<li><strong>Systemic Branch Failure (${worstBranches[0].branch}):</strong> Conversion is near zero (${worstBranches[0].conv.toFixed(1)}%) despite moving ${worstBranches[0].pQ} units. This indicates a store-wide knowledge gap or a leadership failure to enforce pitching at the POS, rather than individual poor performance.</li>`;
         }
         if (premiumMisses.length >= 2) {
-            reasonHTML += `<li><strong>Premium Pitch Avoidance:</strong> Found multiple premium devices > â‚¹50K sold with no OSG attached. Sales reps might be avoiding the OSG pitch on high-ticket items out of fear of losing the primary sale due to total cart value shock.</li>`;
+            reasonHTML += `<li><strong>Premium Pitch Avoidance:</strong> Found multiple premium devices > \u20B950K sold with no OSG attached. Sales reps might be avoiding the OSG pitch on high-ticket items out of fear of losing the primary sale due to total cart value shock.</li>`;
         }
         const topPerformers = staffStats.filter(s => s.conv > 20);
         if (topPerformers.length > 0 && worstStaff.length > 0) {
@@ -6698,7 +6923,7 @@ function exportFutureStoresCSV() {
         html += '<h3 style="margin-top:0; color:var(--primary); display:flex; align-items:center; gap:8px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Immediate Action Plan</h3>';
         html += '<ol style="margin:8px 0 0 24px; color:var(--text-muted); line-height:1.8;">';
         if (worstBranches.length) html += `<li><strong>RBM/BDM Intercept:</strong> Immediately deploy regional trainers to ${worstBranches.map(b => `<strong>${b.branch}</strong>`).join(', ')} for POS floor shadowing.</li>`;
-        if (premiumMisses.length) html += `<li><strong>Premium Bundling Rule:</strong> Institute a strict rule that any manager override/discount on products over â‚¹50K ideally requires an OSG attachment commitment.</li>`;
+        if (premiumMisses.length) html += `<li><strong>Premium Bundling Rule:</strong> Institute a strict rule that any manager override/discount on products over \u20B950K ideally requires an OSG attachment commitment.</li>`;
         if (worstStaff.length) html += `<li><strong>Targeted PIPs:</strong> Place <strong>${worstStaff.map(s => `${s.staff}`).join(', ')}</strong> on an accelerated 7-day OSG pitch improvement plan.</li>`;
         html += '<li><strong>Daily Morning Brief:</strong> Have branch managers physically review the "Customers Without OSG" dashboard list from yesterday\'s data before the store opens to identify missed pitch opportunities and contact customers via the WhatsApp quick-links.</li>';
         html += '</ol>';
