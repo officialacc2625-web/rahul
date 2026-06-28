@@ -2963,7 +2963,8 @@
             .filter(s => s.oQty >= minOsgQty)
             .filter(s => !selectedBranches || selectedBranches.includes(s.branch))
             .filter(s => !selRBM || s.rbm === selRBM)
-            .filter(s => !selBDM || s.bdm === selBDM);
+            .filter(s => !selBDM || s.bdm === selBDM)
+            .filter(s => s.branch && s.branch.toUpperCase().includes('FUTURE'));
             
         if (filteredStaff.length === 0) {
             alert("No staff match the current filters.");
@@ -3102,7 +3103,8 @@
             .filter(s => s.oQty >= minOsgQty)
             .filter(s => !selectedBranches || selectedBranches.includes(s.branch))
             .filter(s => !selRBM || s.rbm === selRBM)
-            .filter(s => !selBDM || s.bdm === selBDM);
+            .filter(s => !selBDM || s.bdm === selBDM)
+            .filter(s => s.branch && s.branch.toUpperCase().includes('FUTURE'));
             
         if (filteredStaff.length === 0) {
             alert("No staff match the current filters.");
@@ -3283,7 +3285,8 @@
         const eligible = allStats
             .filter(s => s.pQty >= minQty && s[sortBy] > 0)
             .filter(s => !selRBM || s.rbm === selRBM)
-            .filter(s => !selBDM || s.bdm === selBDM);
+            .filter(s => !selBDM || s.bdm === selBDM)
+            .filter(s => s.branch && s.branch.toUpperCase().includes('FUTURE'));
 
         // Sort: primarily by absolute OSG volume (OSG Qty or OSG Revenue)
         // This ensures staff with the highest actual number of conversions are at the top,
@@ -3902,7 +3905,8 @@
             .filter(s => s.pQty >= minQty && s[sortBy] > 0)
             .filter(s => !selectedBranches || selectedBranches.includes(s.branch))
             .filter(s => !selRBM || s.rbm === selRBM)
-            .filter(s => !selBDM || s.bdm === selBDM);
+            .filter(s => !selBDM || s.bdm === selBDM)
+            .filter(s => s.branch && s.branch.toUpperCase().includes('FUTURE'));
 
         // Sort: primarily by absolute OSG volume (OSG Qty or OSG Revenue)
         // This ensures staff with the highest actual number of conversions are at the top,
