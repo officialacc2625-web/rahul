@@ -2976,6 +2976,8 @@
         filteredStaff.sort((a, b) => a.qtyConv - b.qtyConv || b.pQty - a.pQty);
         const topStaff = filteredStaff.slice(0, topLimit);
         
+        const staffRankMap = {};
+        topStaff.forEach((s, i) => staffRankMap[s.name] = i);
         const validStaffNames = new Set(topStaff.map(s => s.name));
         const detailedMap = {};
         
@@ -3071,7 +3073,7 @@
         detailedRows.sort((a, b) => {
             if (a.rbm !== b.rbm) return a.rbm.localeCompare(b.rbm);
             if (a.branch !== b.branch) return a.branch.localeCompare(b.branch);
-            if (a.staff !== b.staff) return a.staff.localeCompare(b.staff);
+            if (a.staff !== b.staff) return (staffRankMap[a.staff] ?? 9999) - (staffRankMap[b.staff] ?? 9999);
             // Ensure TOTAL comes first for the staff
             if (a.product === 'TOTAL') return -1;
             if (b.product === 'TOTAL') return 1;
@@ -3125,6 +3127,8 @@
             finalStaffList = finalStaffList.concat(branchStaff.slice(0, maxPerBranch));
         });
         
+        const staffRankMap = {};
+        finalStaffList.forEach((s, i) => staffRankMap[s.name] = i);
         const validStaffNames = new Set(finalStaffList.map(s => s.name));
         const detailedMap = {};
         
@@ -3220,7 +3224,7 @@
         detailedRows.sort((a, b) => {
             if (a.rbm !== b.rbm) return a.rbm.localeCompare(b.rbm);
             if (a.branch !== b.branch) return a.branch.localeCompare(b.branch);
-            if (a.staff !== b.staff) return a.staff.localeCompare(b.staff);
+            if (a.staff !== b.staff) return (staffRankMap[a.staff] ?? 9999) - (staffRankMap[b.staff] ?? 9999);
             // Ensure TOTAL comes first for the staff
             if (a.product === 'TOTAL') return -1;
             if (b.product === 'TOTAL') return 1;
