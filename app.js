@@ -6695,10 +6695,13 @@ function exportFutureStoresCSV() {
         };
 
         let staffColIndex = -1;
+        let productColIndex = -1;
         for (let i = 0; i < headers.length; i++) {
             if (headers[i].toUpperCase() === 'STAFF' || headers[i].toUpperCase() === 'STAFF NAME') {
                 staffColIndex = i;
-                break;
+            }
+            if (headers[i].toUpperCase() === 'PRODUCT') {
+                productColIndex = i;
             }
         }
 
@@ -6706,6 +6709,7 @@ function exportFutureStoresCSV() {
         let lastStaff = null;
 
         for (let R = 0; R < data.length; ++R) {
+            const isTotalRow = R > 0 && productColIndex !== -1 && data[R][productColIndex] && data[R][productColIndex].toString().toUpperCase() === 'TOTAL';
             if (R > 0 && staffColIndex !== -1) {
                 const currentStaff = data[R][staffColIndex];
                 if (currentStaff !== lastStaff) {
@@ -6763,6 +6767,9 @@ function exportFutureStoresCSV() {
                         } else {
                             baseStyle.alignment = { vertical: 'center' };
                         }
+                    }
+                    if (isTotalRow && (h === 'PRODUCT QTY' || h === 'OSG QTY' || h === 'LG' || h === 'SAMSUNG' || h === 'PRODUCT')) {
+                        baseStyle = { ...baseStyle, font: { ...baseStyle.font, bold: true } };
                     }
                     ws[cell_ref].s = baseStyle;
                 }
