@@ -6691,7 +6691,7 @@ function exportFutureStoresCSV() {
 
         const altRowStyle = {
             ...cellStyle,
-            fill: { fgColor: { rgb: 'F8FAFC' } } // F8FAFC is a light cool gray/blue
+            fill: { fgColor: { rgb: 'E2E8F0' } } // E2E8F0 is a slightly darker slate gray for better visibility
         };
 
         let staffColIndex = -1;
