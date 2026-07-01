@@ -4401,17 +4401,16 @@ function exportFutureStoresCSV() {
     const invoiceMeta = {};
     productData.forEach(r => {
         if (r.invoice) {
-            const m = window.getBranchMeta(r);
             invoiceMeta[r.invoice] = {
-                branch: m ? m.origBranch : (r.branch || ''),
-                rbm: r.rbm || (m ? m.rbm : 'Unknown'),
-                bdm: r.bdm || (m ? m.bdm : 'Unknown'),
-                staff: r.staff || 'Unknown'
+                branch: r.branch || '',
+                rbm: r.rbm || '',
+                bdm: r.bdm || '',
+                staff: r.staff || ''
             };
         }
     });
 
-    const getMeta = (r) => {
+    const getProductMeta = (r) => {
         if (r.invoice && invoiceMeta[r.invoice]) return invoiceMeta[r.invoice];
         const m = window.getBranchMeta(r);
         return {
@@ -4422,7 +4421,13 @@ function exportFutureStoresCSV() {
         };
     };
 
+    const getOsgMeta = (r) => {
+        if (r.invoice && invoiceMeta[r.invoice]) return invoiceMeta[r.invoice];
+        return null;
+    };
+
     const passFilters = (m) => {
+        if (!m) return false;
         if (selRBM && m.rbm !== selRBM) return false;
         if (selBDM && m.bdm !== selBDM) return false;
         if (selBranch && m.branch !== selBranch) return false;
@@ -4430,10 +4435,10 @@ function exportFutureStoresCSV() {
     };
 
     const fP = [], fO = [], fA = [], fS = [];
-    productData.forEach(r => { const m = getMeta(r); if (passFilters(m)) { r._m = m; fP.push(r); } });
-    osgData.forEach(r => { const m = getMeta(r); if (passFilters(m)) { r._m = m; fO.push(r); } });
-    amcData.forEach(r => { const m = getMeta(r); if (passFilters(m)) { r._m = m; fA.push(r); } });
-    samsungData.forEach(r => { const m = getMeta(r); if (passFilters(m)) { r._m = m; fS.push(r); } });
+    productData.forEach(r => { const m = getProductMeta(r); if (passFilters(m)) { r._m = m; fP.push(r); } });
+    osgData.forEach(r => { const m = getOsgMeta(r); if (passFilters(m)) { r._m = m; fO.push(r); } });
+    amcData.forEach(r => { const m = getOsgMeta(r); if (passFilters(m)) { r._m = m; fA.push(r); } });
+    samsungData.forEach(r => { const m = getOsgMeta(r); if (passFilters(m)) { r._m = m; fS.push(r); } });
 
     const H = {};
     const getObj = (rbm, bdm, branch, staff, prod) => {
@@ -4490,6 +4495,66 @@ function exportFutureStoresCSV() {
                         const row = { rbm, bdm, branch, staff, product: prod, ...d };
                         flatDataAll.push(row);
                         if (isFuture) flatDataFuture.push(row);
+                    });
+                });
+            });
+        });
+    });
+
+    const filt_fP = [], filt_fO = [], filt_fA = [], filt_fS = [];
+    filteredProduct.forEach(r => { const m = getProductMeta(r); if (passFilters(m)) { r._m = m; filt_fP.push(r); } });
+    filteredOSG.forEach(r => { const m = getOsgMeta(r); if (passFilters(m)) { r._m = m; filt_fO.push(r); } });
+    filteredAMC.forEach(r => { const m = getOsgMeta(r); if (passFilters(m)) { r._m = m; filt_fA.push(r); } });
+    filteredSamsung.forEach(r => { const m = getOsgMeta(r); if (passFilters(m)) { r._m = m; filt_fS.push(r); } });
+
+    const H_filt = {};
+    const getObjFilt = (rbm, bdm, branch, staff, prod) => {
+        if (!H_filt[rbm]) H_filt[rbm] = {};
+        if (!H_filt[rbm][bdm]) H_filt[rbm][bdm] = {};
+        if (!H_filt[rbm][bdm][branch]) H_filt[rbm][bdm][branch] = {};
+        if (!H_filt[rbm][bdm][branch][staff]) H_filt[rbm][bdm][branch][staff] = {};
+        const pName = prod ? prod.toUpperCase().trim() : 'UNKNOWN';
+        if (!H_filt[rbm][bdm][branch][staff][pName]) {
+            H_filt[rbm][bdm][branch][staff][pName] = { 
+                name: pName, pQty:0, pRev:0, oQty:0, oRev:0, aQty:0, aRev:0, sQty:0, sRev:0, lgPQty:0, lgPRev:0, samPQty:0, samPRev:0 
+            };
+        }
+        return H_filt[rbm][bdm][branch][staff][pName];
+    };
+
+    filt_fP.forEach(r => {
+        const prod = r.product || 'Unknown';
+        const obj = getObjFilt(r._m.rbm, r._m.bdm, r._m.branch, r._m.staff, prod);
+        obj.pQty += (r.qty || 0); obj.pRev += (r.soldPrice || 0);
+        const b = (r.brand || '').toUpperCase();
+        if (b.includes('LG')) { obj.lgPQty += (r.qty || 0); obj.lgPRev += (r.soldPrice || 0); }
+        if (b.includes('SAMSUNG') && samAllowed.includes(prod.toUpperCase().trim())) { obj.samPQty += (r.qty || 0); obj.samPRev += (r.soldPrice || 0); }
+    });
+    filt_fO.forEach(r => {
+        const prod = r.product || 'Unknown';
+        const obj = getObjFilt(r._m.rbm, r._m.bdm, r._m.branch, r._m.staff, prod);
+        obj.oQty += (r.qty || 0); obj.oRev += (r.soldPrice || 0);
+    });
+    filt_fA.forEach(r => {
+        const prod = r.product || 'Unknown';
+        const obj = getObjFilt(r._m.rbm, r._m.bdm, r._m.branch, r._m.staff, prod);
+        obj.aQty += (r.qty || 0); obj.aRev += (r.soldPrice || 0);
+    });
+    filt_fS.forEach(r => {
+        const prod = r.product || 'Unknown';
+        const obj = getObjFilt(r._m.rbm, r._m.bdm, r._m.branch, r._m.staff, prod);
+        obj.sQty += (r.qty || 0); obj.sRev += (r.soldPrice || 0);
+    });
+
+    const flatDataFiltered = [];
+    Object.keys(H_filt).forEach(rbm => {
+        Object.keys(H_filt[rbm]).forEach(bdm => {
+            Object.keys(H_filt[rbm][bdm]).forEach(branch => {
+                Object.keys(H_filt[rbm][bdm][branch]).forEach(staff => {
+                    Object.keys(H_filt[rbm][bdm][branch][staff]).forEach(prod => {
+                        const d = H_filt[rbm][bdm][branch][staff][prod];
+                        const row = { rbm, bdm, branch, staff, product: prod, ...d };
+                        flatDataFiltered.push(row);
                     });
                 });
             });
@@ -4615,12 +4680,11 @@ function exportFutureStoresCSV() {
             return ws;
         };
 
-        // Aggregations for Overview and RBM Wise
         const prodMap = {};
         const rbmMap = {};
         let tPQ=0, tQ=0, tPR=0, tR=0;
         
-        flatDataAll.forEach(d => {
+        flatDataFiltered.forEach(d => {
             if (!prodMap[d.product]) prodMap[d.product] = { pQ:0, pR:0, q:0, r:0 };
             if (d.rbm) {
                 if (!rbmMap[d.rbm]) rbmMap[d.rbm] = { pQ:0, pR:0, q:0, r:0, prods: {} };
@@ -4670,6 +4734,7 @@ function exportFutureStoresCSV() {
         aoa1.push(['RBM', 'QTY', 'SALE', 'QTY CONV', 'VALUE CONV']);
         
         Object.keys(rbmMap).sort().forEach(r => {
+            if (r.trim() === 'Unknown' || r.trim() === '') return;
             const d = rbmMap[r];
             aoa1.push([r, d.q, d.r, calcConv(d.q, d.pQ), calcConv(d.r, d.pR)]);
         });
@@ -4685,6 +4750,7 @@ function exportFutureStoresCSV() {
         const merges2 = [{s:{r:0,c:0}, e:{r:0,c:7}}];
         let rIdx = 2;
         Object.keys(rbmMap).sort().forEach(r => {
+            if (r.trim() === 'Unknown' || r.trim() === '') return;
             let startR = rIdx;
             const prods = Object.keys(rbmMap[r].prods).sort();
             prods.forEach(k => {
@@ -4768,9 +4834,9 @@ function exportFutureStoresCSV() {
         });
         addSheet('STAFF WISE', aoa4, [], false, 2);
 
-        let filename = 'Future_Stores_Report.xlsx';
-        if (brandType === 'OSG') filename = 'Future_Stores_OSG.xlsx';
-        if (brandType === 'LG_AMC') filename = 'Future_Stores_LG_AMC.xlsx';
+        let filename = 'Future_Stores_Report_v2.xlsx';
+        if (brandType === 'OSG') filename = 'Future_Stores_OSG_v2.xlsx';
+        if (brandType === 'LG_AMC') filename = 'Future_Stores_LG_AMC_v2.xlsx';
         if (brandType === 'SAMSUNG') filename = 'Future_Stores_Samsung.xlsx';
         
         XLSX.writeFile(wb, filename);
