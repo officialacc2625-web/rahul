@@ -3113,10 +3113,8 @@
             return;
         }
 
-        const exportLimitEl = $('lcTopStaffExportLimit');
-        const topLimit = exportLimitEl ? (parseInt(exportLimitEl.value) || 15) : 15;
         filteredStaff.sort((a, b) => a.qtyConv - b.qtyConv || b.pQty - a.pQty);
-        const topStaff = filteredStaff.slice(0, topLimit);
+        const topStaff = filteredStaff;
 
         // Prepare data for Excel
         const header = ["Rank", "Staff", "Branch", "RBM", "BDM", "Prod Qty", "OSG Qty", "Qty Conv%", "Val Conv%", "Prod Revenue"];
