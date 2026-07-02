@@ -2583,6 +2583,7 @@
     $('btnLCRefresh').addEventListener('click', renderLowConvPage);
     $('btnLCExport').addEventListener('click', exportLowConvCSV);
     if ($('btnLCExportDetailed')) $('btnLCExportDetailed').addEventListener('click', exportDetailedLowConvCSV);
+    if ($('btnLCExportExcel')) $('btnLCExportExcel').addEventListener('click', exportLowConvExcel);
 
     // Also refresh whenever user navigates to the page
     document.querySelector('[data-section="lowconv-section"]').addEventListener('click', () => {
@@ -3086,6 +3087,121 @@
         
         exportToStyledExcel(data, hdr, 'low_conv_staff.xlsx', 'Low Conversion Staff', 3);
     }
+
+    
+    function exportLowConvExcel() {
+        if (productData.length === 0) return;
+        const minQty = parseFloat($('lcMinQty').value) || 0;
+        const maxConv = parseFloat($('lcMaxConv').value);
+        const minOsgQty = parseInt($('lcMinOsgQty') ? $('lcMinOsgQty').value : 0) || 0;
+        const selectedBranches = window.getLcSelectedBranches();
+        const selRBM = $('lcRBM').value;
+        const selBDM = $('lcBDM').value;
+        const selectedProducts = window.getLcSelectedProducts();
+        
+        const allStats = buildStaffStats(selectedProducts);
+        const filteredStaff = allStats
+            .filter(s => s.pQty >= minQty && s.qtyConv <= maxConv)
+            .filter(s => s.oQty >= minOsgQty)
+            .filter(s => !selectedBranches || selectedBranches.includes(s.branch))
+            .filter(s => !selRBM || s.rbm === selRBM)
+            .filter(s => !selBDM || s.bdm === selBDM)
+            .filter(s => s.branch && s.branch.toUpperCase().includes('FUTURE'));
+            
+        if (filteredStaff.length === 0) {
+            alert("No staff match the current filters.");
+            return;
+        }
+
+        const exportLimitEl = $('lcTopStaffExportLimit');
+        const topLimit = exportLimitEl ? (parseInt(exportLimitEl.value) || 15) : 15;
+        filteredStaff.sort((a, b) => a.qtyConv - b.qtyConv || b.pQty - a.pQty);
+        const topStaff = filteredStaff.slice(0, topLimit);
+
+        // Prepare data for Excel
+        const header = ["Rank", "Staff", "Branch", "RBM", "BDM", "Prod Qty", "OSG Qty", "Qty Conv%", "Val Conv%", "Prod Revenue"];
+        
+        const wsData = [];
+        const headerRow = header.map(h => ({
+            v: h,
+            s: {
+                fill: { fgColor: { rgb: "1F2937" } },
+                font: { color: { rgb: "FFFFFF" }, bold: true },
+                alignment: { horizontal: "center" },
+                border: { top: {style:"thin", color:{auto:1}}, right: {style:"thin", color:{auto:1}}, bottom: {style:"thin", color:{auto:1}}, left: {style:"thin", color:{auto:1}} }
+            }
+        }));
+        wsData.push(headerRow);
+
+        topStaff.forEach((s, index) => {
+            const row = [];
+            
+            // Rank
+            row.push({ v: index + 1, s: { fill: { fgColor: { rgb: "065F46" } }, font: { color: { rgb: "FFFFFF" }, bold: true }, alignment: { horizontal: "center" } } });
+            // Staff
+            row.push({ v: s.name, s: { alignment: { horizontal: "left" } } });
+            // Branch
+            row.push({ v: s.branch || "", s: { alignment: { horizontal: "left" } } });
+            // RBM
+            row.push({ v: s.rbm || "", s: { alignment: { horizontal: "left" } } });
+            // BDM
+            row.push({ v: s.bdm || "", s: { alignment: { horizontal: "left" } } });
+            // Prod Qty
+            row.push({ v: s.pQty, t: 'n', s: { alignment: { horizontal: "center" } } });
+            // OSG Qty
+            row.push({ v: s.oQty, t: 'n', s: { alignment: { horizontal: "center" } } });
+            
+            // Qty Conv%
+            let qtyConvColor = "B91C1C"; // Red
+            let qtyConvBg = "FEE2E2";
+            if (s.qtyConv >= 10) {
+                qtyConvColor = "166534"; // Green
+                qtyConvBg = "DCFCE7";
+            }
+            row.push({ v: parseFloat(s.qtyConv.toFixed(2)), t: 'n', s: { font: { color: { rgb: qtyConvColor }, bold: true }, fill: { fgColor: { rgb: qtyConvBg } }, alignment: { horizontal: "center" } } });
+            
+            // Val Conv%
+            let valConvColor = "B91C1C"; // Red
+            let valConvBg = "FEE2E2";
+            if (s.valConv >= 2) {
+                valConvColor = "166534"; // Green
+                valConvBg = "DCFCE7";
+            } else if (s.valConv >= 1) {
+                valConvColor = "B45309"; // Orange/Yellow
+                valConvBg = "FEF08A";
+            }
+            row.push({ v: parseFloat(s.valConv.toFixed(2)), t: 'n', s: { font: { color: { rgb: valConvColor }, bold: true }, fill: { fgColor: { rgb: valConvBg } }, alignment: { horizontal: "center" } } });
+            
+            // Prod Revenue
+            row.push({ v: s.pRev, t: 'n', s: { alignment: { horizontal: "right" } } });
+            
+            wsData.push(row);
+        });
+
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        
+        // Auto size columns
+        const cols = [
+            { wch: 6 }, // Rank
+            { wch: 25 }, // Staff
+            { wch: 25 }, // Branch
+            { wch: 15 }, // RBM
+            { wch: 15 }, // BDM
+            { wch: 10 }, // Prod Qty
+            { wch: 10 }, // OSG Qty
+            { wch: 12 }, // Qty Conv%
+            { wch: 12 }, // Val Conv%
+            { wch: 15 }  // Prod Revenue
+        ];
+        ws['!cols'] = cols;
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Low Conversion Staff");
+        
+        const filename = "Low_Conversion_Staff_" + new Date().toISOString().split('T')[0] + ".xlsx";
+        XLSX.writeFile(wb, filename);
+    }
+
 
     function exportDetailedLowConvCSV() {
         if (productData.length === 0) return;
